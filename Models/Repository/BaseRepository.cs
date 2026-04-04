@@ -1,0 +1,173 @@
+﻿using Microsoft.EntityFrameworkCore;
+using Models.Entity;
+using Models.Interfaces;
+using Models.Tables;
+using SysNet;
+using System.Diagnostics;
+using System.Linq.Expressions;
+
+namespace Models.Repository
+{
+    public abstract class BaseRepository<TContext, Ttable> 
+                                where TContext : DbContext, new()
+                                where Ttable : class, IStandardTable, new()
+    {
+
+        public BaseRepository()
+        {
+
+            Debug.WriteLine($"***** [GC] {this.GetType().Name} {this.GetHashCode()} CARICATO *****");
+
+        }
+
+#if DEBUG
+        ~BaseRepository()
+        {
+            // Questo apparirà nella finestra "Output" di Visual Studio
+            Debug.WriteLine($"***** [GC] {this.GetType().Name} {this.GetHashCode()} DISTRUTTO *****");
+        }
+#endif
+
+        public async Task<bool> EsisteNome(IMap dT)
+        {
+            using TContext _ctx = Create<TContext>.Instance();
+            return await _ctx.Set<Ttable>().AnyAsync(p => p.Nome == dT.Nome);
+        }
+
+        public async Task<List<Ttable>> GetAll(Expression<Func<Ttable, bool>>? predicate = null,
+                                                Expression<Func<Ttable, object>>? orderBy = null)
+        {
+            using TContext _ctx = Create<TContext>.Instance();
+            return await _ctx.Set<Ttable>()
+                         .Where(predicate!)
+                         .OrderBy(orderBy!)
+                         .ToListAsync();
+        }
+
+        public async Task<bool> EsisteNomeUpd(IMap dT)
+        {
+            using TContext _ctx = Create<TContext>.Instance();
+            return await _ctx.Set<Ttable>().AnyAsync(p => p.Nome == dT.Nome && p.Id != dT.Id);
+        }
+
+        public async Task<bool> Del(IMap map)
+        {
+            using TContext _ctx = Create<TContext>.Instance();
+            var row = await _ctx.Set<Ttable>().FindAsync(map.Id);
+
+            if (row == null) return false;
+
+            _ctx.Set<Ttable>().Remove(row);
+
+            try
+            {
+                // 3. Applichiamo la modifica al DB
+                await _ctx.SaveChangesAsync();
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Errore Delete: {ex.Message}");
+                return false;
+            }
+        }
+
+        public async Task<int> Add<TMap>(TMap map)
+                            where TMap : IMappable<Ttable> // Accetta solo mappe che sanno convertirsi
+        {
+            using TContext _ctx = new();
+            var entity = map.ToTable(); // Chiama il tuo mapper manuale
+            _ctx.Set<Ttable>().Add(entity);
+            try
+            {
+                // 3. Un'unica chiamata al database (Transazione atomica)
+                await _ctx.SaveChangesAsync();
+
+                // Dopo SaveChanges, person.Id contiene l'ID reale generato dal DB
+                return entity.Id;
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Errore Add: {ex.InnerException?.Message ?? ex.Message}");
+                return -1;
+            }
+        }
+
+        public async Task<bool> Upd<TMap>(TMap map)
+                            where TMap : IMappable<Ttable>, IMap
+                            // Deve avere l'ID per sapere cosa aggiornare
+        {
+            using TContext _ctx = new();
+
+            // 1. Cerchiamo il record esistente nel DB tramite l'ID della mappa
+            var existing = await _ctx.Set<Ttable>().FindAsync(map.Id);
+
+            if (existing == null)
+            {
+                Debug.WriteLine($"***** UPDATE FALLITO: Record {typeof(Ttable).Name} con ID {map.Id} non trovato. *****");
+                return false;
+            }
+
+            // 2. Usiamo il mapper manuale per aggiornare l'entità esistente
+            map.UpdateTable(existing);
+
+            try
+            {
+                // 3. Salvataggio (EF rileva automaticamente le differenze)
+                await _ctx.SaveChangesAsync();
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"***** ERRORE UPDATE: {ex.InnerException?.Message ?? ex.Message} *****");
+                return false;
+            }
+        }
+
+        public virtual async Task<TMap> GetById<TMap>(int id, Expression<Func<Ttable, TMap>> selector)
+                                            where TMap : class, new()
+        {
+            using TContext _ctx = new();
+
+            // Usiamo la proiezione (selector) direttamente nella query SQL
+            var result = await _ctx.Set<Ttable>()
+                                   .AsNoTracking()
+                                   .Where(p => p.Id == id)
+                                   .Select(selector)
+                                   .FirstOrDefaultAsync();
+
+            // Se non trova nulla, restituisce una nuova istanza pulita
+            return result ?? new TMap();
+        }
+
+        public async Task<List<TMap>> GetAll<TMap>(Expression<Func<Ttable, TMap>> selector,
+                                                   Expression<Func<Ttable, bool>>? predicate = null,
+                                                   Expression<Func<Ttable, object>>? orderBy = null)
+                                            where TMap : class, new()
+        {
+            using TContext _ctx = new();
+
+            IQueryable<Ttable> query = _ctx.Set<Ttable>().AsNoTracking();
+
+            if (predicate is not null)
+            {
+                query = query.Where(predicate);
+            }
+
+            if (orderBy is not null)
+            {
+                query = query.OrderBy(orderBy);
+            }
+
+            return await query.Select(selector).ToListAsync();
+        }
+
+        public virtual void Dispose()
+        {
+#if DEBUG
+            Debug.WriteLine($"***** [VM] {this.GetType().Name} {this.GetHashCode()} disposed *****");
+#endif
+        }
+
+    }
+}
