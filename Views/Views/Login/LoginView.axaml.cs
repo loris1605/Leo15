@@ -23,31 +23,31 @@ public partial class LoginView : ReactiveUserControl<LoginViewModel>
 
         this.WhenActivated(d =>
         {
-            //ViewModel?.PasswordFocus
-            //        .RegisterHandler(interaction =>
-            //        {
-            //            Dispatcher.UIThread.Post(() =>
-            //            {
-            //                PasswordBox.Focus();
-            //                PasswordBox.SelectAll();
-            //            });
-            //            interaction.SetOutput(Unit.Default);
-            //        })
-            //        .DisposeWith(d);
+            ViewModel?.PasswordFocus
+                    .RegisterHandler(interaction =>
+                    {
+                        Dispatcher.UIThread.Post(() =>
+                        {
+                            PasswordBox.Focus();
+                            PasswordBox.SelectAll();
+                        });
+                        interaction.SetOutput(Unit.Default);
+                    })
+                    .DisposeWith(d);
 
             // Esc Key Pressed
-            //Observable.FromEventPattern<KeyEventArgs>(this, nameof(this.KeyDown))
-            //        .Where(e => e.EventArgs.Key == Key.Escape)
-            //        .Select(_ => Unit.Default) // <--- AGGIUNGI QUESTA RIGA
-            //        .InvokeCommand(ViewModel, vm => vm.AppExitCommand)
-            //        .DisposeWith(d);
+            Observable.FromEventPattern<KeyEventArgs>(this, nameof(this.KeyDown))
+                    .Where(e => e.EventArgs.Key == Key.Escape)
+                    .Select(_ => Unit.Default) // <--- AGGIUNGI QUESTA RIGA
+                    .InvokeCommand(ViewModel, vm => vm.AppExitCommand)
+                    .DisposeWith(d);
 
             //// Enter Key Pressed
-            //Observable.FromEventPattern<KeyEventArgs>(PasswordBox, nameof(PasswordBox.KeyUp))
-            //        .Where(e => e.EventArgs.Key == Key.Enter)
-            //        .Select(_ => Unit.Default) // <--- AGGIUNGI QUESTA RIGA
-            //        .InvokeCommand(ViewModel, vm => vm.EntraCommand)
-            //.DisposeWith(d);
+            Observable.FromEventPattern<KeyEventArgs>(PasswordBox, nameof(PasswordBox.KeyUp))
+                    .Where(e => e.EventArgs.Key == Key.Enter)
+                    .Select(_ => Unit.Default) // <--- AGGIUNGI QUESTA RIGA
+                    .InvokeCommand(ViewModel, vm => vm.EntraCommand)
+            .DisposeWith(d);
 
             #region TwoWay
 

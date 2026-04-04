@@ -108,6 +108,30 @@ namespace ViewModels
             
         }
 
+        protected async Task TriggerInteraction<TInput, TOutput>(
+        Interaction<TInput, TOutput> interaction,
+        TInput input,
+        int delayMs = 200)
+            {
+                // Attendiamo che la View sia agganciata e pronta
+                await Task.Delay(delayMs);
+
+                try
+                {
+                    // Verifichiamo se l'interazione ha almeno un handler registrato
+                    // per evitare eccezioni se la View è già stata deattivata
+                    await interaction.Handle(input);
+                }
+                catch (UnhandledInteractionException<TInput, TOutput>)
+                {
+                Debug.WriteLine($">>> [WARN] Interaction {typeof(TInput).Name}->{typeof(TOutput).Name} non gestita (View deattivata).");
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine($">>> [ERROR] Errore Interaction: {ex.Message}");
+                }
+            }
+
         private bool _isLoading;
         public bool IsLoading
         {

@@ -86,25 +86,25 @@ namespace ViewModels
             catch (Exception) { Debug.WriteLine("Caricamento Login fallito."); }
             finally { IsLoading = false; }
 
-            await OnPasswordFocus();
-            
+            await TriggerInteraction(PasswordFocus, Unit.Default);
+
         }
 
-        private async Task OnPasswordFocus()
-        {
-            // Fondamentale: aspetta un attimo che la View sia "viva" e l'handler registrato
-            await Task.Delay(200);
+        //private async Task OnPasswordFocus()
+        //{
+        //    // Fondamentale: aspetta un attimo che la View sia "viva" e l'handler registrato
+        //    await Task.Delay(200);
 
-            try
-            {
-                await PasswordFocus.Handle(Unit.Default);
-            }
-            catch (Exception ex)
-            {
-                // Evita crash se l'handler non è ancora pronto o la vista è già chiusa
-                System.Diagnostics.Debug.WriteLine("Interaction Focus fallita: " + ex.Message);
-            }
-        }
+        //    try
+        //    {
+        //        await PasswordFocus.Handle(Unit.Default);
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        // Evita crash se l'handler non è ancora pronto o la vista è già chiusa
+        //        System.Diagnostics.Debug.WriteLine("Interaction Focus fallita: " + ex.Message);
+        //    }
+        //}
 
         private async Task OnEntra()
         {
