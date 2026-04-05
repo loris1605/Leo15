@@ -20,46 +20,37 @@ namespace ViewModels
         public ReactiveCommand<Unit, Unit> LogoutCommand { get; }
         public ReactiveCommand<Unit, Unit> ConnectionCommand { get; }
         public ReactiveCommand<Unit,Unit> SociCommand { get; }
+        public ReactiveCommand<Unit, Unit> ConfigurazioneCommand { get; }
 
         
         public MenuViewModel(IScreen host,
                              IMenuRepository menuRepository = null) : base(host)
         {
             Q = menuRepository ?? Locator.Current.GetService<IMenuRepository>();
-           
 
-            NavigateCommand = ReactiveCommand.Create<string>(param =>
+
+            NavigateCommand = ReactiveCommand.CreateFromTask<string>(async (dest) =>
             {
-                //if (param == null)
-                //    MessageBox.Show("Parametro ricevuto NULL");
-                //else
-                //    MessageBox.Show($"Ricevuto: {param} di tipo {param.GetType()}");
+                IRoutableViewModel page = dest switch
+                {
+                    "Login" => new LoginViewModel(HostScreen),
+                    "Connection" => new ConnectionViewModel(HostScreen),
+                    "Soci" => new SociViewModel(HostScreen),
+                    "Configurazione" => new ConfigurazioneViewModel(HostScreen), // Corretto l'errore precedente
+                    _ => null
+                };
 
-                //IRoutableViewModel CurrentPage = param switch
-                //{
-
-                //    "Connection" => new ConnectionViewModel(HostScreen),
-                //    "Soci" => new SociViewModel(HostScreen),
-                //    "Configurazione" => new ConfigurazioneViewModel(HostScreen),
-                //    //"Servizi" => null,
-                //    //"Gestore" => null,
-                //    //"OpenPostazioneCassa" => null,
-                //    //"OpenGiornata" => null,
-                //    //"CloseGiornata" => null,
-                //    //"OpenTurno" => null,
-                //    //"CloseTurno" => null,
-                //    _ => null
-                //};
-                //if (CurrentPage != null)
-                //{
-                //    HostScreen.Router.NavigateAndReset.Execute(CurrentPage);
-                //}
-
+                if (page != null)
+                    await HostScreen.Router.NavigateAndReset.Execute(page);
             });
+
             CassaCommand = ReactiveCommand.Create<string>(param => OnCassa(param));
             LogoutCommand = ReactiveCommand.CreateFromTask(GoToLogin);
             ConnectionCommand = ReactiveCommand.CreateFromTask(GoToConnection);
             SociCommand = ReactiveCommand.CreateFromTask(GoToSoci);
+            ConfigurazioneCommand = ReactiveCommand.CreateFromTask(GoToConfigurazione);
+
+            
 
             this.WhenActivated(d => 
             {
@@ -67,6 +58,8 @@ namespace ViewModels
                 CassaCommand.DisposeWith(d);
                 NavigateCommand.DisposeWith(d);
                 ConnectionCommand.DisposeWith(d);
+                ConfigurazioneCommand.DisposeWith(d);
+
             });
                 
         }
@@ -82,77 +75,76 @@ namespace ViewModels
 
         protected override async Task OnLoading()
         {
+            if (GlobalValuesC.MySetting == null) return;
 
-            //if (GlobalValuesC.MySetting != null)
-            //{
-            //    AttivaPermessi();
-            //}
+            AttivaPermessi();
+           
 
-            //List<PostazioneDTO> listaDto = await Q.CaricaPostazioniCassa(GlobalValuesC.MySetting.IDOPERATORE);
+            List<PostazioneDTO> listaDto = await Q.CaricaPostazioniCassa(GlobalValuesC.MySetting.IDOPERATORE);
 
-            //CassaPostazioniDataSource = listaDto
-            //                            .Select(dto => new PostazioneMap(dto))
-            //                            .ToList();
+            CassaPostazioniDataSource = listaDto
+                                        .Select(dto => new PostazioneMap(dto))
+                                        .ToList();
 
-            //ApriGiornataEnabled = !(await Q.EsisteGiornataAperta());
-            //if (GlobalValuesC.MySetting is null) await Task.CompletedTask;
-            //if (GlobalValuesC.MySetting.POSTAZIONI is not null)
-            //{
-            //    if (GlobalValuesC.MySetting.POSTAZIONI.Count == 0) ApriPostazioneEnabled = false;
-            //}
+            ApriGiornataEnabled = !(await Q.EsisteGiornataAperta());
+            if (GlobalValuesC.MySetting is null) await Task.CompletedTask;
+            if (GlobalValuesC.MySetting.POSTAZIONI is not null)
+            {
+                if (GlobalValuesC.MySetting.POSTAZIONI.Count == 0) ApriPostazioneEnabled = false;
+            }
 
-            await Task.CompletedTask;
+            
         }
 
-        //private void AttivaPermessi()
-        //{
-        //    if (GlobalValuesC.MySetting is null) return;
+        private void AttivaPermessi()
+        {
+            if (GlobalValuesC.MySetting is null) return;
 
-        //    OperatoreName = "Operatore : " + GlobalValuesC.MySetting.NOMEOPERATORE;
-        //    SessioneContabile = "Sessione Contabile " + (ApriGiornataEnabled ? "Chiusa" : "Aperta");
+            OperatoreName = "Operatore : " + GlobalValuesC.MySetting.NOMEOPERATORE;
+            SessioneContabile = "Sessione Contabile " + (ApriGiornataEnabled ? "Chiusa" : "Aperta");
 
-        //    if (GlobalValuesC.MySetting.POSTAZIONI is null) return;
+            if (GlobalValuesC.MySetting.POSTAZIONI is null) return;
 
-        //    try
-        //    {
-        //        foreach (PostazioneXC Element in GlobalValuesC.MySetting.POSTAZIONI)
-        //        {
-        //            switch (Element.TIPOPOSTAZIONE)
-        //            {
-        //                case (int)Enums.Postazioni.Amministratore:
-        //                    AmministratoreVisible = true;
-        //                    ReportVisible = true;
-        //                    break;
+            try
+            {
+                foreach (PostazioneXC Element in GlobalValuesC.MySetting.POSTAZIONI)
+                {
+                    switch (Element.TIPOPOSTAZIONE)
+                    {
+                        case (int)Enums.Postazioni.Amministratore:
+                            AmministratoreVisible = true;
+                            ReportVisible = true;
+                            break;
 
-        //                case (int)Enums.Postazioni.Cassa:
-        //                    CassaVisible = true;
-        //                    ReportVisible = true;
-        //                    break;
+                        case (int)Enums.Postazioni.Cassa:
+                            CassaVisible = true;
+                            ReportVisible = true;
+                            break;
 
-        //                case (int)Enums.Postazioni.Bar:
-        //                    BarVisible = true;
-        //                    break;
+                        case (int)Enums.Postazioni.Bar:
+                            BarVisible = true;
+                            break;
 
-        //                case (int)Enums.Postazioni.Guardaroba:
-        //                    GuardarobaVisible = true;
-        //                    break;
+                        case (int)Enums.Postazioni.Guardaroba:
+                            GuardarobaVisible = true;
+                            break;
 
-        //                case (int)Enums.Postazioni.Pulizie:
-        //                    PulizieVisible = true;
-        //                    break;
+                        case (int)Enums.Postazioni.Pulizie:
+                            PulizieVisible = true;
+                            break;
 
-        //            }
-        //        }
-        //    }
-        //    catch (NullReferenceException)
-        //    {
-        //        return;
-        //    }
+                    }
+                }
+            }
+            catch (NullReferenceException)
+            {
+                return;
+            }
 
-        //    IsMenuReady = true;
+            IsMenuReady = true;
 
 
-        //}
+        }
 
         private void OnCassa(string x)
         {
@@ -166,7 +158,7 @@ namespace ViewModels
 
         private async Task GoToLogin()
         {
-            await HostScreen.Router.NavigateAndReset.Execute(new TestViewModel(HostScreen));
+            await HostScreen.Router.NavigateAndReset.Execute(new LoginViewModel(HostScreen));
         }
 
         private async Task GoToConnection()
@@ -177,6 +169,11 @@ namespace ViewModels
         private async Task GoToSoci()
         {
             await HostScreen.Router.NavigateAndReset.Execute(new SociViewModel(HostScreen));
+        }
+
+        private async Task GoToConfigurazione()
+        {
+            await HostScreen.Router.NavigateAndReset.Execute(new ConfigurazioneViewModel(HostScreen));
         }
     }
 

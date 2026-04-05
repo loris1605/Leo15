@@ -76,19 +76,19 @@ public partial class LoginView : ReactiveUserControl<LoginViewModel>
             #endregion
 
             //Evento DropDownClose sulla Combo
-            //Observable.FromEventPattern<EventHandler, EventArgs>(
-            //            h => OperatoreCombo.DropDownClosed += h,
-            //            h => OperatoreCombo.DropDownClosed -= h)
-            //.Subscribe(_ =>
-            //{
-            //    // Rimando al dispatcher per sicurezza
-            //    Dispatcher.UIThread.InvokeAsync(() =>
-            //    {
-            //        PasswordBox.Focus();
-            //        PasswordBox.SelectAll();
-            //    });
-            //})
-            //.DisposeWith(d);
+            Observable.FromEventPattern<EventHandler, EventArgs>(
+                        h => OperatoreCombo.DropDownClosed += h,
+                        h => OperatoreCombo.DropDownClosed -= h)
+            .Subscribe(_ =>
+            {
+                // Rimando al dispatcher per sicurezza
+                Dispatcher.UIThread.InvokeAsync(() =>
+                {
+                    PasswordBox.Focus();
+                    PasswordBox.SelectAll();
+                });
+            })
+            .DisposeWith(d);
 
 
             Disposable.Create(() =>

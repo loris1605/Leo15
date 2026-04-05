@@ -109,9 +109,7 @@ namespace ViewModels
 
         private void GoToLogin()
         {
-            var factory = Locator.Current.GetService<Func<IScreen, LoginViewModel>>();
-            var vm = factory(HostScreen);
-            HostScreen.Router.NavigateAndReset.Execute(vm);
+            HostScreen.Router.NavigateAndReset.Execute(new LoginViewModel(HostScreen));
             
         }
 
@@ -204,13 +202,7 @@ namespace ViewModels
             get => avviavisibile;
             set => this.RaiseAndSetIfChanged(ref avviavisibile, value);
         }
-
-        private bool _isLoading;
-        public bool IsLoading
-        {
-            get => _isLoading;
-            set => this.RaiseAndSetIfChanged(ref _isLoading, value);
-        }
+        
 
         private bool _enabledcheck;
         public bool EnabledCheck

@@ -66,9 +66,7 @@
 
                         <ui:UiMenuItem x:Name="ConfigurazioneItem"
                                        Header="  CONFIGURAZIONE  " 
-                                       
-                                       Command="{Binding NavigateCommand}"
-                                       CommandParameter="Configurazione"/>
+                                       Command="{Binding ConfigurazioneCommand}"/>
 
                         <ui:UiMenuItem Name="ServiziItem"
                                        Header="  SERVIZI  " 

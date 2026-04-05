@@ -40,7 +40,8 @@
 	<Setter Property="Foreground" Value="White" />
     <Setter Property="FontWeight" Value="SemiBold"/>
     <Setter Property="Cursor" Value="Hand"/>
-    
+    <Setter Property="HorizontalContentAlignment" Value="Center"/>
+    <Setter Property="VerticalContentAlignment" Value="Center"/>
     <Setter Property="ToolTip.Tip" Value="{Binding ToolTipText, RelativeSource={RelativeSource Self}}"/>
     <Setter Property="CornerRadius" Value="8"/>
 
