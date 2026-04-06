@@ -1,5 +1,7 @@
+using Avalonia.Controls;
 using ReactiveUI;
 using ReactiveUI.Avalonia;
+using System.Diagnostics;
 using System.Reactive.Disposables;
 using System.Reactive.Disposables.Fluent;
 using System.Reactive.Linq;
@@ -7,22 +9,14 @@ using ViewModels;
 
 namespace Views;
 
-public partial class MenuView : ReactiveUserControl<MenuViewModel>
+public partial class MenuView : BaseUserControl<MenuViewModel>
 {
+    protected override string RootControlName => "RootGrid";
+
     public MenuView()
     {
 
-#if DEBUG
-
-        GC.Collect();
-        GC.WaitForPendingFinalizers();
-        GC.Collect();
-        GC.WaitForPendingFinalizers();
-
-#endif
-
         InitializeComponent();
-
 
         this.WhenActivated(d =>
         {
@@ -111,27 +105,8 @@ public partial class MenuView : ReactiveUserControl<MenuViewModel>
 
             #endregion
 
-            #region Commands
-
-
-            #endregion
-
-            Disposable.Create(() =>
-            {
-                System.Diagnostics.Debug.WriteLine(">>> [VIEW] MenuView deattivata, DataContext rimosso.");
-            }).DisposeWith(d);
-
-
         });
     }
-
-#if DEBUG
-    // Questo viene chiamato solo quando l'oggetto viene rimosso dalla RAM
-    ~MenuView()
-    {
-        System.Diagnostics.Debug.WriteLine(">>>>>> [GC SUCCESS] La MenuView è stata distrutta fisicamente dalla memoria.");
-    }
-#endif
 
 
 }

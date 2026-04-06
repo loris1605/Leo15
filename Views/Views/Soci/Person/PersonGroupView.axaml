@@ -4,13 +4,14 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              xmlns:vm="using:ViewModels"
+             xmlns:dt="using:ViewModels.BindableObjects"
              xmlns:ui="using:ControlStyles"
-             xmlns:lc="using:Leonardo"
+             xmlns:lc="using:Views"
              KeyboardNavigation.TabNavigation="Cycle"
              Background="Transparent"
-             x:CompileBindings="False"
+             x:CompileBindings="True"
              x:DataType="vm:PersonGroupViewModel"
-             x:Class="Leonardo.PersonGroupView">
+             x:Class="Views.PersonGroupView">
 
     <UserControl.Resources>
         <ui:IntDateToStringDateConverter x:Key="stringConversion"/>
@@ -72,76 +73,35 @@
                       GridLinesVisibility="All"
                       Margin="20">
 
-                <DataGrid.Resources>
+                <DataGrid.Columns>
 					
-                    <DataTemplate x:Key="NumeroSocioTemplate" x:CompileBindings="False">
-                        <TextBlock Text="{Binding NumeroSocio}" 
-                                   Margin="10,0"
-                                   VerticalAlignment="Center"
-                                   HorizontalAlignment="Center"/>
-                    </DataTemplate>
-                    <DataTemplate x:Key="CodiceSocioTemplate" x:CompileBindings="False">
-                        <TextBlock Text="{Binding CodiceSocio}" 
-                                   VerticalAlignment="Center"
-                                   Margin="10,0"
-                                   HorizontalAlignment="Center"/>
-                    </DataTemplate>
-                    <DataTemplate x:Key="CodiceTesseraTemplate" x:CompileBindings="False">
-                        <TextBlock Text="{Binding CodiceTessera}"
-                                   VerticalAlignment="Center"
-                                   Margin="10,0"
-                                   HorizontalAlignment="Center"/>
-                    </DataTemplate>
-                    <DataTemplate x:Key="NumeroTesseraTemplate" x:CompileBindings="False">
-                        <TextBlock Text="{Binding NumeroTessera}"
-                                   VerticalAlignment="Center"
-                                   Margin="10,0"
-                                   HorizontalAlignment="Center"/>
-                    </DataTemplate>
-                    <DataTemplate x:Key="ScadenzaTemplate" x:CompileBindings="False">
-                        <TextBlock Text="{Binding Scadenza}"
-                                   VerticalAlignment="Center"
-                                   Margin="10,0"
-                                   HorizontalAlignment="Center"/>
-                    </DataTemplate>
-                </DataGrid.Resources>
-            
-                <DataGrid.Styles>
-                    <Style Selector="DataGridColumnHeader">
-                        <Setter Property="FontSize" Value="11" />
-                        <Setter Property="FontWeight" Value="SemiBold" />
-                        <Setter Property="HorizontalContentAlignment" Value="Center" />
-                    </Style>
-                    <Style Selector="DataGridRowGroupHeader">
-                        <Setter Property="Background" Value="#F2F2F2" />
-                        <Setter Property="Height" Value="30" />
-                    </Style>
-                    
-                </DataGrid.Styles>
+                    <DataGridTextColumn Header="Cod." 
+                                        x:DataType="dt:PersonMap"
+                                        Binding="{Binding CodiceSocio}" 
+                                        IsVisible="False" />
 
-                <DataGrid.Columns >
-                    
-                                               
-                    <DataGridTemplateColumn Header="Cod." 
-                                            CellTemplate="{StaticResource CodiceSocioTemplate}"
-                                            IsVisible="False"/>
+                    <DataGridTextColumn Header="Num. Socio" 
+                                        x:DataType="dt:PersonMap"
+                                        Binding="{Binding NumeroSocio}" 
+                                        Width="Auto" />
 
-                    <DataGridTemplateColumn Header="Num. Socio" 
-                                            Width="Auto"
-                                            CellTemplate="{StaticResource NumeroSocioTemplate}"/>
-                    
-                    <DataGridTemplateColumn Header="IdTessera" 
-                                            CellTemplate="{StaticResource CodiceTesseraTemplate}"
-                                            IsVisible="False"/>
-                    
-                    <DataGridTemplateColumn Header="Num. Tessera"
-                                            CellTemplate="{StaticResource NumeroTesseraTemplate}"
-                                            Width="Auto"/>
+                    <DataGridTextColumn Header="Cod." 
+                                        x:DataType="dt:PersonMap"
+                                        Binding="{Binding CodiceTessera}" 
+                                        IsVisible="False" />
 
-                    <DataGridTemplateColumn Header="Scad. Tessera"
-                                            CellTemplate="{StaticResource ScadenzaTemplate}"
-                                            Width="Auto"/>
+                    <DataGridTextColumn Header="Num. Tessera" 
+                                        x:DataType="dt:PersonMap"
+                                        Binding="{Binding NumeroTessera}" 
+                                        Width="Auto" />
+
+                    <DataGridTextColumn Header="Scadenza" 
+                                        x:DataType="dt:PersonMap"
+                                        Binding="{Binding Scadenza}" 
+                                        Width="Auto" />
+
                 </DataGrid.Columns>
+               
 
             </DataGrid>
                

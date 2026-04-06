@@ -9,16 +9,17 @@ using ViewModels;
 
 namespace Views;
 
-public partial class ConnectionView : ReactiveUserControl<ConnectionViewModel>
+public partial class ConnectionView : BaseUserControl<ConnectionViewModel>
 {
+    protected override string RootControlName => "RootGrid";
+
     public ConnectionView()
     {
         InitializeComponent();
 
         this.WhenActivated(d =>
         {
-
-            
+          
             if (ViewModel != null)
             {
                 ViewModel.UserIdFocus
@@ -140,13 +141,7 @@ public partial class ConnectionView : ReactiveUserControl<ConnectionViewModel>
             })
             .DisposeWith(d);
 
-            Disposable.Create(() => {
-                this.DataContext = null;
-                System.Diagnostics.Debug.WriteLine(">>> [VIEW] ConnectionView deattivata, DataContext rimosso.");
-            }).DisposeWith(d);
-
-
-
+            
         });
     }
 }

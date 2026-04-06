@@ -6,6 +6,7 @@ using Avalonia.Threading;
 using ReactiveUI;
 using ReactiveUI.Avalonia;
 using System;
+using System.Diagnostics;
 using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Disposables.Fluent;
@@ -14,11 +15,12 @@ using ViewModels;
 
 namespace Views;
 
-public partial class LoginView : ReactiveUserControl<LoginViewModel>
+public partial class LoginView : BaseUserControl<LoginViewModel>
 {
+    protected override string RootControlName => "RootGrid";
+
     public LoginView()
     {
-
         InitializeComponent();
 
         this.WhenActivated(d =>
@@ -89,37 +91,10 @@ public partial class LoginView : ReactiveUserControl<LoginViewModel>
                 });
             })
             .DisposeWith(d);
-
-
-            Disposable.Create(() =>
-            {
-                RootGrid.Children.Clear();
-
-                // Oppure, se vuoi essere radicale ma sicuro:
-                RootGrid.Children.Add(new Panel()); // Sostituisci tutto con un pannello vuoto leggerissimo
-
-                System.Diagnostics.Debug.WriteLine(">>> [DETACH] LoginView svuotata e pronta per GC.");
-
-                Task.Run(async () =>
-                {
-                    await Task.Delay(500); // Diamo tempo ad Avalonia di completare la navigazione
-                    System.GC.Collect();
-                    System.GC.WaitForPendingFinalizers();
-                    System.GC.Collect();
-                    System.Diagnostics.Debug.WriteLine(">>> [DEBUG] GC Eseguito post-distacco.");
-                });
-            }).DisposeWith(d);
+           
 
         });
     }
-
-#if DEBUG
-    // Questo viene chiamato solo quando l'oggetto viene rimosso dalla RAM
-    ~LoginView()
-    {
-        System.Diagnostics.Debug.WriteLine(">>>>>> [GC SUCCESS] La LoginView DISTRUTTA");
-    }
-#endif
 
 
 }

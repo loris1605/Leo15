@@ -9,6 +9,7 @@ namespace ViewModels
     {
         void AggiornaGrid(object model);
         
+
     }
     public partial class SociViewModel : BaseViewModel, ISociScreen
     {
@@ -17,7 +18,7 @@ namespace ViewModels
         public RoutingState Router => GroupRouter;
 
         public ReactiveCommand<Unit, Unit> EsciCommand { get; }
-          
+         
 
         public SociViewModel(IScreen host) : base(host)
         {
@@ -51,8 +52,17 @@ namespace ViewModels
         {
             if (GroupRouter.GetCurrentViewModel() is IGroupViewModelBase groupVm)
             {
-                // Passiamo l'ID al metodo di caricamento della lista
-                groupVm.CaricaByModel(model);
+                if (model is int n)
+                {
+                    AggiornaGrid(n);
+                    
+                }
+                else
+                {
+                    groupVm.CaricaByModel(model);
+                }
+                    // Passiamo l'ID al metodo di caricamento della lista
+                    
 
                 // Se hai un comando di ricarica nel GroupViewModel:
                 // groupVm.LoadCommand.Execute().Subscribe();

@@ -11,99 +11,100 @@ namespace DTO.Repository
 {
     public interface ILoginRepository 
     {
-        Task<List<LoginDTO>> GetOperatoriAbilitati();
-        Task SaveSettings(LoginDTO dT);
+        Task<List<LoginDTO>> GetOperatoriAbilitati(CancellationToken ct = default);
+        Task SaveSettings(LoginDTO dto, CancellationToken ct = default);
     }
 
     public class LoginRepository : BaseRepository<LoginDbContext, Operatore>, ILoginRepository
     {
-        public async Task<List<LoginDTO>> GetOperatoriAbilitati()
+        public async Task<List<LoginDTO>> GetOperatoriAbilitati(CancellationToken ctk)
         {
             return await GetAll(
                 selector: OperatoreMapper.ToLoginDto,
-                predicate: p => p.Abilitato == true);
+                predicate: p => p.Abilitato == true,
+                ct : ctk);
         }
 
-        private async Task<List<PostazioneXC>> ListPostazioniByOperatore(int CodiceOperatore)
-        {
-
-            using LoginDbContext _ctx = new();
-            IQueryable<Permesso> query =
-                _ctx.Permessi
-                    .AsNoTracking()
-                    .Where(p => p.OperatoreId == CodiceOperatore);
-
-            return await query.Select(PermessoMapper.ToPostazioneXC).ToListAsync();
-        }
-
-        private async Task<List<SettoreXC>> SelectSettoriX(int CodicePostazione)
+        private async Task<List<PostazioneXC>> ListPostazioniByOperatore(int CodiceOperatore, CancellationToken ct)
         {
             using LoginDbContext _ctx = new();
-            IQueryable<Reparto> query =
-                _ctx.Reparti
-                    .AsNoTracking()
-                    .Where(p => p.PostazioneId == CodicePostazione);
-
-            return await query.Select(RepartoMapper.ToSettoreXC).ToListAsync();
-
+            return await _ctx.Permessi
+                        .AsNoTracking()
+                        .Where(p => p.OperatoreId == CodiceOperatore)
+                        .Select(PermessoMapper.ToPostazioneXC)
+                        .ToListAsync(ct); // <--- Passiamo il token a EF
         }
 
-        private async Task<List<TariffaXC>> SelectTariffeX(int CodiceSettore)
+        private async Task<List<SettoreXC>> SelectSettoriX(int CodicePostazione, CancellationToken ct)
         {
             using LoginDbContext _ctx = new();
-            IQueryable<Listino> query =
-                _ctx.Listini
-                   .AsNoTracking()
-                   .Where(p => p.SettoreId == CodiceSettore);
-
-            return await query.Select(ListinoMapper.ToTariffaXC).ToListAsync();
-
+            return await _ctx.Reparti
+                        .AsNoTracking()
+                        .Where(p => p.PostazioneId == CodicePostazione)
+                        .Select(RepartoMapper.ToSettoreXC)
+                        .ToListAsync(ct); // <--- Passiamo il token a EF
         }
 
-        public async Task SaveSettings(LoginDTO dT)
+        private async Task<List<TariffaXC>> SelectTariffeX(int CodiceSettore, CancellationToken ct)
         {
+            using LoginDbContext _ctx = new();
+            return await _ctx.Listini
+                       .AsNoTracking()
+                       .Where(p => p.SettoreId == CodiceSettore)
+                       .Select(ListinoMapper.ToTariffaXC)
+                       .ToListAsync(ct); // <--- Passiamo il token a EF
+        }
 
-            await Task.Run(async () =>
+        public async Task SaveSettings(LoginDTO dT, CancellationToken ct = default)
+        {
+            // 1. Rimosso Task.Run: le chiamate sotto sono già asincrone.
+            // Usiamo il token 'ct' per rendere l'intera catena interrompibile.
+
+            OperatoreXC XOperatore = Create<OperatoreXC>.Instance();
+
+            XOperatore.IDOPERATORE = dT.Id;
+            XOperatore.NOMEOPERATORE = dT.NomeOperatore;
+            XOperatore.PASSWORD = dT.Password;
+
+            // 2. Passiamo il token a ogni metodo asincrono
+            XOperatore.POSTAZIONI = await ListPostazioniByOperatore(dT.Id, ct).ConfigureAwait(false);
+
+            if (XOperatore.POSTAZIONI.Count > 0)
             {
-                OperatoreXC XOperatore = Create<OperatoreXC>.Instance();
-
-                XOperatore.IDOPERATORE = dT.Id;
-                XOperatore.NOMEOPERATORE = dT.NomeOperatore;
-                XOperatore.PASSWORD = dT.Password;
-
-                // Le tue funzioni atomiche originali, ma con ConfigureAwait
-                XOperatore.POSTAZIONI = await ListPostazioniByOperatore(dT.Id).ConfigureAwait(false);
-
-                if (XOperatore.POSTAZIONI.Count > 0)
+                foreach (var postazione in XOperatore.POSTAZIONI)
                 {
-                    foreach (var postazione in XOperatore.POSTAZIONI)
-                    {
-                        postazione.SETTORI = await SelectSettoriX(postazione.CODICEPOSTAZIONE).ConfigureAwait(false);
+                    // 3. Controllo manuale prima di ogni ciclo pesante per massima reattività
+                    ct.ThrowIfCancellationRequested();
 
-                        foreach (var settore in postazione.SETTORI)
-                        {
-                            // Evitiamo il null con l'operatore ?? []
-                            settore.TARIFFE = await SelectTariffeX(settore.CODICESETTORE).ConfigureAwait(false) ?? [];
-                        }
+                    postazione.SETTORI = await SelectSettoriX(postazione.CODICEPOSTAZIONE, ct).ConfigureAwait(false);
+
+                    foreach (var settore in postazione.SETTORI)
+                    {
+                        // Un controllo rapido anche qui se le query sono molte
+                        ct.ThrowIfCancellationRequested();
+
+                        settore.TARIFFE = await SelectTariffeX(settore.CODICESETTORE, ct).ConfigureAwait(false) ?? [];
                     }
                 }
+            }
 
-                XOperatore.GIORNATA = await GetGiornataOpen().ConfigureAwait(false);
+            XOperatore.GIORNATA = await GetGiornataOpen(ct).ConfigureAwait(false);
 
-                GlobalValuesC.MySetting = XOperatore;
-            });
+            // 4. Fondamentale: verifichiamo un'ultima volta prima di sovrascrivere le impostazioni globali
+            ct.ThrowIfCancellationRequested();
 
+            GlobalValuesC.MySetting = XOperatore;
         }
 
-        private async Task<GiornataXC?> GetGiornataOpen()
+
+        private async Task<GiornataXC?> GetGiornataOpen(CancellationToken ct)
         {
             using LoginDbContext _ctx = new();
-            IQueryable<Giornata> query = _ctx.Giornate
-                                            .AsNoTracking()
-                                            .Where(x => x.Aperta == true);
-
-            return await query.Select(GiornataMapper.ToGiornataXC).FirstOrDefaultAsync();
-
+            return await _ctx.Giornate
+                            .AsNoTracking()
+                            .Where(x => x.Aperta == true)
+                            .Select(GiornataMapper.ToGiornataXC)
+                            .FirstOrDefaultAsync(ct); // <--- Passiamo il token a EF
         }
     }
 }

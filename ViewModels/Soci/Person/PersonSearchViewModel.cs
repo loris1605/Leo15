@@ -1,42 +1,47 @@
-﻿using Models.Entity;
+﻿using DTO.Entity;
+using DTO.Repository;
+using DynamicData;
 using Models.Repository;
 using ReactiveUI;
 using SysNet;
 using SysNet.Converters;
+using System.Diagnostics;
+using System.Reactive;
 using System.Reactive.Disposables.Fluent;
 using System.Reactive.Linq;
+using ViewModels.BindableObjects;
 
 namespace ViewModels
 {
     public partial class PersonSearchViewModel : PersonInputBase
     {
-        private PersonR Q { get; set; }
+        private IPersonRepository Q;
 
-        public PersonSearchViewModel(IScreen host) : base(host)
+        public PersonSearchViewModel(IScreen host, IPersonRepository personRepository) : base(host)
         {
             Titolo = "Trova Socio";
-            Q = Create<PersonR>.Instance();
+            
 
             this.WhenActivated(d =>
             {
-                OnFocus(CognomeFocus).FireAndForget();
+                SetFocus(CognomeFocus);
 
                 this.WhenAnyValue(x => x.AnagraficaChecked)
                     .Where(value => value == true) // Filtra: procedi solo se è true
                     .ObserveOn(RxApp.MainThreadScheduler) // Assicurati di essere sul thread UI
-                    .Subscribe(_ => OnFocus(CognomeFocus).FireAndForget())
+                    .Subscribe(_ => SetFocus(CognomeFocus))
                     .DisposeWith(d);
 
                 this.WhenAnyValue(x => x.SocioChecked)
                     .Where(value => value == true) // Filtra: procedi solo se è true
                     .ObserveOn(RxApp.MainThreadScheduler) // Assicurati di essere sul thread UI
-                    .Subscribe(_ => OnFocus(SocioFocus).FireAndForget())
+                    .Subscribe(_ => SetFocus(SocioFocus))
                     .DisposeWith(d);
 
                 this.WhenAnyValue(x => x.TesseraChecked)
                     .Where(value => value == true) // Filtra: procedi solo se è true
                     .ObserveOn(RxApp.MainThreadScheduler) // Assicurati di essere sul thread UI
-                    .Subscribe(_ => OnFocus(TesseraFocus).FireAndForget())
+                    .Subscribe(_ => SetFocus(TesseraFocus))
                     .DisposeWith(d);
 
 
@@ -47,15 +52,16 @@ namespace ViewModels
 
         protected override void OnFinalDestruction()
         {
-            Q?.Dispose();
             Q = null;
+            DataSource = null;
         }
 
         protected override async Task OnLoading()
         {
             ResetAllCombos();
             AnagraficaChecked = true;
-            await OnFocus(CognomeFocus);
+            SetFocus(CognomeFocus);
+            await Task.CompletedTask;
         }
 
         protected async override Task OnSaving()
@@ -63,13 +69,13 @@ namespace ViewModels
             // se il numero di tessera è diverso da zero esegue la ricerca solo sulla tessera
             if (TesseraChecked && GetNumeroTessera != "")
             {
-                int personid = await Q.FirstIdPersonByNumeroTessera(NumeroTessera);
+                int personid = await Q.FirstIdPersonByNumeroTessera(GetNumeroTessera);
 
                 if (personid != 0) { OnBack(personid); }
                 else
                 {
                     InfoLabel = "Nessuna persona trovata";
-                    OnFocus(TesseraFocus).FireAndForget();
+                    SetFocus(TesseraFocus);
                 }
                 return;
             }
@@ -77,13 +83,13 @@ namespace ViewModels
             // se il numero socio è diverso da zero esegue la ricerca solo sul socio
             if (SocioChecked && GetNumeroSocio != "")
             {
-                int personid = await Q.FirstIdPersonByNumeroSocio(NumeroSocio);
+                int personid = await Q.FirstIdPersonByNumeroSocio(GetNumeroSocio);
 
                 if (personid != 0) { OnBack(personid); }
                 else
                 {
                     InfoLabel = "Nessuna persona trovata";
-                    OnFocus(SocioFocus).FireAndForget();
+                    SetFocus(SocioFocus);
                 }
                 return;
             }
@@ -100,75 +106,84 @@ namespace ViewModels
 
         private async Task StartSearch(int cognomeFlag, int nomeFlag, int natoilFlag)
         {
+            var ct = CancellationToken.None;
+            List<PersonDTO> dbData;
+
+            try
+            {
+                if (cognomeFlag > 0)
+                {
+                    
+
+                    if (cognomeFlag == 1) dbData = await Q.LoadByCognomeExact(GetCognome);
+                    else if (cognomeFlag == 2) dbData = await Q.LoadStartByCognome(GetCognome);
+                    else dbData = await Q.LoadContainsCognome(GetCognome);
+                    
+                    DataSource = dbData.Select(dto => new PersonMap(dto)).ToList();
+
+                    if (DataSource == null || DataSource.Count == 0)
+                    {
+                        InfoLabel = "Nessuna persona trovata";
+                        SetFocus(CognomeFocus);
+                        return;
+                    }
+
+                    //dopo il nome
+                    EstractNome();
+
+                    if (DataSource == null || DataSource.Count == 0)
+                    {
+                        InfoLabel = "Nessuna persona trovata";
+                        SetFocus(NomeFocus);
+                        return;
+                    }
+
+                    //dopo la data di nascita
+                    EstractNatoil();
+
+                }
+                else if (nomeFlag > 0)
+                {
+                    if (nomeFlag == 1) dbData = await Q.LoadByNomeExact(GetNome);
+                    else if (nomeFlag == 2) dbData = await Q.LoadStartByNome(GetNome);
+                    else dbData = await Q.LoadContainsNome(GetNome);
+
+                    DataSource = dbData.Select(dto => new PersonMap(dto)).ToList();
+
+                    if (DataSource == null || DataSource.Count == 0)
+                    {
+                        InfoLabel = "Nessuna persona trovata";
+                        SetFocus(NomeFocus);
+                        return;
+                    }
+
+                    //dopo la data di nascita
+                    EstractNatoil();
+
+                }
+
+                else if (natoilFlag > 0)
+                {
+                    if (natoilFlag == 1) dbData = await Q.LoadByNatoilExact(Natoil);
+                    else if (natoilFlag == 2) dbData = await Q.LoadMinorNato(Natoil);
+                    else dbData = await Q.LoadMaiorNato(Natoil);
+
+                    DataSource = dbData.Select(dto => new PersonMap(dto)).ToList();
+
+                }
+
+                if (DataSource == null || DataSource.Count == 0)
+                {
+                    InfoLabel = "Nessuna persona trovata";
+                    SetFocus(CognomeFocus);
+                    return;
+                }
+            }
+            catch (OperationCanceledException) { Debug.WriteLine("Caricamento Person Search Annullato."); }
+            catch (Exception ex) { Debug.WriteLine($"Errore: {ex.Message}"); }
+            
             //1.Caricamento iniziale dei dati(scegli la query più restrittiva per performance)
-            if (cognomeFlag > 0)
-            {
-                if (cognomeFlag == 1)
-                    DataSource = await Q.LoadByCognomeExact(Cognome);
-                else if (cognomeFlag == 2)
-                    DataSource = await Q.LoadStartByCognome(Cognome);
-                else
-                    DataSource = await Q.LoadContainsCognome(Cognome);
-
-                if (DataSource == null || DataSource.Count == 0)
-                {
-                    InfoLabel = "Nessuna persona trovata";
-                    await OnFocus(CognomeFocus);
-                    return;
-                }
-
-                //dopo il nome
-                EstractNome();
-
-                if (DataSource == null || DataSource.Count == 0)
-                {
-                    InfoLabel = "Nessuna persona trovata";
-                    await OnFocus(NomeFocus);
-                    return;
-                }
-
-                //dopo la data di nascita
-                EstractNatoil();
-
-            }
-
-            else if (nomeFlag > 0)
-            {
-                if (nomeFlag == 1)
-                    DataSource = await Q.LoadByNomeExact(Nome);
-                else if (nomeFlag == 2)
-                    DataSource = await Q.LoadStartByNome(Nome);
-                else
-                    DataSource = await Q.LoadContainsNome(Nome);
-
-                if (DataSource == null || DataSource.Count == 0)
-                {
-                    InfoLabel = "Nessuna persona trovata";
-                    await OnFocus(NomeFocus);
-                    return;
-                }
-
-                //dopo la data di nascita
-                EstractNatoil();
-
-            }
-
-            else if (natoilFlag > 0)
-            {
-                if (natoilFlag == 1)
-                    DataSource = await Q.LoadByNatoilExact(Natoil);
-                else if (natoilFlag == 2)
-                    DataSource = await Q.LoadMinorNato(Natoil);
-                else
-                    DataSource = await Q.LoadMaiorNato(Natoil);
-            }
-
-            if (DataSource == null || DataSource.Count == 0)
-            {
-                InfoLabel = "Nessuna persona trovata";
-                await OnFocus(CognomeFocus);
-                return;
-            }
+            
 
             OnBackFiltered();
 
@@ -184,15 +199,15 @@ namespace ViewModels
         {
             if (NomeSelectedValue == 1) // uguale a
             {
-                Estract(x => x.Nome.Equals(Nome, StringComparison.CurrentCultureIgnoreCase));
+                Estract(x => x.Nome.Equals(GetNome, StringComparison.CurrentCultureIgnoreCase));
             }
             else if (NomeSelectedValue == 2) // inizia con
             {
-                Estract(x => x.Nome.StartsWith(Nome, StringComparison.CurrentCultureIgnoreCase));
+                Estract(x => x.Nome.StartsWith(GetNome, StringComparison.CurrentCultureIgnoreCase));
             }
             else if (NomeSelectedValue == 3) // che contiene
             {
-                Estract(x => x.Nome.Contains(Nome, StringComparison.CurrentCultureIgnoreCase));
+                Estract(x => x.Nome.Contains(GetNome, StringComparison.CurrentCultureIgnoreCase));
             }
         }
 

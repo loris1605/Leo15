@@ -13,7 +13,7 @@
              x:Class="Views.ConnectionView">
 
     <!-- Main Grid -->
-    <Grid >
+    <Grid x:Name="RootGrid">
 		
         <Grid.RowDefinitions>
             <RowDefinition Height="*"/>

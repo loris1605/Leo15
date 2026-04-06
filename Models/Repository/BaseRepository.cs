@@ -34,14 +34,18 @@ namespace Models.Repository
             return await _ctx.Set<Ttable>().AnyAsync(p => p.Nome == dT.Nome);
         }
 
-        public async Task<List<Ttable>> GetAll(Expression<Func<Ttable, bool>>? predicate = null,
-                                                Expression<Func<Ttable, object>>? orderBy = null)
+        public async Task<List<TResult>> GetAll<TResult>(
+                        Expression<Func<Ttable, TResult>> selector, // Necessario per OperatoreMapper.ToLoginDto
+                        Expression<Func<Ttable, bool>>? predicate = null,
+                        CancellationToken ct = default)
         {
             using TContext _ctx = Create<TContext>.Instance();
-            return await _ctx.Set<Ttable>()
-                         .Where(predicate!)
-                         .OrderBy(orderBy!)
-                         .ToListAsync();
+            IQueryable<Ttable> query = _ctx.Set<Ttable>().AsNoTracking();
+
+            if (predicate != null)
+                query = query.Where(predicate);
+
+            return await query.Select(selector).ToListAsync(ct);
         }
 
         public async Task<bool> EsisteNomeUpd(IMap dT)

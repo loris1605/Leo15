@@ -18,10 +18,7 @@ namespace ViewModels
         public ReactiveCommand<string, Unit> NavigateCommand { get; }
         public ReactiveCommand<string, Unit> CassaCommand { get; }
         public ReactiveCommand<Unit, Unit> LogoutCommand { get; }
-        public ReactiveCommand<Unit, Unit> ConnectionCommand { get; }
-        public ReactiveCommand<Unit,Unit> SociCommand { get; }
-        public ReactiveCommand<Unit, Unit> ConfigurazioneCommand { get; }
-
+                
         
         public MenuViewModel(IScreen host,
                              IMenuRepository menuRepository = null) : base(host)
@@ -46,20 +43,14 @@ namespace ViewModels
 
             CassaCommand = ReactiveCommand.Create<string>(param => OnCassa(param));
             LogoutCommand = ReactiveCommand.CreateFromTask(GoToLogin);
-            ConnectionCommand = ReactiveCommand.CreateFromTask(GoToConnection);
-            SociCommand = ReactiveCommand.CreateFromTask(GoToSoci);
-            ConfigurazioneCommand = ReactiveCommand.CreateFromTask(GoToConfigurazione);
-
-            
+                                   
 
             this.WhenActivated(d => 
             {
                 LogoutCommand.DisposeWith(d);
                 CassaCommand.DisposeWith(d);
                 NavigateCommand.DisposeWith(d);
-                ConnectionCommand.DisposeWith(d);
-                ConfigurazioneCommand.DisposeWith(d);
-
+                               
             });
                 
         }
@@ -68,7 +59,6 @@ namespace ViewModels
         {
             CassaPostazioniDataSource?.Clear(); // Svuota la lista
             CassaPostazioniDataSource = null;   // Rimuovi il riferimento
-            Q?.Dispose();
             Q = null;
             base.OnFinalDestruction();
         }
@@ -161,20 +151,7 @@ namespace ViewModels
             await HostScreen.Router.NavigateAndReset.Execute(new LoginViewModel(HostScreen));
         }
 
-        private async Task GoToConnection()
-        {
-            await HostScreen.Router.NavigateAndReset.Execute(new ConnectionViewModel(HostScreen));
-        }
-
-        private async Task GoToSoci()
-        {
-            await HostScreen.Router.NavigateAndReset.Execute(new SociViewModel(HostScreen));
-        }
-
-        private async Task GoToConfigurazione()
-        {
-            await HostScreen.Router.NavigateAndReset.Execute(new ConfigurazioneViewModel(HostScreen));
-        }
+        
     }
 
     public partial class MenuViewModel

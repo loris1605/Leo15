@@ -10,12 +10,36 @@ using System.Reactive.Disposables.Fluent;
 using System.Reactive.Linq;
 using ViewModels;
 
-namespace Leonardo;
+namespace Views;
 
-public partial class PersonInputView : ReactiveUserControl<PersonInputBase>
+public partial class PersonInputView : BaseUserControl<PersonInputBase>,
+                                        IViewFor<PersonAddViewModel>,
+                                        IViewFor<PersonUpdViewModel>,
+                                        IViewFor<PersonDelViewModel>
 {
+    protected override string RootControlName => "MainGrid";
+
+    PersonAddViewModel? IViewFor<PersonAddViewModel>.ViewModel
+    {
+        get => ViewModel as PersonAddViewModel;
+        set => ViewModel = value;
+    }
+
+    PersonUpdViewModel? IViewFor<PersonUpdViewModel>.ViewModel
+    {
+        get => ViewModel as PersonUpdViewModel;
+        set => ViewModel = value;
+    }
+
+    PersonDelViewModel? IViewFor<PersonDelViewModel>.ViewModel
+    {
+        get => ViewModel as PersonDelViewModel;
+        set => ViewModel = value;
+    }
+
     public PersonInputView()
     {
+
         InitializeComponent();
 
         this.WhenActivated(d =>
@@ -102,13 +126,13 @@ public partial class PersonInputView : ReactiveUserControl<PersonInputBase>
 
             //Bind Cognome to TextBox
             this.Bind(ViewModel,
-                      vm => vm.Cognome,
+                      vm => vm.BindingT.Cognome,
                       v => v.CognomeBox.Text)
                 .DisposeWith(d);
 
             //Bind Nome to TextBox
             this.Bind(ViewModel,
-                      vm => vm.Nome,
+                      vm => vm.BindingT.Nome,
                       v => v.NomeBox.Text)
                 .DisposeWith(d);
 
@@ -120,13 +144,13 @@ public partial class PersonInputView : ReactiveUserControl<PersonInputBase>
 
             //Bind Codice Socio to TextBox
             this.Bind(ViewModel,
-                      vm => vm.NumeroSocio,
+                      vm => vm.BindingT.NumeroSocio,
                       v => v.CodiceSocioBox.Text)
                 .DisposeWith(d);
 
             //Bind Numero Tessera to TextBox
             this.Bind(ViewModel,
-                      vm => vm.NumeroTessera,
+                      vm => vm.BindingT.NumeroTessera,
                       v => v.NumeroTesseraBox.Text)
                 .DisposeWith(d);
 
@@ -171,24 +195,6 @@ public partial class PersonInputView : ReactiveUserControl<PersonInputBase>
             .DisposeWith(d);
 
             #endregion
-
-            #region Commands
-
-            this.Bind(ViewModel,
-                    vm => vm.EscPressedCommand,
-                    v => v.InputSaveBox.ExitCommand).DisposeWith(d);
-
-            this.Bind(ViewModel,
-                vm => vm.SaveCommand,
-                v => v.InputSaveBox.SaveCommand).DisposeWith(d);
-
-
-            #endregion
-
-            Disposable.Create(() => {
-                this.DataContext = null;
-                System.Diagnostics.Debug.WriteLine(">>> [VIEW] PersonInputView deattivata, DataContext rimosso.");
-            }).DisposeWith(d);
 
         });
     }

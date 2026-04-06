@@ -12,7 +12,7 @@ namespace Models.Repository
     {
         public TariffaR() : base() { }
 
-        public async Task<List<TariffaMap>> Load(int id)
+        public async Task<List<TariffaMap>> Load(int id, CancellationToken ctk = default)
         {
             if (id > 0)
                 return await LoadTariffe(x => x.Id == id);
@@ -21,7 +21,7 @@ namespace Models.Repository
 
         }
 
-        public Task<List<TariffaMap>> LoadByModel(object model) =>
+        public Task<List<TariffaMap>> LoadByModel(object model, CancellationToken ctk = default) =>
                 Task.FromResult((List<TariffaMap>)model);
 
         public async Task<List<TariffaMap>> LoadTariffe(Expression<Func<Tariffa, bool>> predicate)

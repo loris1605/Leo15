@@ -5,11 +5,12 @@
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              xmlns:vm="using:ViewModels"
              xmlns:ui="using:ControlStyles"
+             xmlns:lc="using:Leonardo"
              xmlns:r="using:ReactiveUI.Avalonia"
              KeyboardNavigation.TabNavigation="Cycle"
              Background="Transparent"
              x:CompileBindings="False"
-             x:Class="Leonardo.PersonSearchView">
+             x:Class="Views.PersonSearchView">
 
     <Grid x:Name="MainGrid" >
     
@@ -235,58 +236,11 @@
 
                 </TextBlock>
 
-                <Grid x:Name="ButtonGrid"
-                             Grid.Row="3"
-                             Margin="20">
-                
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="*"/>
-                    </Grid.ColumnDefinitions>
-
-                    <ui:UiButton Grid.Column="1"
-                                 x:Name="SalvaButton"
-                                 IsTabStop="False"
-                                 Margin="20,2" 
-                                 FontSize="14"
-                                 Height="40"
-                                 VerticalAlignment="Top"
-                                 VerticalContentAlignment="Center"
-                                 ToolTipText="SALVA SUL DATABASE">
-
-                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                                <Image Source="avares://ControlStyles/Resources/SaveIcon.png" Width="34" Height="34" />
-                                <TextBlock Text=" Salva " 
-                                           VerticalAlignment="Center"
-                                           FontSize="16"/>
-                            </StackPanel>
-
-                    </ui:UiButton>
-
-                    <ui:UiButton Grid.Column="3"
-                                 x:Name="EsciButton"
-                                 IsTabStop="False"
-                                 Margin="20,2" 
-                                 FontSize="14"
-                                 Height="40"
-                                 VerticalAlignment="Top"
-                                 VerticalContentAlignment="Center"
-                                 ToolTipText="ANNULLA INPUT">
-
-                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                                <Image Source="avares://ControlStyles/Resources/ExitIcon.png" Width="34" Height="34" />
-                                <TextBlock Text=" Esci " 
-                                           VerticalAlignment="Center"
-                                           FontSize="16"/>
-                            </StackPanel>
-
-                    </ui:UiButton>
-
-                
-                </Grid>
+                <lc:InputSaveBox x:Name="InputSaveBox"
+                                 Grid.Row="3"
+                                 Margin="20"
+                                 SaveCommand="{Binding SaveCommand}"
+                                 ExitCommand="{Binding EscPressedCommand}"/>
             
             </Grid>
 

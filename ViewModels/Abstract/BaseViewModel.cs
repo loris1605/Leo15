@@ -1,6 +1,7 @@
 ﻿using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using ReactiveUI;
+using SysNet.Converters;
 using System.Diagnostics;
 using System.Reactive;
 using System.Reactive.Disposables;
@@ -107,6 +108,13 @@ namespace ViewModels
                 lifetime.Shutdown();
             
         }
+
+        protected void SetFocus(Interaction<Unit, Unit> focusInteraction, int delay = 200)
+        {
+            // Chiama il tuo metodo esistente passando Unit.Default come input
+            TriggerInteraction(focusInteraction, Unit.Default, delay).FireAndForget();
+        }
+
 
         protected async Task TriggerInteraction<TInput, TOutput>(
         Interaction<TInput, TOutput> interaction,

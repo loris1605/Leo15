@@ -1,4 +1,5 @@
-﻿using Models.Repository;
+﻿using DTO.Repository;
+using Models.Repository;
 using ReactiveUI;
 using SysNet;
 using SysNet.Converters;
@@ -9,7 +10,7 @@ namespace ViewModels
 {
     public class CodiceSocioAddViewModel : CodiceSocioInputBase
     {
-        private PersonR Q { get; set; }
+        private PersonRepository Q { get; set; }
         private readonly int _idDaModificare;
         
         public CodiceSocioAddViewModel(IScreen host, int idperson) : base(host)
@@ -21,7 +22,7 @@ namespace ViewModels
             FieldsVisibile = true;
             FieldsEnabled = true;
 
-            Q = Create<PersonR>.Instance();
+            Q = Create<PersonRepository>.Instance();
 
             OnNumeroSocioFocus().FireAndForget();
 

@@ -3,71 +3,31 @@ using Avalonia.Controls;
 using Avalonia.Threading;
 using ReactiveUI;
 using ReactiveUI.Avalonia;
+using System.Diagnostics;
 using System.Reactive.Disposables;
 using System.Reactive.Disposables.Fluent;
 using ViewModels;
 
-namespace Leonardo;
+namespace Views;
 
-public partial class PersonGroupView : ReactiveUserControl<PersonGroupViewModel>
+public partial class PersonGroupView : BaseUserControl<PersonGroupViewModel>
 {
+    protected override string RootControlName => "MainGrid";
+
     public PersonGroupView()
     {
         InitializeComponent();
 
         this.WhenActivated(d =>
         {
-            if (SociDataGrid != null)
+
+            SociDataGrid.LoadingRowGroup += OnLoadingRowGroup;
+
+            Disposable.Create(() =>
             {
-                SociDataGrid.LoadingRowGroup += OnLoadingRowGroup;
-
-                Disposable.Create(() => SociDataGrid.LoadingRowGroup -= OnLoadingRowGroup)
-                    .DisposeWith(d);
-            }
-           
-        
-            // Esc Key Pressed
-
-
-            // Enter Key Pressed
-
-            #region TwoWay
-
-            //Bind PasswordText to TextBox
-
-
-            #endregion
-
-            #region OneWay
-
-            this.OneWayBind(ViewModel,
-                    vm => vm.EnabledButton,
-                    v => v.CrudBar.UpdButton.IsEnabled,
-                    l => l)
-            .DisposeWith(d);
-
-            this.OneWayBind(ViewModel,
-                    vm => vm.EnabledButton,
-                    v => v.CrudBar.DelButton.IsEnabled,
-                    l => l)
-            .DisposeWith(d);
-
-            this.OneWayBind(ViewModel,
-                    vm => vm.EnabledButton,
-                    v => v.CodiceSocio.IsEnabled,
-                    l => l)
-            .DisposeWith(d);
-
-            #endregion
-
-            #region Commands
-
-
-            #endregion
-
-            Disposable.Create(() => {
-                this.DataContext = null;
-                System.Diagnostics.Debug.WriteLine(">>> [VIEW] PersonGroupView deattivata, DataContext rimosso.");
+                SociDataGrid.LoadingRowGroup -= OnLoadingRowGroup;
+                // Scolleghiamo i dati per liberare la memoria della griglia subito
+                SociDataGrid.ItemsSource = null;
             }).DisposeWith(d);
 
         });
@@ -81,7 +41,7 @@ public partial class PersonGroupView : ReactiveUserControl<PersonGroupViewModel>
             // Il secondo parametro 'false' indica "NON espandere" -> quindi CHIUDI
             Dispatcher.UIThread.Post(() =>
             {
-                grid.CollapseRowGroup(group, true);
+                grid.CollapseRowGroup(group, false);
             }, DispatcherPriority.Render);
         }
     }

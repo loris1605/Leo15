@@ -22,12 +22,14 @@
                              FontSize="24"/> 
 
                 <ui:UiButton x:Name="BackButton"
+                             Margin="20,15"
                              Grid.Column="1"
                              Command="{Binding #Root.ExitCommand}">
                     <StackPanel Orientation="Horizontal" Spacing="10">
                         <Image Source="avares://ControlStyles/Resources/ExitIcon.png" 
                                Width="44" Height="44" />
                         <TextBlock Text="{Binding #Root.ButtonText}"
+                                   Margin="5"
                                    VerticalAlignment="Center"/>
                     </StackPanel>
                 </ui:UiButton>  

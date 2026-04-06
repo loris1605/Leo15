@@ -10,9 +10,9 @@
              KeyboardNavigation.TabNavigation="Cycle"
              Background="LightSteelBlue"
              x:DataType="vm:SociViewModel"
-             x:Class="Leonardo.SociView">
+             x:Class="Views.SociView">
 
-    <Grid >
+    <Grid x:Name="RootGrid">
     
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/> 
@@ -29,6 +29,7 @@
 
         <lc:TitleView TitoloPagina="GESTIONE SOCI"
                       ButtonText="Esci"
+                      ExitCommand="{Binding EsciCommand}"
                       x:Name="Title"/>
         
         <Grid x:Name="MainGrid"

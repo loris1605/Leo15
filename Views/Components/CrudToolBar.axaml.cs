@@ -4,10 +4,12 @@ using ReactiveUI.Avalonia;
 using System.Reactive;
 using ViewModels;
 
-namespace Leonardo;
+namespace Views;
 
-public partial class CrudToolBar : ReactiveUserControl<BaseViewModel>
+public partial class CrudToolBar : BaseUserControl<BaseViewModel>
 {
+    protected override string RootControlName => "MainRoot";
+
     public CrudToolBar()
     {
         InitializeComponent();

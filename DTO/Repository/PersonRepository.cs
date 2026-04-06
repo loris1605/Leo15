@@ -1,0 +1,616 @@
+﻿using DTO.Entity;
+using DTO.Mapper;
+using Microsoft.EntityFrameworkCore;
+using Models.Context;
+using Models.Entity;
+using Models.Projections;
+using Models.Repository;
+using Models.Tables;
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
+using System.Linq.Expressions;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace DTO.Repository
+{
+    public interface IPersonRepository
+    {
+        Task<int> Add(PersonDTO map, CancellationToken ctk = default);
+        Task<bool> Del(PersonDTO map, CancellationToken ctk = default);
+        Task<bool> DelSocio(PersonDTO map, CancellationToken ctk = default);
+        Task<bool> DelTessera(PersonDTO map, CancellationToken ctk = default);
+        Task<bool> EsisteCodiceUnivoco(string codiceunivoco, CancellationToken ctk = default);
+        Task<bool> EsisteCodiceUnivoco(string codiceunivoco, int id, CancellationToken ctk = default);
+        Task<bool> EsisteNumeroSocio(string numeroSocio, CancellationToken ctk = default);
+        Task<bool> EsisteNumeroSocioUpd(PersonMap dT, CancellationToken ctk = default);
+        Task<bool> EsisteNumeroTessera(string numeroTessera, CancellationToken ctk = default);
+        Task<bool> EsisteNumeroTesseraUpd(PersonDTO dT, CancellationToken ctk = default);
+        Task<int> FirstIdPersonByNumeroSocio(string numeroSocio, CancellationToken ctk = default);
+        Task<int> FirstIdPersonByNumeroTessera(string numeroTessera, CancellationToken ctk = default);
+        Task<PersonDTO> FirstPerson(int id, CancellationToken ctk = default);
+        Task<PersonDTO> FirstSocio(int idSocio, CancellationToken ctk = default);
+        Task<PersonDTO> FirstTessera(int idTessera, CancellationToken ctk = default);
+        Task<bool> HasCodiciSocio(int idperson, CancellationToken ctk = default);
+        Task<List<PersonDTO>> Load(int id, CancellationToken ctk = default);
+        Task<List<PersonDTO>> LoadByCognomeExact(string cognome, CancellationToken ctk = default);
+        Task<List<PersonDTO>> LoadByModel(object model, CancellationToken ctk = default);
+        Task<List<PersonDTO>> LoadByNatoilExact(int natoil, CancellationToken ctk = default);
+        Task<List<PersonDTO>> LoadByNomeExact(string nome, CancellationToken ctk = default);
+        Task<List<PersonDTO>> LoadContainsCognome(string cognome, CancellationToken ctk = default);
+        Task<List<PersonDTO>> LoadContainsNome(string nome, CancellationToken ctk = default);
+        Task<List<PersonDTO>> LoadMaiorNato(int natoil, CancellationToken ctk = default);
+        Task<List<PersonDTO>> LoadMinorNato(int natoil, CancellationToken ctk = default);
+        Task<List<PersonDTO>> LoadStartByCognome(string cognome, CancellationToken ctk = default);
+        Task<List<PersonDTO>> LoadStartByNome(string nome, CancellationToken ctk = default);
+        Task<bool> Upd(PersonDTO map, CancellationToken ctk = default);
+        Task<bool> UpdSocio(PersonDTO map, CancellationToken ctk = default);
+        Task<bool> UpdTessera(PersonDTO map, CancellationToken ctk = default);
+    }
+
+    public class PersonRepository : BaseRepository<PeopleDbContext, Person>, IPersonRepository
+    {
+        //da controllare
+        public Task<List<PersonDTO>> LoadByModel(object model, CancellationToken ctk = default)
+        {
+            if (ctk.IsCancellationRequested)
+                return Task.FromCanceled<List<PersonDTO>>(ctk);
+
+            return Task.FromResult((List<PersonDTO>)model);
+        }
+
+        private static async Task<List<PersonDTO>> LoadPeople(Expression<Func<Person, bool>> predicate,
+                                              CancellationToken ctk = default)
+        {
+            using PeopleDbContext _ctx = new();
+
+            var query = _ctx.People
+                .AsNoTracking()
+                .Where(predicate)
+                .SelectMany(
+                    person => person.Soci.DefaultIfEmpty(),
+                    (person, socio) => new { person, socio })
+                .SelectMany(
+                    combined => combined.socio!.Tessere.DefaultIfEmpty(),
+                    (combined, tessera) => new { combined.person, combined.socio, tessera });
+
+            return await query
+                .Select(x => new PersonDTO // <--- Questa viene tradotta in SQL
+                {
+                    Id = x.person.Id,
+                    Cognome = x.person.SurName ?? string.Empty,
+                    Nome = x.person.FirstName ?? string.Empty,
+                    Natoil = x.person.Natoil,
+
+                    
+                    CodiceSocio = x.socio != null ? x.socio.Id : 0,
+                    NumeroSocio = x.socio != null ? x.socio.NumeroSocio : string.Empty,
+
+                    CodiceTessera = x.tessera != null ? x.tessera.Id : 0,
+                    NumeroTessera = x.tessera != null ? x.tessera.NumeroTessera : string.Empty,
+                    Scadenza = x.tessera != null ? x.tessera.Scadenza : 0
+                })
+                .Take(100)
+                .ToListAsync(ctk);
+        }
+
+
+        public async Task<List<PersonDTO>> Load(int id, CancellationToken ctk = default)
+        {
+            //IQueryable<Person> query = _ctx.People.AsNoTracking();
+
+            if (id > 0)
+                return await LoadPeople(x => x.Id == id, ctk);
+            else
+                return await LoadPeople(p => p.Id > 0, ctk);
+
+        }
+
+        public async Task<List<PersonDTO>> LoadByCognomeExact(string cognome, CancellationToken ctk = default) =>
+                  await LoadPeople(p => p.SurName == cognome, ctk);
+
+        public async Task<List<PersonDTO>> LoadStartByCognome(string cognome, CancellationToken ctk = default) =>
+                   await LoadPeople(p => p.SurName.StartsWith(cognome), ctk);
+
+        public async Task<List<PersonDTO>> LoadContainsCognome(string cognome, CancellationToken ctk = default) =>
+                   await LoadPeople(p => p.SurName.Contains(cognome), ctk);
+
+        public async Task<List<PersonDTO>> LoadByNomeExact(string nome, CancellationToken ctk = default) =>
+                   await LoadPeople(p => p.FirstName == nome, ctk);
+
+        public async Task<List<PersonDTO>> LoadStartByNome(string nome, CancellationToken ctk = default) =>
+                   await LoadPeople(p => p.FirstName.StartsWith(nome), ctk);
+
+        public async Task<List<PersonDTO>> LoadContainsNome(string nome, CancellationToken ctk = default) =>
+                   await LoadPeople(p => p.FirstName.Contains(nome), ctk);
+
+        public async Task<List<PersonDTO>> LoadByNatoilExact(int natoil, CancellationToken ctk = default) =>
+                   await LoadPeople(p => p.Natoil == natoil, ctk);
+
+        public async Task<List<PersonDTO>> LoadMinorNato(int natoil, CancellationToken ctk = default) =>
+                   await LoadPeople(p => p.Natoil <= natoil, ctk);
+
+        public async Task<List<PersonDTO>> LoadMaiorNato(int natoil, CancellationToken ctk = default) =>
+                   await LoadPeople(p => p.Natoil >= natoil, ctk);
+
+        public async Task<PersonDTO> FirstPerson(int id, CancellationToken ctk = default)
+        {
+            using PeopleDbContext _ctx = new();
+
+            var result = await _ctx.People
+                .AsNoTracking()
+                .Where(p => p.Id == id)
+                .Select(p => new PersonDTO // Proiezione esplicita (Traducibile in SQL)
+                {
+                    Id = p.Id,
+                    Nome = p.FirstName ?? string.Empty,
+                    Cognome = p.SurName ?? string.Empty,
+                    Natoil = p.Natoil,
+                    CodiceUnivoco = p.UniqueParam ?? string.Empty,
+
+                    // Aggiungi qui solo i campi necessari per il "Simple" DTO
+                })
+                .FirstOrDefaultAsync(ctk);
+
+            ctk.ThrowIfCancellationRequested();
+
+            return result ?? new PersonDTO();
+        }
+
+        public async Task<PersonDTO> FirstSocio(int idSocio, CancellationToken ctk = default)
+        {
+            using PeopleDbContext _ctx = new();
+            var result = await _ctx.Soci
+                .AsNoTracking()
+                .Where(s => s.Id == idSocio)
+                // Partiamo dal Socio (s), carichiamo la Persona (s.Person) 
+                // e le Tessere (s.Tessere) con LEFT JOIN
+                .Select(p => new PersonDTO // Proiezione esplicita (Traducibile in SQL)
+                {
+                    Id = p.PersonId,
+                    Nome = p.Person!.FirstName ?? string.Empty,
+                    Cognome = p.Person!.SurName ?? string.Empty,
+                    Natoil = p.Person!.Natoil,
+                    CodiceUnivoco = p.Person!.UniqueParam ?? string.Empty,
+                    CodiceSocio = p.Id,
+                    NumeroSocio = p.NumeroSocio
+
+                    // Aggiungi qui solo i campi necessari per il "Simple" DTO
+                })
+                .FirstOrDefaultAsync(ctk);
+
+            ctk.ThrowIfCancellationRequested();
+
+            // Se non trova il socio, restituisce un oggetto vuoto per il binding
+            return result ?? new PersonDTO();
+        }
+
+        public async Task<PersonDTO> FirstTessera(int idTessera, CancellationToken ctk = default)
+        {
+            using PeopleDbContext _ctx = new();
+            var result = await _ctx.Tessere
+                .AsNoTracking()
+                .Where(t => t.Id == idTessera)
+                // Risaliamo alla Persona tramite il Socio (t.Socio.Person)
+                // Passiamo: (Persona, Socio, Tessera)
+                .Select(p => new PersonDTO
+                {
+                    Id = p.Socio!.PersonId,
+                    Nome = p.Socio!.Person!.FirstName ?? string.Empty,
+                    Cognome = p.Socio!.Person!.SurName ?? string.Empty,
+                    Natoil = p.Socio!.Person!.Natoil,
+                    CodiceUnivoco = p.Socio!.Person!.UniqueParam ?? string.Empty,
+                    CodiceSocio = p.SocioId,
+                    NumeroSocio = p.Socio!.NumeroSocio ?? string.Empty,
+                    CodiceTessera = p.Id,
+                    NumeroTessera = p.NumeroTessera,
+                    Scadenza = p.Scadenza
+
+                })
+                .FirstOrDefaultAsync(ctk);
+
+            ctk.ThrowIfCancellationRequested();
+
+            // Ritorna il record completo (Persona + Socio + Dati di QUESTA tessera)
+            return result ?? new PersonDTO();
+        }
+
+        public async Task<int> FirstIdPersonByNumeroTessera(string numeroTessera, CancellationToken ctk = default)
+        {
+            using PeopleDbContext _ctx = new();
+            var result = await _ctx.Tessere
+                .AsNoTracking()
+                .Where(t => t.NumeroTessera == numeroTessera)
+                .Select(t => t.Socio!.PersonId)
+                .FirstOrDefaultAsync(ctk);
+
+            ctk.ThrowIfCancellationRequested();
+
+            return result; // Se non trova nulla, ritorna 0 (default int)
+        }
+
+        public async Task<int> FirstIdPersonByNumeroSocio(string numeroSocio, CancellationToken ctk = default)
+        {
+            using PeopleDbContext _ctx = new();
+            var result = await _ctx.Soci
+                .AsNoTracking()
+                .Where(s => s.NumeroSocio == numeroSocio)
+                .Select(s => s.PersonId)
+                .FirstOrDefaultAsync(ctk);
+
+            ctk.ThrowIfCancellationRequested();
+            return result; // Se non trova nulla, ritorna 0 (default int)
+        }
+
+        public async Task<bool> HasCodiciSocio(int idperson, CancellationToken ctk = default)
+        {
+            using PeopleDbContext _ctx = new();
+            var result = await _ctx.Soci.AnyAsync(s => s.PersonId == idperson, ctk);
+
+            return result;
+
+        }
+
+        public async Task<int> Add(PersonDTO map, CancellationToken ctk = default)
+        {
+            ctk.ThrowIfCancellationRequested();
+
+            using PeopleDbContext _ctx = new();
+            // 1. Creiamo l'albero degli oggetti collegati
+            var person = new Person
+            {
+                FirstName = map.Nome ?? string.Empty,
+                SurName = map.Cognome ?? string.Empty,
+                Natoil = map.Natoil,
+                UniqueParam = map.CodiceUnivoco,
+
+                // Colleghiamo il Socio direttamente alla lista della Persona
+                Soci =
+                [
+                    new Socio
+                    {
+                        NumeroSocio = map.NumeroSocio,
+                        // Colleghiamo la Tessera direttamente al Socio
+                        Tessere =
+                        [
+                            new Tessera
+                            {
+                                NumeroTessera = map.NumeroTessera,
+                                Scadenza = map.Scadenza
+                            }
+                        ]
+                    }
+                ]
+            };
+
+            // 2. Aggiungiamo solo la "radice" (Person). EF aggiungerà i figli a cascata.
+            _ctx.People.Add(person);
+
+            ctk.ThrowIfCancellationRequested();
+
+            try
+            {
+                await _ctx.SaveChangesAsync(ctk);
+                return person.Id;
+            }
+            catch (OperationCanceledException)
+            {
+                Debug.WriteLine(">>> [INFO] Inserimento Persona annullato dall'utente.");
+                return -1;
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($">>> [ERROR] Add: {ex.InnerException?.Message ?? ex.Message}");
+                return -1;
+            }
+        }
+        public async Task<bool> Upd(PersonDTO map, CancellationToken ctk = default)
+        {
+            ctk.ThrowIfCancellationRequested();
+            using PeopleDbContext _ctx = new();
+            // 1. Cerchiamo l'entità (FindAsync è ottimo qui)
+            var person = await _ctx.People.FindAsync(map.Id, ctk);
+            if (person == null) return false;
+            // 2. Aggiorniamo le proprietà
+            person.FirstName = map.Nome ?? string.Empty;
+            person.SurName = map.Cognome ?? string.Empty;
+            person.Natoil = map.Natoil;
+            person.UniqueParam = map.CodiceUnivoco;
+
+            ctk.ThrowIfCancellationRequested();
+
+            try
+            {
+                await _ctx.SaveChangesAsync(ctk);
+                return true;
+            }
+            catch (OperationCanceledException)
+            {
+                Debug.WriteLine(">>> [INFO] Inserimento Persona annullato dall'utente.");
+                return false;
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($">>> [ERROR] Add: {ex.InnerException?.Message ?? ex.Message}");
+                return false;
+            }
+
+        }
+        public async Task<bool> UpdSocio(PersonDTO map, CancellationToken ctk = default)
+        {
+            ctk.ThrowIfCancellationRequested();
+            using PeopleDbContext _ctx = new();
+            // 1. Cerchiamo l'entità (FindAsync è ottimo qui)
+            var socio = await _ctx.Soci.FindAsync(map.CodiceSocio, ctk);
+            if (socio == null) return false;
+            // 2. Aggiorniamo le proprietà
+            socio.NumeroSocio = map.NumeroSocio;
+
+            ctk.ThrowIfCancellationRequested();
+
+            try
+            {
+                await _ctx.SaveChangesAsync(ctk);
+                return true;
+            }
+            catch (OperationCanceledException)
+            {
+                Debug.WriteLine(">>> [INFO] Inserimento Socio annullato dall'utente.");
+                return false;
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($">>> [ERROR] Add: {ex.InnerException?.Message ?? ex.Message}");
+                return false;
+            }
+
+        }
+        public async Task<bool> UpdTessera(PersonDTO map, CancellationToken ctk = default)
+        {
+            ctk.ThrowIfCancellationRequested();
+
+            using PeopleDbContext _ctx = new();
+            // 1. Cerchiamo l'entità (FindAsync è ottimo qui)
+            var tessera = await _ctx.Tessere.FindAsync(map.CodiceTessera, ctk);
+            if (tessera == null) return false;
+            // 2. Aggiorniamo le proprietà
+            tessera.NumeroTessera = map.NumeroTessera;
+
+            try
+            {
+                await _ctx.SaveChangesAsync(ctk);
+                return true;
+            }
+            catch (OperationCanceledException)
+            {
+                Debug.WriteLine(">>> [INFO] Inserimento Tessera annullato dall'utente.");
+                return false;
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($">>> [ERROR] Add: {ex.InnerException?.Message ?? ex.Message}");
+                return false;
+            }
+
+        }
+
+        public async Task<bool> Del(PersonDTO map, CancellationToken ctk = default)
+        {
+            ctk.ThrowIfCancellationRequested();
+            using PeopleDbContext _ctx = new();
+            var person = await _ctx.People.FindAsync(map.Id, ctk);
+            if (person == null) return false;
+
+            _ctx.People.Remove(person);
+
+            ctk.ThrowIfCancellationRequested();
+
+            try
+            {
+                await _ctx.SaveChangesAsync(ctk);
+                return true;
+            }
+            catch (OperationCanceledException)
+            {
+                Debug.WriteLine(">>> [INFO] Cancellazione Persona annullato dall'utente.");
+                return false;
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($">>> [ERROR] Add: {ex.InnerException?.Message ?? ex.Message}");
+                return false;
+            }
+        }
+        public async Task<bool> DelSocio(PersonDTO map, CancellationToken ctk = default)
+        {
+            ctk.ThrowIfCancellationRequested();
+            using PeopleDbContext _ctx = new();
+            var socio = await _ctx.Soci.FindAsync(map.CodiceSocio, ctk);
+            if (socio == null) return false;
+
+            _ctx.Soci.Remove(socio);
+
+            ctk.ThrowIfCancellationRequested();
+
+            try
+            {
+                await _ctx.SaveChangesAsync(ctk);
+                return true;
+            }
+            catch (OperationCanceledException)
+            {
+                Debug.WriteLine(">>> [INFO] Cancellazioe Socio annullato dall'utente.");
+                return false;
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($">>> [ERROR] Add: {ex.InnerException?.Message ?? ex.Message}");
+                return false;
+            }
+        }
+        public async Task<bool> DelTessera(PersonDTO map, CancellationToken ctk = default)
+        {
+            ctk.ThrowIfCancellationRequested();
+            using PeopleDbContext _ctx = new();
+            var tessera = await _ctx.Tessere.FindAsync(map.CodiceTessera, ctk);
+            if (tessera == null) return false;
+
+            _ctx.Tessere.Remove(tessera);
+
+            try
+            {
+                await _ctx.SaveChangesAsync(ctk);
+                return true;
+            }
+            catch (OperationCanceledException)
+            {
+                Debug.WriteLine(">>> [INFO] Cancellazioe Tessera annullato dall'utente.");
+                return false;
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($">>> [ERROR] Add: {ex.InnerException?.Message ?? ex.Message}");
+                return false;
+            }
+        }
+
+        public async Task<bool> EsisteCodiceUnivoco(string codiceunivoco, CancellationToken ctk = default)
+        {
+            ctk.ThrowIfCancellationRequested();
+            using PeopleDbContext _ctx = new();
+
+
+            try
+            {
+                var result = await _ctx.People.AnyAsync(p => p.UniqueParam == codiceunivoco, ctk);
+                return result;
+            }
+            catch (OperationCanceledException)
+            {
+                Debug.WriteLine(">>> [INFO] Operazione annullata dall'utente.");
+                return false;
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($">>> [ERROR] Add: {ex.InnerException?.Message ?? ex.Message}");
+                return false;
+            }
+        }
+        public async Task<bool> EsisteCodiceUnivoco(string codiceunivoco, int id, CancellationToken ctk = default)
+        {
+            ctk.ThrowIfCancellationRequested();
+            using PeopleDbContext _ctx = new();
+            try
+            {
+                var result = await _ctx.People.AnyAsync(p => p.UniqueParam == codiceunivoco && p.Id != id, ctk);
+                return result;
+            }
+            catch (OperationCanceledException)
+            {
+                Debug.WriteLine(">>> [INFO] Operazione annullata dall'utente.");
+                return false;
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($">>> [ERROR] Add: {ex.InnerException?.Message ?? ex.Message}");
+                return false;
+            }
+
+        }
+
+        public async Task<bool> EsisteNumeroTessera(string numeroTessera, CancellationToken ctk = default)
+        {
+            ctk.ThrowIfCancellationRequested();
+            using PeopleDbContext _ctx = new();
+
+            try
+            {
+                var result = await _ctx.Tessere.AnyAsync(t => t.NumeroTessera == numeroTessera, ctk);
+                return result;
+            }
+            catch (OperationCanceledException)
+            {
+                Debug.WriteLine(">>> [INFO] Operazione annullata dall'utente.");
+                return false;
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($">>> [ERROR] Add: {ex.InnerException?.Message ?? ex.Message}");
+                return false;
+            }
+
+        }
+        public async Task<bool> EsisteNumeroTesseraUpd(PersonDTO dT, CancellationToken ctk = default)
+        {
+            ctk.ThrowIfCancellationRequested();
+            using PeopleDbContext _ctx = new();
+
+            try
+            {
+                var result = await _ctx.Tessere.AnyAsync(t => t.NumeroTessera == dT.NumeroTessera &&
+                                                    t.Id != dT.CodiceTessera, ctk);
+                return result;
+            }
+            catch (OperationCanceledException)
+            {
+                Debug.WriteLine(">>> [INFO] Operazione annullata dall'utente.");
+                return false;
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($">>> [ERROR] Add: {ex.InnerException?.Message ?? ex.Message}");
+                return false;
+            }
+
+        }
+
+        public async Task<bool> EsisteNumeroSocio(string numeroSocio, CancellationToken ctk = default)
+        {
+            ctk.ThrowIfCancellationRequested();
+            using PeopleDbContext _ctx = new();
+
+            try
+            {
+                var result = await _ctx.Soci.AnyAsync(s => s.NumeroSocio == numeroSocio, ctk);
+                return result;
+            }
+            catch (OperationCanceledException)
+            {
+                Debug.WriteLine(">>> [INFO] Operazione annullata dall'utente.");
+                return false;
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($">>> [ERROR] Add: {ex.InnerException?.Message ?? ex.Message}");
+                return false;
+            }
+
+        }
+        public async Task<bool> EsisteNumeroSocioUpd(PersonMap dT, CancellationToken ctk = default)
+        {
+            ctk.ThrowIfCancellationRequested();
+            using PeopleDbContext _ctx = new();
+
+            try
+            {
+                var result = await _ctx.Soci.AnyAsync(s => s.NumeroSocio == dT.NumeroSocio &&
+                                                 s.Id != dT.CodiceSocio, ctk);
+                return result;
+            }
+            catch (OperationCanceledException)
+            {
+                Debug.WriteLine(">>> [INFO] Operazione annullata dall'utente.");
+                return false;
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($">>> [ERROR] Add: {ex.InnerException?.Message ?? ex.Message}");
+                return false;
+            }
+
+        }
+
+    }
+}

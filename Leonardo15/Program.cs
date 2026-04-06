@@ -53,7 +53,7 @@ internal class Program
         // Repository
         services.AddTransient<ILoginRepository, LoginRepository>();
         services.AddTransient<IMenuRepository, MenuRepository>();
-
+        services.AddTransient<IPersonRepository, PersonRepository>();
     }
 
     private static void RegisterViewModels(IServiceCollection services)
@@ -71,7 +71,9 @@ internal class Program
         services.AddTransient<IViewFor<LoginViewModel>, LoginView>();
         services.AddTransient<IViewFor<ConnectionViewModel>, ConnectionView>();
         services.AddTransient<IViewFor<MenuViewModel>, MenuView>();
-        services.AddTransient<IViewFor<TestViewModel>, TestView>();
+        //services.AddTransient<IViewFor<TestViewModel>, TestView>();
+        services.AddTransient<IViewFor<SociViewModel>, SociView>();
+        RegisterIViewForSoci(services);
 
     }
 
@@ -79,4 +81,15 @@ internal class Program
     {
         services.AddTransient<MainWindow>();
     }
+
+    private static void RegisterIViewForSoci(IServiceCollection services)
+    {
+        services.AddTransient<IViewFor<PersonGroupViewModel>, PersonGroupView>();
+        services.AddTransient<IViewFor<PersonAddViewModel>, PersonInputView>();
+        services.AddTransient<IViewFor<PersonUpdViewModel>, PersonInputView>();
+        services.AddTransient<IViewFor<PersonDelViewModel>, PersonInputView>();
+        services.AddTransient<IViewFor<PersonSearchViewModel>, PersonSearchView>();
+    }
+
+
 }

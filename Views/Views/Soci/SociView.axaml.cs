@@ -1,31 +1,23 @@
+using Avalonia.Controls;
 using ReactiveUI;
 using ReactiveUI.Avalonia;
+using System.Diagnostics;
 using System.Reactive.Disposables;
 using System.Reactive.Disposables.Fluent;
 using ViewModels;
 
-namespace Leonardo;
+namespace Views;
 
-public partial class SociView : ReactiveUserControl<SociViewModel>
+public partial class SociView : BaseUserControl<SociViewModel>
 {
+    protected override string RootControlName => "RootGrid";
+
     public SociView()
     {
         InitializeComponent();
 
         this.WhenActivated(d =>
         {
-
-            // Esc Key Pressed
-
-
-            // Enter Key Pressed
-
-            #region TwoWay
-
-            //Bind PasswordText to TextBox
-
-
-            #endregion
 
             #region OneWay
 
@@ -36,19 +28,7 @@ public partial class SociView : ReactiveUserControl<SociViewModel>
 
             #endregion
 
-            #region Commands
-
-            this.Bind(ViewModel,
-                vm => vm.EsciCommand,
-                v => v.Title.ExitCommand).DisposeWith(d);
-
-            #endregion
-
-            Disposable.Create(() => {
-                this.DataContext = null;
-                System.Diagnostics.Debug.WriteLine(">>> [VIEW] SociView deattivata, DataContext rimosso.");
-            }).DisposeWith(d);
-
         });
     }
+
 }

@@ -9,8 +9,8 @@
              xmlns:lc="using:Leonardo"
              KeyboardNavigation.TabNavigation="Cycle"
              Background="Transparent"
-             x:CompileBindings="False"
-             x:Class="Leonardo.PersonInputView">
+             x:Class="Views.PersonInputView"
+             x:DataType="vm:PersonInputBase">
    
 		
     <Grid x:Name="MainGrid" >
@@ -160,7 +160,9 @@
             
                 <lc:InputSaveBox x:Name="InputSaveBox"
                                  Grid.Row="3"
-                                 Margin="20"/>
+                                 Margin="20"
+                                 SaveCommand="{Binding SaveCommand}"
+                                 ExitCommand="{Binding EscPressedCommand}"/>
                 
             
             </Grid>

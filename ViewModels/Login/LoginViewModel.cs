@@ -5,10 +5,12 @@ using DTO.Repository;
 using ReactiveUI;
 using Splat;
 using SysNet;
+using SysNet.Converters;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Diagnostics.Metrics;
 using System.Reactive;
+using System.Reactive.Disposables;
 using System.Reactive.Disposables.Fluent;
 using System.Reactive.Linq;
 using ViewModels.BindableObjects;
@@ -22,12 +24,16 @@ namespace ViewModels
         public ReactiveCommand<Unit, Unit> EntraCommand { get; }
         public ReactiveCommand<Unit, Unit> EsciCommand { get; }
 
+        private CancellationTokenSource _loadingCts;
+
         //public LoginViewModel() { }
 
         public LoginViewModel(IScreen host,
                               ILoginRepository loginRepository = null) : base(host)
         {
             Q = loginRepository ?? Locator.Current.GetService<ILoginRepository>();
+
+            _loadingCts = new CancellationTokenSource();
 
             var canEntra = this.WhenAnyValue(
                x => x.PasswordText,
@@ -49,6 +55,14 @@ namespace ViewModels
 
             this.WhenActivated(d =>
             {
+                if (_loadingCts.IsCancellationRequested)
+                    _loadingCts = new CancellationTokenSource();
+
+                Disposable.Create(() =>
+                {
+                    _loadingCts.Cancel();
+                    _loadingCts.Dispose();
+                }).DisposeWith(d);
 
                 EntraCommand.DisposeWith(d);
                 EsciCommand.DisposeWith(d);
@@ -66,14 +80,19 @@ namespace ViewModels
 
         protected override async Task OnLoading()
         {
+            var token = _loadingCts.Token;
 
             try
             {
                 IsLoading = true;
                 //Q = new(); // Istanza locale del Repository
                 List<LoginDTO> dbData = await Q.GetOperatoriAbilitati();
+
+                token.ThrowIfCancellationRequested();
+
                 if (dbData != null && dbData.Count != 0)
                 {
+                
                     // Trasforma l'Expression in una funzione e usala con LINQ .Select()
                     // Aggiorna la DataSource della UI
                     DataSource = dbData.Select(dto => new LoginMap(dto)).ToList();
@@ -83,11 +102,14 @@ namespace ViewModels
                 }
             }
             catch (OperationCanceledException) { Debug.WriteLine("Caricamento Login Annullato."); }
-            catch (Exception) { Debug.WriteLine("Caricamento Login fallito."); }
+            catch (Exception ex) { Debug.WriteLine($"Errore: {ex.Message}"); }
             finally { IsLoading = false; }
 
-            await TriggerInteraction(PasswordFocus, Unit.Default);
-
+            if (!token.IsCancellationRequested)
+            {
+                SetFocus(PasswordFocus);
+            }
+            
         }
 
         //private async Task OnPasswordFocus()

@@ -9,10 +9,12 @@ using System.Reactive.Disposables.Fluent;
 using System.Reactive.Linq;
 using ViewModels;
 
-namespace Leonardo;
+namespace Views;
 
-public partial class PersonSearchView : ReactiveUserControl<PersonSearchViewModel>
+public partial class PersonSearchView : BaseUserControl<PersonSearchViewModel>
 {
+    protected override string RootControlName => "MainGrid";
+
     public PersonSearchView()
     {
         InitializeComponent();
@@ -68,47 +70,12 @@ public partial class PersonSearchView : ReactiveUserControl<PersonSearchViewMode
                     })
                     .DisposeWith(d);
 
-            //ViewModel?.NatoFocus
-            //        .RegisterHandler(interaction =>
-            //        {
-            //            Dispatcher.UIThread.Post(() =>
-            //            {
-            //                DataNascitaPicker.Focus();
-            //            });
-            //            interaction.SetOutput(Unit.Default);
-            //        })
-            //        .DisposeWith(d);
-
-            //ViewModel?.TesseraFocus
-            //        .RegisterHandler(interaction =>
-            //        {
-            //            Dispatcher.UIThread.Post(() =>
-            //            {
-            //                NumeroTesseraBox.Focus();
-            //                NumeroTesseraBox.SelectAll();
-            //            });
-            //            interaction.SetOutput(Unit.Default);
-            //        })
-            //        .DisposeWith(d);
-
-            //ViewModel?.SocioFocus
-            //        .RegisterHandler(interaction =>
-            //        {
-            //            Dispatcher.UIThread.Post(() =>
-            //            {
-            //                CodiceSocioBox.Focus();
-            //                CodiceSocioBox.SelectAll();
-            //            });
-            //            interaction.SetOutput(Unit.Default);
-            //        })
-            //        .DisposeWith(d);
-
             ViewModel?.EscFocus
                 .RegisterHandler(interaction =>
                 {
                     Dispatcher.UIThread.Post(() =>
                     {
-                        EsciButton.Focus();
+                        InputSaveBox.EsciButton.Focus();
                     });
                     interaction.SetOutput(Unit.Default);
                 })
@@ -131,7 +98,7 @@ public partial class PersonSearchView : ReactiveUserControl<PersonSearchViewMode
 
             //Bind Cognome to TextBox
             this.Bind(ViewModel,
-                      vm => vm.Cognome,
+                      vm => vm.BindingT.Cognome,
                       v => v.CognomeBox.Text)
                 .DisposeWith(d);
 
@@ -161,7 +128,7 @@ public partial class PersonSearchView : ReactiveUserControl<PersonSearchViewMode
 
             //Bind Nome to TextBox
             this.Bind(ViewModel,
-                      vm => vm.Nome,
+                      vm => vm.BindingT.Nome,
                       v => v.NomeBox.Text)
                 .DisposeWith(d);
 
@@ -185,13 +152,13 @@ public partial class PersonSearchView : ReactiveUserControl<PersonSearchViewMode
 
             //Bind Codice Socio to TextBox
             this.Bind(ViewModel,
-                      vm => vm.NumeroSocio,
+                      vm => vm.BindingT.NumeroSocio,
                       v => v.CodiceSocioBox.Text)
                 .DisposeWith(d);
 
             //Bind Numero Tessera to TextBox
             this.Bind(ViewModel,
-                      vm => vm.NumeroTessera,
+                      vm => vm.BindingT.NumeroTessera,
                       v => v.NumeroTesseraBox.Text)
                 .DisposeWith(d);
 
@@ -244,31 +211,6 @@ public partial class PersonSearchView : ReactiveUserControl<PersonSearchViewMode
                     v => v.NumeroTesseraBox.IsEnabled)
             .DisposeWith(d);
 
-            //this.OneWayBind(ViewModel,
-            //        vm => vm.FieldsEnabled,
-            //        v => v.InputGrid.IsEnabled)
-            //.DisposeWith(d);
-
-
-            //this.OneWayBind(ViewModel,
-            //        vm => vm.FieldsVisibile,
-            //        v => v.CodiceSocioBox.IsVisible)
-            //.DisposeWith(d);
-
-            //this.OneWayBind(ViewModel,
-            //        vm => vm.FieldsVisibile,
-            //        v => v.NumeroTesseraBox.IsVisible)
-            //.DisposeWith(d);
-
-            //this.OneWayBind(ViewModel,
-            //        vm => vm.FieldsVisibile,
-            //        v => v.CodiceSocioLabel.IsVisible)
-            //.DisposeWith(d);
-
-            //this.OneWayBind(ViewModel,
-            //        vm => vm.FieldsVisibile,
-            //        v => v.NumeroTesseraLabel.IsVisible)
-            //.DisposeWith(d);
 
             this.OneWayBind(ViewModel,
                     vm => vm.InfoLabel,
@@ -277,18 +219,7 @@ public partial class PersonSearchView : ReactiveUserControl<PersonSearchViewMode
 
             #endregion
 
-            #region Commands
-
-            this.BindCommand(ViewModel,
-                             vm => vm.EscPressedCommand,
-                             v => v.EsciButton).DisposeWith(d);
-
-            this.BindCommand(ViewModel,
-                             vm => vm.SaveCommand,
-                             v => v.SalvaButton).DisposeWith(d);
-
-
-            #endregion
+            
 
             //Evento DropDownClose sulla Combo Cognome
             Observable.FromEventPattern<EventHandler, EventArgs>(

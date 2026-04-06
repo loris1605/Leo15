@@ -6,7 +6,7 @@
              xmlns:vm="using:ViewModels"
              xmlns:vmdt="using:ViewModels.DataTypes"
              xmlns:ui="using:ControlStyles"
-             xmlns:lc="using:Leonardo"
+             xmlns:lc="using:Views"
              KeyboardNavigation.TabNavigation="Cycle"
              Background="Transparent"
              x:DataType="vm:SettoreGroupViewModel"

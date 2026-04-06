@@ -1,44 +1,61 @@
-﻿using Models.Repository;
+﻿using DTO.Repository;
+using Models.Repository;
 using ReactiveUI;
+using Splat;
 using SysNet;
+using System.Diagnostics;
+using System.Reactive;
 
 namespace ViewModels
 {
     public class PersonUpdViewModel : PersonInputBase
     {
-        private PersonR Q { get; set; }
+        private IPersonRepository Q;
         private readonly int _idDaModificare;
         
 
-        public PersonUpdViewModel(IScreen host, int idperson) : base(host)
+        public PersonUpdViewModel(IScreen host, int idperson, IPersonRepository personRepository = null) : base(host)
         {
             _idDaModificare = idperson;
-                        
+            Q = personRepository; // ?? Locator.Current.GetService<IPersonRepository>();
             Titolo = "Modifica Socio";
             FieldsEnabled = true;
             FieldsVisibile = false;
-
-            Q = Create<PersonR>.Instance();
-
-            
+                        
         }
 
         protected override void OnFinalDestruction()
         {
-            Q?.Dispose();
             Q = null;
             DataSource = null;
         }
 
         protected override async Task OnLoading()
         {
-            BindingT = await Q.FirstPerson(_idDaModificare);
-            if (BindingT == null)
+            var token = CancellationToken.None;
+
+            try
             {
-                InfoLabel = "Errore: Socio non trovato nel database.";
-                FieldsEnabled = false;
+                // Passa il token al repository
+                var data = await Q.FirstPerson(_idDaModificare, token);
+                BindingT = new BindableObjects.PersonMap(data);
+
+                if (BindingT.Id == 0)
+                {
+                    InfoLabel = "Errore: Socio non trovato.";
+                    FieldsEnabled = false;
+                }
+                SetFocus(CognomeFocus);
             }
-            await OnFocus(CognomeFocus);
+            catch (OperationCanceledException)
+            {
+                InfoLabel = "Errore: Operazione fermata dall'utente.";
+            }
+            catch (Exception ex)
+            {
+                { Debug.WriteLine($"OnLoading Error: {ex.Message}"); }
+            }
+
         }
 
         protected override async Task OnSaving()
@@ -51,13 +68,27 @@ namespace ViewModels
                 return;
             }
 
-            InfoLabel = "";
+            InfoLabel = "Updating Database...";
 
-            if (!await Q.Upd(BindingT))
+            var token = CancellationToken.None;
+
+            try
             {
-                InfoLabel = "Errore Db modifica person";
-                await OnFocus(CognomeFocus);
-                return;
+                if (!await Q.Upd(BindingT.ToDto()))
+                {
+                    InfoLabel = "Errore Db modifica person";
+                    SetFocus(CognomeFocus);
+                    return;
+                }
+            }
+            catch (OperationCanceledException)
+            {
+                InfoLabel = "Operazione annullata dall'utente";
+
+            }
+            catch (Exception ex)
+            {
+                InfoLabel = $"Person Upd Error: {ex.Message}";
             }
 
             OnBack(_idDaModificare);
@@ -68,25 +99,32 @@ namespace ViewModels
 
         private async Task<bool> EsisteAnagraficaUpd()
         {
-            string srvcognome = Cognome;
-            string srvnome = Nome;
+            var token = CancellationToken.None;
 
-            if (srvcognome.Length == 2)
+            string srvcognome = (GetCognome ?? "").PadRight(3);
+            string srvnome = (GetNome ?? "").PadRight(3);
+
+            BindingT.CodiceUnivoco = string.Concat(
+                                    srvcognome[..3],
+                                    srvnome[..3],
+                                    BindingT.Natoil.ToString());
+
+            try
             {
-                srvcognome += " ";
+                return await Q.EsisteCodiceUnivoco(CodiceUnivoco, BindingT.Id);
             }
-            if (srvnome.Length == 2)
+            catch (OperationCanceledException)
             {
-                srvnome += " ";
+                InfoLabel = "Operazione annullata dall'utente";
+                
             }
-            if (BindingT is null) return false;
+            catch (Exception ex)
+            {
+                InfoLabel = $"Esiste Anagrafica Error: {ex.Message}";
+            }
 
-            BindingT.CodiceUnivoco = string.Concat(srvcognome[..3],
-                                                   srvnome[..3],
-                                                   BindingT.Natoil.ToString());
-
-
-            return await Q.EsisteCodiceUnivoco(CodiceUnivoco, BindingT.Id);
+            return false;
+         
 
         }
     }

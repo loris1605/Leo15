@@ -12,21 +12,7 @@ namespace DTO.Mapper
 {
     public static class OperatoreMapper
     {
-        //public static OperatoreDTO ToMap(this Operatore entity)
-        //{
-        //    if (entity == null) return new OperatoreMap();
-
-        //    return new OperatoreMap
-        //    {
-        //        Id = entity.Id,
-        //        NomeOperatore = entity.Nome ?? string.Empty,
-        //        Password = entity.Password ?? string.Empty,
-        //        Abilitato = entity.Abilitato,
-        //        Badge = entity.Pass,
-        //        CodicePerson = entity.PersonId
-        //    };
-        //}
-
+        
         public static Expression<Func<Operatore, LoginDTO>> ToLoginDto => entity => new LoginDTO
         {
             Id = entity.Id,

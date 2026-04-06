@@ -12,7 +12,7 @@ namespace Models.Repository
     {
         public SettoreR() : base() { }
 
-        public async Task<List<SettoreMap>> Load(int id)
+        public async Task<List<SettoreMap>> Load(int id, CancellationToken ctk = default)
         {
             if (id > 0)
                 return await LoadSettori(x => x.Id == id);
@@ -21,7 +21,7 @@ namespace Models.Repository
 
         }
 
-        public Task<List<SettoreMap>> LoadByModel(object model) =>
+        public Task<List<SettoreMap>> LoadByModel(object model, CancellationToken ctk = default) =>
                 Task.FromResult((List<SettoreMap>)model);
 
         public async Task<List<SettoreMap>> LoadSettori(Expression<Func<Settore, bool>> predicate)

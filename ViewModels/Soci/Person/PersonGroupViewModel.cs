@@ -1,14 +1,22 @@
-﻿using Models.Entity;
-using Models.Repository;
+﻿using Avalonia.Collections;
+using DTO.Entity;
+using DTO.Repository;
 using ReactiveUI;
+using Splat;
+using System.Diagnostics;
+using System.Linq;
 using System.Reactive;
+using System.Reactive.Disposables;
 using System.Reactive.Disposables.Fluent;
 using System.Reactive.Linq;
+using ViewModels.BindableObjects;
 
 namespace ViewModels
 {
-    public class PersonGroupViewModel : GroupViewModel<PersonMap, PersonR>
+ 
+    public class PersonGroupViewModel : GroupViewModelBase<PersonMap>, IGroupViewModelBase
     {
+        private IPersonRepository Q;
 
         public ReactiveCommand<Unit, Unit> AddCodiceSocioCommand { get; }
         public ReactiveCommand<Unit, Unit> DelCodiceSocioCommand { get; private set; }
@@ -18,8 +26,13 @@ namespace ViewModels
         public ReactiveCommand<Unit, Unit> UpdTesseraCommand { get; private set; }
         public ReactiveCommand<Unit, Unit> PersonSearchCommand { get; }
 
-        public PersonGroupViewModel(IScreen host) : base(host)
+        protected IGroupScreen ConfigHost => HostScreen as IGroupScreen;
+
+        public PersonGroupViewModel(IScreen host,
+                              IPersonRepository personRepository = null) : base(host)
         {
+            Q = personRepository ?? Locator.Current.GetService<IPersonRepository>();
+
             var isHostValid = this.WhenAnyValue(x => x.HostScreen)
             .Select(h => h is IGroupScreen);
 
@@ -28,7 +41,7 @@ namespace ViewModels
 
             var canDelete = this.WhenAnyValue(x => x.GroupBindingT, x => x.IsLoading,
                 (item, loading) => item != null &&
-                                   item.CodiceSocio != 0 &&
+                                   item.CodiceSocio == 0 &&
                                    !loading);
 
             var canSocioDelete = this.WhenAnyValue(x => x.GroupBindingT, x => x.IsLoading,
@@ -48,65 +61,157 @@ namespace ViewModels
 
             // 2. Definizione Comandi tramite i metodi della Base
             AddCommand = ReactiveCommand.CreateFromObservable(
-                () => NavigateToInput(new PersonAddViewModel(ConfigHost)),
+                () => NavigateToInput(new PersonAddViewModel(ConfigHost, Locator.Current.GetService<IPersonRepository>())),
                 this.WhenAnyValue(x => x.IsLoading, x => !x));
 
             UpdCommand = ReactiveCommand.CreateFromObservable(
-                () => NavigateToInput(new PersonUpdViewModel(ConfigHost, GroupBindingT!.Id)), canAction);
+                () => NavigateToInput(new PersonUpdViewModel(ConfigHost, GroupBindingT!.Id,
+                                                             Locator.Current.GetService<IPersonRepository>())), canAction);
 
             DelCommand = ReactiveCommand.CreateFromObservable(
-                () => NavigateToInput(new PersonDelViewModel(ConfigHost, GroupBindingT!.Id)), canDelete);
+                () => NavigateToInput(new PersonDelViewModel(ConfigHost, GroupBindingT!.Id,
+                                                             Locator.Current.GetService<IPersonRepository>())), canDelete);
 
-            AddCodiceSocioCommand = ReactiveCommand.CreateFromObservable(
-                () => NavigateToInput(new CodiceSocioAddViewModel(ConfigHost, GroupBindingT!.Id)), canAction);
+            //AddCodiceSocioCommand = ReactiveCommand.CreateFromObservable(
+            //    () => NavigateToInput(new CodiceSocioAddViewModel(ConfigHost, GroupBindingT!.Id)), canAction);
 
-            DelCodiceSocioCommand = ReactiveCommand.CreateFromObservable(
-                () => NavigateToInput(new CodiceSocioDelViewModel(ConfigHost,
-                                                                    GroupBindingT.CodiceSocio,
-                                                                    GroupBindingT.Id)), canSocioDelete);
+            //DelCodiceSocioCommand = ReactiveCommand.CreateFromObservable(
+            //    () => NavigateToInput(new CodiceSocioDelViewModel(ConfigHost,
+            //                                                        GroupBindingT.CodiceSocio,
+            //                                                        GroupBindingT.Id)), canSocioDelete);
 
-            UpdCodiceSocioCommand = ReactiveCommand.CreateFromObservable(
-                () => NavigateToInput(new CodiceSocioUpdViewModel(ConfigHost,
-                                                                    GroupBindingT.CodiceSocio,
-                                                                    GroupBindingT.Id)), canDelete);
+            //UpdCodiceSocioCommand = ReactiveCommand.CreateFromObservable(
+            //    () => NavigateToInput(new CodiceSocioUpdViewModel(ConfigHost,
+            //                                                        GroupBindingT.CodiceSocio,
+            //                                                        GroupBindingT.Id)), canDelete);
 
-            AddTesseraCommand = ReactiveCommand.CreateFromObservable(
-                () => NavigateToInput(new TesseraAddViewModel(ConfigHost,
-                                        GroupBindingT.Id, GroupBindingT.CodiceSocio)), canDelete);
+            //AddTesseraCommand = ReactiveCommand.CreateFromObservable(
+            //    () => NavigateToInput(new TesseraAddViewModel(ConfigHost,
+            //                            GroupBindingT.Id, GroupBindingT.CodiceSocio)), canDelete);
 
-            DelTesseraCommand = ReactiveCommand.CreateFromObservable(
-                () => NavigateToInput(new TesseraDelViewModel(ConfigHost,
-                                        GroupBindingT.CodiceTessera, GroupBindingT.Id)), canTesseraDelete);
+            //DelTesseraCommand = ReactiveCommand.CreateFromObservable(
+            //    () => NavigateToInput(new TesseraDelViewModel(ConfigHost,
+            //                            GroupBindingT.CodiceTessera, GroupBindingT.Id)), canTesseraDelete);
 
-            UpdTesseraCommand = ReactiveCommand.CreateFromObservable(
-                () => NavigateToInput(new TesseraUpdViewModel(ConfigHost,
-                                        GroupBindingT.CodiceTessera, GroupBindingT.Id)), canTesseraDelete);
+            //UpdTesseraCommand = ReactiveCommand.CreateFromObservable(
+            //    () => NavigateToInput(new TesseraUpdViewModel(ConfigHost,
+            //                            GroupBindingT.CodiceTessera, GroupBindingT.Id)), canTesseraDelete);
 
             PersonSearchCommand = ReactiveCommand.CreateFromObservable(
-                () => NavigateToInput(new PersonSearchViewModel(ConfigHost)),
+                () => NavigateToInput(new PersonSearchViewModel(ConfigHost, Locator.Current.GetService<IPersonRepository>())),
                 this.WhenAnyValue(x => x.IsLoading, x => !x));
 
-            this.WhenActivated(d => 
+            this.WhenActivated(d =>
             {
-                               
-                AddCodiceSocioCommand.DisposeWith(d);
-                DelCodiceSocioCommand.DisposeWith(d);
-                UpdCodiceSocioCommand.DisposeWith(d);
-                AddTesseraCommand.DisposeWith(d);
-                DelTesseraCommand.DisposeWith(d);
-                UpdTesseraCommand.DisposeWith(d);
-                PersonSearchCommand.DisposeWith(d);
+
+                AddCodiceSocioCommand?.DisposeWith(d);
+                DelCodiceSocioCommand?.DisposeWith(d);
+                UpdCodiceSocioCommand?.DisposeWith(d);
+                AddTesseraCommand?.DisposeWith(d);
+                DelTesseraCommand?.DisposeWith(d);
+                UpdTesseraCommand?.DisposeWith(d);
+                PersonSearchCommand?.DisposeWith(d);
 
             });
 
-        }
-        
-        public string NumeroSocio => BindingT is null ? "" : BindingT.NumeroSocio;
-        public string NumeroTessera => BindingT is null ? "" : BindingT.NumeroTessera;
-        public int CodiceSocio => BindingT is null ? 0 : BindingT.CodiceSocio;
-        public int CodiceTessera => BindingT is null ? 0 : BindingT.CodiceTessera;
-        public int Scadenza => BindingT is null ? 0 : BindingT.Scadenza;
 
-        
+        }
+
+        protected override void OnFinalDestruction()
+        {
+            // Assicuriamoci che la collezione sia nulla per il GC
+            Q = null;
+            base.OnFinalDestruction();
+        }
+
+        protected override async Task OnLoading()
+        {
+            var token = _cts?.Token ?? CancellationToken.None;
+
+            IsLoading = true;
+            try
+            {
+                var data = await Q.Load(0, token);
+
+                token.ThrowIfCancellationRequested();
+
+                if (data?.Count > 0)
+                {
+                    UpdateCollection(data, 0);
+                    GroupBindingT = DataSource[0];
+                }
+            }
+            catch (OperationCanceledException) { /* Caricamento interrotto dal cambio pagina */ }
+            catch (Exception ex) { Debug.WriteLine($"Load Error: {ex.Message}"); }
+            finally { IsLoading = false; }
+        }
+
+        private void UpdateCollection(List<PersonDTO> data, int id)
+        {
+            DataSource = data.Select(dto => new PersonMap(dto)).ToList(); ;
+
+            // Creiamo la collezione raggruppata
+            var view = new DataGridCollectionView(DataSource);
+            view.GroupDescriptions.Add(new DataGridPathGroupDescription("Titolo"));
+
+            GroupedDataSource = view;
+            GroupFocus = true;
+            IdIndex = id;
+        }
+
+        public async Task CaricaDataSource(int id = 0)
+        {
+            var token = _cts.Token;
+            try
+            {
+                var data = await Q.Load(id, token);
+                token.ThrowIfCancellationRequested();
+                UpdateCollection(data, id);
+            }
+            catch (OperationCanceledException) { }
+        }
+
+        public async Task CaricaByModel(object model)
+        {
+            var token = _cts.Token;
+            try
+            {
+                var data = await Q.LoadByModel(model, token);
+                token.ThrowIfCancellationRequested();
+                UpdateCollection(data, 0);
+            }
+            catch (OperationCanceledException) { }
+        }
+
+        protected IObservable<Unit> NavigateToReset(IRoutableViewModel vm)
+        {
+            if (ConfigHost == null) return Observable.Return(Unit.Default);
+
+            return ConfigHost.GroupRouter
+                .NavigateAndReset
+                .Execute(vm)
+                .Select(_ => Unit.Default);
+        }
+
+        protected IObservable<Unit> NavigateToInput(IRoutableViewModel vm)
+        {
+            if (ConfigHost == null) return Observable.Return(Unit.Default);
+
+            var stringa = GroupBindingT is null ? "" : GroupBindingT.CodiceSocio.ToString();
+
+            Debug.WriteLine($"canDelete {stringa}");
+
+            // Esegue il cambio di stato della UI e poi naviga
+            return Observable.Start(() => ConfigHost.GroupEnabled = false, RxApp.MainThreadScheduler)
+                .SelectMany(_ => ConfigHost.InputRouter.Navigate.Execute(vm))
+                .Select(_ => Unit.Default);
+        }
+
+        public string NumeroSocio => BindingT is null ? "" : GroupBindingT.NumeroSocio;
+        public string NumeroTessera => BindingT is null ? "" : GroupBindingT.NumeroTessera;
+        public int CodiceSocio => BindingT is null ? 0 : GroupBindingT.CodiceSocio;
+        public int CodiceTessera => BindingT is null ? 0 : GroupBindingT.CodiceTessera;
+        public int Scadenza => BindingT is null ? 0 : GroupBindingT.Scadenza;
+
     }
 }

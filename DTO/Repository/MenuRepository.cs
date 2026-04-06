@@ -7,7 +7,7 @@ using Models.Tables;
 
 namespace DTO.Repository
 {
-    public interface IMenuRepository : IDisposable
+    public interface IMenuRepository
     {
         Task<List<PostazioneDTO>> CaricaPostazioniCassa(int CodiceOperatore);
         Task<bool> EsisteGiornataAperta();

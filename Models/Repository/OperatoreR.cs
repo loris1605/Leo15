@@ -21,7 +21,7 @@ namespace Models.Repository
 
         }
 
-        public async Task<List<OperatoreMap>> Load(int id)
+        public async Task<List<OperatoreMap>> Load(int id, CancellationToken ctk = default)
         {
             if (id > 0)
                 return await LoadOperatori(x => x.Id == id);
@@ -29,7 +29,7 @@ namespace Models.Repository
                 return await LoadOperatori(p => p.Id > -2);
         }
 
-        public Task<List<OperatoreMap>> LoadByModel(object model) =>
+        public Task<List<OperatoreMap>> LoadByModel(object model, CancellationToken ctk = default) =>
                 Task.FromResult((List<OperatoreMap>)model);
 
         public async Task<List<OperatoreMap>> LoadOperatori(Expression<Func<Operatore, bool>> predicate)

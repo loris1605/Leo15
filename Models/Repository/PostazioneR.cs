@@ -13,7 +13,7 @@ namespace Models.Repository
         public PostazioneR() : base() { }
        
 
-        public async Task<List<PostazioneMap>> Load(int id)
+        public async Task<List<PostazioneMap>> Load(int id, CancellationToken ctk = default)
         {
             if (id > 0)
                 return await LoadPostazioni(x => x.Id == id);
@@ -22,7 +22,7 @@ namespace Models.Repository
 
         }
 
-        public Task<List<PostazioneMap>> LoadByModel(object model) =>
+        public Task<List<PostazioneMap>> LoadByModel(object model, CancellationToken ctk = default) =>
                 Task.FromResult((List<PostazioneMap>)model);
 
         public async Task<List<PostazioneMap>> LoadPostazioni(Expression<Func<Postazione, bool>> predicate)

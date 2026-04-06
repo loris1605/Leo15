@@ -1,30 +1,31 @@
-﻿using Models.Repository;
+﻿using DTO.Repository;
+using Models.Repository;
 using ReactiveUI;
+using Splat;
 using SysNet;
 using System.Reactive;
 using System.Reactive.Linq;
+using System.Diagnostics;
+using SysNet.Converters;
 
 namespace ViewModels
 {
     public class PersonAddViewModel : PersonInputBase
     {
-               
-        private PersonR Q { get; set; }
 
-        public PersonAddViewModel(IScreen host) : base(host)
+        private IPersonRepository Q;
+
+        public PersonAddViewModel(IScreen host, IPersonRepository personRepository = null) : base(host)
         {
-            
+            Q = personRepository; //?? Locator.Current.GetService<IPersonRepository>();
             Titolo = "Aggiungi Nuovo Socio";
             FieldsVisibile = true;
             FieldsEnabled = true;
 
-            Q = Create<PersonR>.Instance();
-            
         }
 
         protected override void OnFinalDestruction()
         {
-            Q?.Dispose();
             Q = null;
             DataSource = null;
         }
@@ -32,49 +33,69 @@ namespace ViewModels
 
         protected override async Task OnLoading()
         {
-            await OnFocus(CognomeFocus);
+            SetFocus(CognomeFocus);
+            await Task.CompletedTask;
         }
 
         protected async override Task OnSaving()
         {
+            var ct = CancellationToken.None;
+
             if (!await ValidaDati()) return;
 
-            if (int.TryParse(GetNumeroTessera, out int numeroTessera))
+            if (!int.TryParse(GetNumeroTessera, out int numeroTessera) || numeroTessera <= 0)
             {
-                // 2. Se la conversione riesce, controlliamo il valore
-                if (numeroTessera <= 0) {}
-                else
-                {
-                    if (await Q.EsisteNumeroTessera(BindingT.NumeroTessera))
-                    {
-                        InfoLabel = "Tessera già in uso";
-                        await TesseraFocus.Handle(Unit.Default);
-                        return;
-                    }
-                }
-                
-            }
-            else
-            {
-                // 3. Se è stringa vuota o contiene lettere, finisce qui senza crash
-                // (In questo caso considerala come se fosse <= 0)
-                InfoLabel = "Numero Tessera non può essere zero";
-                await TesseraFocus.Handle(Unit.Default);
+                InfoLabel = "Numero Tessera non valido o uguale a zero";
+                SetFocus(TesseraFocus);
                 return;
             }
+
+            try
+            {
+                if (await Q.EsisteNumeroTessera(BindingT.NumeroTessera, ct))
+                {
+                    InfoLabel = "Tessera già in uso";
+                    SetFocus(TesseraFocus);
+                    return;
+                }
+            }
+            catch (OperationCanceledException)
+            {
+                Debug.WriteLine("Operazione annullata dall'utente");
+                return;
+            }
+            catch (Exception ex)
+            {
+                { Debug.WriteLine($"OnSaving Error: {ex.Message}"); }
+            }
+
+
 
             if (int.TryParse(GetNumeroSocio, out int numeroSocio))
             {
                 // 2. Se la conversione riesce, controlliamo il valore
-                if (numeroSocio <= 0) {}
+                if (numeroSocio <= 0) { }
                 else
                 {
-                    if (await Q.EsisteNumeroSocio(BindingT.NumeroSocio))
+                    try
                     {
-                        InfoLabel = "Codice Socio già in uso";
-                        await SocioFocus.Handle(Unit.Default);
+                        if (await Q.EsisteNumeroSocio(BindingT.NumeroSocio, ct))
+                        {
+                            InfoLabel = "Codice Socio già in uso";
+                            SetFocus(SocioFocus);
+                            return;
+                        }
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        Debug.WriteLine("Operazione annullata dall'utente");
                         return;
                     }
+                    catch (Exception ex)
+                    {
+                        { Debug.WriteLine($"Esiste Numero Socio Error: {ex.Message}"); }
+                    }
+
                 }
             }
             else
@@ -82,52 +103,61 @@ namespace ViewModels
                 // 3. Se è stringa vuota o contiene lettere, finisce qui senza crash
                 // (In questo caso considerala come se fosse <= 0)
                 InfoLabel = "Codice Socio non può essere zero";
-                await SocioFocus.Handle(Unit.Default);
+                SetFocus(SocioFocus);
                 return;
             }
-           
 
-            if (await EsisteAnagrafica())
+            
+            if (await EsisteAnagrafica(ct))
             {
                 InfoLabel = "Socio già registrato";
-                await SocioFocus.Handle(Unit.Default);
+                SetFocus(SocioFocus);
                 return;
             }
 
-            InfoLabel = "";
-            
-            int newPersonId = await Q.Add(BindingT);
+            InfoLabel = "Salvataggio in corso...";
+
+            int newPersonId = await Q.Add(BindingT.ToDto(), ct);
 
             if (newPersonId == -1)
             {
                 InfoLabel = "Errore Db inserimento Socio";
-                await CognomeFocus.Handle(Unit.Default);
+                SetFocus(CognomeFocus);
                 return;
             }
 
             OnBack(newPersonId);
         }
 
-        private async Task<bool> EsisteAnagrafica()
+        private async Task<bool> EsisteAnagrafica(CancellationToken ct)
         {
-            string srvcognome = Cognome;
-            string srvnome = Nome;
-
-            if (srvcognome.Length == 2)
-            {
-                srvcognome += " ";
-            }
-            if (srvnome.Length == 2)
-            {
-                srvnome += " ";
-            }
-
             if (BindingT is null) return false;
 
-            BindingT.CodiceUnivoco = string.Concat(srvcognome[..3], srvnome[..3],
-                                            BindingT.Natoil.ToString());
+            string srvcognome = BindingT.Cognome.PadRight(3);
+            string srvnome = BindingT.Nome.PadRight(3);
 
-            return await Q.EsisteCodiceUnivoco(BindingT.CodiceUnivoco);
+
+            BindingT.CodiceUnivoco = string.Concat(
+                                                srvcognome[..3],
+                                                srvnome[..3],
+                                                BindingT.Natoil.ToString());
+
+            try
+            {
+                return await Q.EsisteCodiceUnivoco(BindingT.CodiceUnivoco, ct);
+            }
+            catch (OperationCanceledException)
+            {
+                Debug.WriteLine("Operazione annullata dall'utente");
+            }
+            catch (Exception ex)
+            {
+                { Debug.WriteLine($"Esiste Anagrafica Error: {ex.Message}"); }
+            }
+
+            return false;
+
+
 
         }
     }

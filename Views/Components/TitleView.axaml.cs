@@ -12,7 +12,6 @@ public partial class TitleView : UserControl
     public TitleView()
     {
         InitializeComponent();
-
     }
 
     public static readonly StyledProperty<string> TitoloPaginaProperty =
@@ -43,6 +42,16 @@ public partial class TitleView : UserControl
         set => SetValue(ExitCommandProperty, value);
     }
 
-    
+    // Proprietà CommandParameter
+    public static readonly StyledProperty<string> CommandParameterProperty =
+        AvaloniaProperty.Register<TitleView, string>(nameof(CommandParameter));
+
+    public string? CommandParameter
+    {
+        get => GetValue(CommandParameterProperty);
+        set => SetValue(CommandParameterProperty, value!);
+    }
+
+
 
 }
