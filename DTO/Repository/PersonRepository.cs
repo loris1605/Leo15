@@ -21,6 +21,7 @@ namespace DTO.Repository
     {
         Task<int> Add(PersonDTO map, CancellationToken ctk = default);
         Task<int> AddCodiceSocio(PersonDTO map, CancellationToken ctk = default);
+        Task<int> AddTessera(PersonDTO map, CancellationToken ctk = default);
         Task<bool> Del(PersonDTO map, CancellationToken ctk = default);
         Task<bool> DelSocio(PersonDTO map, CancellationToken ctk = default);
         Task<bool> DelTessera(PersonDTO map, CancellationToken ctk = default);
@@ -258,8 +259,6 @@ namespace DTO.Repository
 
         public async Task<int> Add(PersonDTO map, CancellationToken ctk = default)
         {
-            ctk.ThrowIfCancellationRequested();
-
             using PeopleDbContext _ctx = new();
             // 1. Creiamo l'albero degli oggetti collegati
             var person = new Person
@@ -289,9 +288,7 @@ namespace DTO.Repository
             };
 
             // 2. Aggiungiamo solo la "radice" (Person). EF aggiungerà i figli a cascata.
-            _ctx.People.Add(person);
-
-            ctk.ThrowIfCancellationRequested();
+            await _ctx.People.AddAsync(person);
 
             try
             {
@@ -300,8 +297,7 @@ namespace DTO.Repository
             }
             catch (OperationCanceledException)
             {
-                Debug.WriteLine(">>> [INFO] Inserimento Persona annullato dall'utente.");
-                return -1;
+                throw;
             }
             catch (Exception ex)
             {
@@ -331,10 +327,8 @@ namespace DTO.Repository
             };
 
             // 2. Aggiungiamo solo la "radice" (Person). EF aggiungerà i figli a cascata.
-            _ctx.Soci.Add(socio);
-
-            ctk.ThrowIfCancellationRequested();
-
+            await _ctx.Soci.AddAsync(socio);
+            
             try
             {
                 await _ctx.SaveChangesAsync(ctk);
@@ -344,6 +338,40 @@ namespace DTO.Repository
             {
                 Debug.WriteLine(">>> [INFO] Inserimento Codice Socio annullato dall'utente.");
                 return -1;
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($">>> [ERROR] Add: {ex.InnerException?.Message ?? ex.Message}");
+                return -1;
+            }
+
+        }
+        public async Task<int> AddTessera(PersonDTO map, CancellationToken ctk = default)
+        {
+            ctk.ThrowIfCancellationRequested();
+            using PeopleDbContext _ctx = new();
+
+            if (map.CodiceSocio <= 0) return -1;
+
+            var tessera = new Tessera
+            {
+                NumeroTessera = map.NumeroTessera,
+                SocioId = map.CodiceSocio,
+                Abilitato = true
+
+            };
+
+            await _ctx.Tessere.AddAsync(tessera, ctk);
+
+            try
+            {
+                await _ctx.SaveChangesAsync(ctk);
+                return tessera.Id;
+            }
+            catch (OperationCanceledException)
+            {
+                // Rilanciamo l'eccezione per far capire al ViewModel che è stato l'utente ad annullare
+                throw;
             }
             catch (Exception ex)
             {

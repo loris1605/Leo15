@@ -1,18 +1,24 @@
-﻿using Models.Repository;
+﻿using DTO.Repository;
 using ReactiveUI;
+using Splat;
 using SysNet;
+using System.Diagnostics;
+using ViewModels.BindableObjects;
 
 namespace ViewModels
 {
     public class TesseraAddViewModel : TesseraInputBase
     {
-        private PersonR Q { get; set; }
+        private IPersonRepository Q;
         private readonly int _idDaModificare;
         private readonly int _idRitorno;
 
         private int idtessera;
 
-        public TesseraAddViewModel(IScreen host, int idperson, int idsocio) : base(host)
+        public TesseraAddViewModel(IScreen host, 
+                                   int idperson, 
+                                   int idsocio,
+                                   IPersonRepository personRepository = null) : base(host)
         {
             _idRitorno = idperson;
             _idDaModificare = idsocio;
@@ -21,72 +27,89 @@ namespace ViewModels
  
             FieldsVisibile = true;
             FieldsEnabled = true;
-            Q = Create<PersonR>.Instance();
+            Q = personRepository ?? Locator.Current.GetService<IPersonRepository>();
 
         }
 
         protected override void OnFinalDestruction()
         {
-            Q?.Dispose();
             Q = null;
         }
 
         protected override async Task OnLoading()
         {
-            BindingT = await Q.FirstSocio(_idDaModificare);
-            if (BindingT == null)
+            IsLoading = true;
+            var token = _cts?.Token ?? CancellationToken.None;
+
+            try
             {
-                InfoLabel = "Errore: Socio non trovato nel database.";
-                FieldsEnabled = false;
+                var dto = await Q.FirstSocio(_idDaModificare, token);
+                token.ThrowIfCancellationRequested();
+                if (dto == null)
+                {
+                    InfoLabel = "Errore: Socio non trovato nel database.";
+                    FieldsEnabled = false;
+                    SetFocus(EscFocus);
+                }
+                else
+                {
+                    BindingT = new PersonMap(dto);
+                    Titolo = "Nuova Tessera per " + GetNomeCognome;
+                    Titolo1 = "Numero Socio : " + GetNumeroSocio;
+                    BindingT.NumeroTessera = string.Empty;
+                    await OnNumeroTesseraFocus();
+                }
+                    
             }
-            Titolo = "Nuova Tessera per " + GetNomeCognome;
-            Titolo1 = "Numero Socio : " + GetNumeroSocio;
-            NumeroTessera = string.Empty;
-            await OnNumeroTesseraFocus();
+            catch (OperationCanceledException)
+            {
+                Debug.WriteLine("Operazione annullata dall'utente");
+                return;
+            }
+            catch (Exception ex)
+            {
+                { Debug.WriteLine($"OnLoading Error: {ex.Message}"); }
+            }
+            finally { IsLoading = false; }
+
+
+
         }
 
         protected async override Task OnSaving()
         {
-
-            if (BindingT is null)
-                return;
-
-            
-            if (int.TryParse(GetNumeroTessera, out int numeroTessera))
-            {
-                // 2. Se la conversione riesce, controlliamo il valore
-                if (numeroTessera <= 0) { }
-                else
-                {
-                    if (await Q.EsisteNumeroTessera(BindingT.NumeroTessera))
-                    {
-                        InfoLabel = "Tessera già in uso";
-                        await OnNumeroTesseraFocus();
-                        return;
-                    }
-                }
-
-            }
-            else
-            {
-                // 3. Se è stringa vuota o contiene lettere, finisce qui senza crash
-                // (In questo caso considerala come se fosse <= 0)
-                InfoLabel = "Numero Tessera non può essere zero";
-                await OnNumeroTesseraFocus();
-                return;
-            }
+            IsLoading = true;
+            var token = _cts?.Token ?? CancellationToken.None;
 
             try
             {
-                idtessera = await Q.AddTessera(BindingT);
-                //await Host.Router.NavigateBack.Execute();
-            }
-            catch (Exception ex)
-            {
-                InfoLabel = $"Errore durante il salvataggio: {ex.Message}";
-            }
-            finally
-            {
+                if (BindingT is null) { return; }
+
+                if (int.TryParse(GetNumeroTessera, out int numeroTessera))
+                {
+                    // 2. Se la conversione riesce, controlliamo il valore
+                    if (numeroTessera <= 0) { }
+                    else
+                    {
+                        if (await Q.EsisteNumeroTessera(BindingT.NumeroTessera, token))
+                        {
+                            InfoLabel = "Tessera già in uso";
+                            SetFocus(NumeroTesseraFocus);
+                            return;
+                        }
+                    }
+                }
+                else
+                {
+                    // 3. Se è stringa vuota o contiene lettere, finisce qui senza crash
+                    // (In questo caso considerala come se fosse <= 0)
+                    InfoLabel = "Numero Tessera non può essere zero";
+                    SetFocus(NumeroTesseraFocus);
+                    return;
+                }
+
+                idtessera = await Q.AddTessera(BindingT.ToDto(), token);
+
                 if (idtessera == -1)
                 {
                     InfoLabel = "Errore durante il salvataggio. Verificare i dati e riprovare.";
@@ -94,9 +117,25 @@ namespace ViewModels
                 }
                 else
                 {
-                    OnBack(_idRitorno);
+                    await OnBack(_idRitorno);
                 }
+
             }
+            catch (OperationCanceledException)
+            {
+                Debug.WriteLine("Operazione annullata dall'utente");
+                return;
+            }
+            catch (Exception ex)
+            {
+                InfoLabel = $"Errore durante il salvataggio: {ex.Message}";
+            }
+            finally
+            { 
+                IsLoading = false;
+                
+            }
+
         }
     }
 }

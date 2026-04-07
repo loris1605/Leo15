@@ -138,6 +138,15 @@ namespace ViewModels
 
                 idsocio = await Q.AddCodiceSocio(BindingT.ToDto(), token);
 
+                if (idsocio == -1)
+                {
+                    SetFocus(NumeroSocioFocus);
+                }
+                else
+                {
+                    await OnBack(_idDaModificare);
+                }
+
 
             }
             catch (OperationCanceledException)
@@ -152,14 +161,7 @@ namespace ViewModels
             finally
             {
                 IsLoading = false;
-                if (idsocio == -1)
-                {
-                    SetFocus(NumeroSocioFocus);
-                }
-                else
-                {
-                    await OnBack(_idDaModificare);
-                }
+                
             }
         }
     }

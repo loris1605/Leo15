@@ -31,14 +31,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <AvaloniaXaml Remove="Views\Soci\Tessera\TesseraInputView.axaml" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Compile Remove="Views\Soci\Tessera\TesseraInputView.axaml.cs" />
-  </ItemGroup>
-
-  <ItemGroup>
     <PackageReference Include="Avalonia" Version="11.3.11" />
     <PackageReference Include="Avalonia.Controls.DataGrid" Version="11.3.11" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.14" />
@@ -51,10 +43,6 @@
   <ItemGroup>
     <ProjectReference Include="..\ControlStyles\ControlStyles.csproj" />
     <ProjectReference Include="..\ViewModels\ViewModels.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Views\Soci\Tessera\" />
   </ItemGroup>
 
 </Project>

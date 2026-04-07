@@ -44,7 +44,7 @@ namespace ViewModels
         protected override async Task OnLoading()
         {
             //await GroupRouter.NavigateAndReset.Execute(new OperatoreGroupViewModel(this));
-
+            await Task.CompletedTask;
             
         }
          

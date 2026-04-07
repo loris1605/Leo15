@@ -94,6 +94,8 @@ internal class Program
         services.AddTransient<IViewFor<CodiceSocioAddViewModel>, SocioInputView>();
         services.AddTransient<IViewFor<CodiceSocioDelViewModel>, SocioInputView>();
         services.AddTransient<IViewFor<CodiceSocioUpdViewModel>, SocioInputView>();
+
+        services.AddTransient<IViewFor<TesseraAddViewModel>, TesseraInputView>();
     }
 
 

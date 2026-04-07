@@ -12,10 +12,19 @@ using System.Reactive.Disposables.Fluent;
 using System.Reactive.Linq;
 using ViewModels;
 
-namespace Leonardo;
+namespace Views;
 
-public partial class TesseraInputView : ReactiveUserControl<TesseraInputBase>
+public partial class TesseraInputView : BaseUserControl<TesseraInputBase>,
+                                        IViewFor<TesseraAddViewModel>
 {
+    protected override string RootControlName => "MainGrid";
+
+    TesseraAddViewModel? IViewFor<TesseraAddViewModel>.ViewModel
+    {
+        get => ViewModel as TesseraAddViewModel;
+        set => ViewModel = value;
+    }
+
     public TesseraInputView()
     {
         InitializeComponent();
@@ -53,7 +62,7 @@ public partial class TesseraInputView : ReactiveUserControl<TesseraInputBase>
 
             //Bind Numero Tessera to TextBox
             this.Bind(ViewModel,
-                      vm => vm.NumeroTessera,
+                      vm => vm.BindingT.NumeroTessera,
                       v => v.NumeroTesseraBox.Text)
                 .DisposeWith(d);
 
@@ -99,25 +108,6 @@ public partial class TesseraInputView : ReactiveUserControl<TesseraInputBase>
 
 
             #endregion
-
-            #region Commands
-
-            this.Bind(ViewModel,
-                    vm => vm.EscPressedCommand,
-                    v => v.InputSaveBox.ExitCommand).DisposeWith(d);
-
-            this.Bind(ViewModel,
-                vm => vm.SaveCommand,
-                v => v.InputSaveBox.SaveCommand).DisposeWith(d);
-
-
-            #endregion
-
-            Disposable.Create(() => {
-                this.DataContext = null;
-                System.Diagnostics.Debug.WriteLine(">>> [VIEW] TesseraInputView deattivata, DataContext rimosso.");
-            }).DisposeWith(d);
-
 
         });
     }

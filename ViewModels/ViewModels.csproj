@@ -35,9 +35,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Remove="Soci\Tessera\TesseraAddViewModel.cs" />
     <Compile Remove="Soci\Tessera\TesseraDelViewModel.cs" />
-    <Compile Remove="Soci\Tessera\TesseraInputBase.cs" />
     <Compile Remove="Soci\Tessera\TesseraUpdViewModel.cs" />
   </ItemGroup>
 
@@ -54,10 +52,6 @@
   <ItemGroup>
     <ProjectReference Include="..\DTO\DTO.csproj" />
     <ProjectReference Include="..\SysNet\SysNet.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Soci\Tessera\" />
   </ItemGroup>
 
 </Project>

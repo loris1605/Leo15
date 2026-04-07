@@ -1,11 +1,11 @@
-﻿using Models.Entity;
-using ReactiveUI;
+﻿using ReactiveUI;
 using SysNet;
 using System.Reactive;
 using System.Reactive.Concurrency;
 using System.Reactive.Disposables.Fluent;
 using System.Reactive.Linq;
 using System.Reactive.Threading.Tasks;
+using ViewModels.BindableObjects;
 
 namespace ViewModels
 {
@@ -17,7 +17,7 @@ namespace ViewModels
         int CodiceSocio => BindingT is null ? 0 : BindingT.CodiceSocio;
         int CodicePerson => BindingT is null ? 0 : BindingT.Id;
 
-        protected string GetNumeroTessera => NumeroTessera;
+        protected string GetNumeroTessera => BindingT is null ? "" : BindingT.NumeroTessera;
         protected string GetNumeroSocio => NumeroSocio;
         protected int GetCodiceSocio => CodiceSocio;
         protected string GetNomeCognome => Nome + " " + Cognome;
@@ -29,14 +29,12 @@ namespace ViewModels
         
         public TesseraInputBase(IScreen host) : base(host)
         {
-            EscPressedCommand = ReactiveCommand.Create(OnBackEsc);
+            EscPressedCommand = ReactiveCommand.CreateFromTask(OnBackEsc,
+                                canExecute: this.WhenAnyValue(x => x.IsLoading, loading => !loading));
 
             this.WhenActivated(d =>
             {
-                this.WhenAnyValue(x => x.NumeroTessera)
-                    .Where(_ => BindingT != null)
-                    .Subscribe(val => BindingT.NumeroTessera = val)
-                    .DisposeWith(d);
+                EscPressedCommand.DisposeWith(d);
             });
         }
 
@@ -46,11 +44,12 @@ namespace ViewModels
         {
             // Fondamentale: aspetta un attimo che la View sia "viva" e l'handler registrato
             await Task.Delay(200);
-            await NumeroTesseraFocus.Handle(Unit.Default).ToTask();
+            SetFocus(NumeroTesseraFocus);
         }
 
-        private void OnBackEsc()
+        protected async Task OnBackEsc()
         {
+            IsLoading = true;
             if (HostScreen is ISociScreen sociHost)
             {
                 RxApp.MainThreadScheduler.Schedule(() => {
@@ -58,47 +57,35 @@ namespace ViewModels
                     sociHost.GroupEnabled = true;
                 });
             }
+
+            await Task.CompletedTask;
         }
 
-        protected void OnBack(int value = 0)
+        protected async Task OnBack(int value = 0)
         {
+            IsLoading = true;
             if (HostScreen is ISociScreen sociHost)
             {
                 // Svuota completamente lo stack del router di input
-                sociHost.InputRouter.NavigateBack.Execute();
+                await sociHost.InputRouter.NavigateBack.Execute();
                 sociHost.InputRouter.NavigationStack.Clear();
-                sociHost.AggiornaGrid(value);
+                sociHost.AggiornaGridByInt(value);
                 sociHost.GroupEnabled = true;
             }
+
+            await Task.CompletedTask;
         }
     }
 
     public partial class TesseraInputBase
     {
 
-        private string numerotessera = string.Empty;
-        public string NumeroTessera
-        {
-            get => numerotessera;
-            set => this.RaiseAndSetIfChanged(ref numerotessera, value);
-
-        }
-
         private PersonMap bindingt = Create<PersonMap>.Instance();
         public PersonMap BindingT
         {
             get => bindingt;
-            set
-            {
-                // 1. Aggiorna il riferimento (fondamentale per RaiseAndSetIfChanged)
-                this.RaiseAndSetIfChanged(ref bindingt, value);
-
-                // 2. Se carichi un socio, allinea la UI al modello
-                if (value != null)
-                {
-                    this.NumeroTessera = value.NumeroTessera;
-                }
-            }
+            set => this.RaiseAndSetIfChanged(ref bindingt, value);
+        
         }
     }
 }

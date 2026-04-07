@@ -80,14 +80,15 @@ namespace ViewModels
 
         protected override async Task OnSaving()
         {
-
-            if (BindingT is null)
-                return;
+            IsLoading = true;
 
             var token = _cts?.Token ?? CancellationToken.None;
 
             try
             {
+                if (BindingT is null)
+                    return;
+
                 if (int.TryParse(GetNumeroSocio, out int numeroSocio))
                 {
                     // 2. Se la conversione riesce, controlliamo il valore
@@ -120,8 +121,7 @@ namespace ViewModels
                     return;
                 }
 
-                OnBack(_idRitorno);
-
+                await OnBack(_idRitorno);
 
             }
             catch (OperationCanceledException)
@@ -133,17 +133,8 @@ namespace ViewModels
             {
                 { Debug.WriteLine($"OnLoading Error: {ex.Message}"); }
             }
-            
-
-
-
-
-
-            
-
-            
-
-            
+            finally { IsLoading = false; }
+        
 
         }
 

@@ -93,9 +93,11 @@ namespace ViewModels
                                                                     GroupBindingT.Id,
                                                                     Locator.Current.GetService<IPersonRepository>())), canSocioUpdate);
 
-            //AddTesseraCommand = ReactiveCommand.CreateFromObservable(
-            //    () => NavigateToInput(new TesseraAddViewModel(ConfigHost,
-            //                            GroupBindingT.Id, GroupBindingT.CodiceSocio)), canDelete);
+            AddTesseraCommand = ReactiveCommand.CreateFromObservable(
+                () => NavigateToInput(new TesseraAddViewModel(ConfigHost,
+                                                                GroupBindingT.Id, 
+                                                                GroupBindingT.CodiceSocio,
+                                                                Locator.Current.GetService<IPersonRepository>())), canSocioUpdate);
 
             //DelTesseraCommand = ReactiveCommand.CreateFromObservable(
             //    () => NavigateToInput(new TesseraDelViewModel(ConfigHost,
