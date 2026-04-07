@@ -1,4 +1,5 @@
 ﻿using Avalonia.Collections;
+using DTO.Entity;
 using ReactiveUI;
 using SysNet;
 using System.Diagnostics;
@@ -20,8 +21,6 @@ namespace ViewModels
     public partial class GroupViewModelBase<TMap> : BaseViewModel where TMap : class, new()
     {
 
-        protected CancellationTokenSource _cts;
-
         public ReactiveCommand<Unit, Unit> AddCommand { get; protected set; }
         public ReactiveCommand<Unit, Unit> UpdCommand { get; protected set; }
         public ReactiveCommand<Unit, Unit> DelCommand { get; protected set; }
@@ -31,8 +30,6 @@ namespace ViewModels
         {
             this.WhenActivated(d =>
             {
-                _cts = new CancellationTokenSource();
-
                 Disposable.Create(() =>
                 {
                     _cts.Cancel();
@@ -64,7 +61,9 @@ namespace ViewModels
             base.OnFinalDestruction();
         }
 
-        
+        public virtual Task CaricaByModel(object model) { return Task.CompletedTask; }
+
+
         #region DataSource
 
         private IList<TMap> _datasource = [];

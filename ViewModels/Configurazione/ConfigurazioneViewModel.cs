@@ -12,7 +12,7 @@ namespace ViewModels
         RoutingState InputRouter { get; }
         bool GroupEnabled { get; set; }
 
-        void AggiornaGrid(int id);
+        void AggiornaGridByInt(int id);
     }
 
 
@@ -48,7 +48,7 @@ namespace ViewModels
             
         }
          
-        public void AggiornaGrid(int id)
+        public void AggiornaGridByInt(int id)
         {
             if (GroupRouter.GetCurrentViewModel() is IGroupViewModelBase groupVm)
             {

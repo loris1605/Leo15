@@ -1,19 +1,22 @@
 ﻿using DTO.Repository;
 using Models.Repository;
 using ReactiveUI;
+using Splat;
 using SysNet;
 using SysNet.Converters;
+using System.Diagnostics;
 using System.Reactive;
 using System.Reactive.Linq;
+using ViewModels.BindableObjects;
 
 namespace ViewModels
 {
     public class CodiceSocioAddViewModel : CodiceSocioInputBase
     {
-        private PersonRepository Q { get; set; }
+        private IPersonRepository Q;
         private readonly int _idDaModificare;
         
-        public CodiceSocioAddViewModel(IScreen host, int idperson) : base(host)
+        public CodiceSocioAddViewModel(IScreen host, int idperson, IPersonRepository personRepository = null) : base(host)
         {
             _idDaModificare = idperson;
 
@@ -22,30 +25,55 @@ namespace ViewModels
             FieldsVisibile = true;
             FieldsEnabled = true;
 
-            Q = Create<PersonRepository>.Instance();
+            Q = personRepository ?? Locator.Current.GetService<IPersonRepository>();
 
-            OnNumeroSocioFocus().FireAndForget();
-
+            SetFocus(NumeroSocioFocus);
+           
         }
 
         protected override void OnFinalDestruction()
         {
-            Q?.Dispose();
             Q = null;
         }
 
         protected override async Task OnLoading()
         {
-            BindingT = await Q.FirstPerson(_idDaModificare);
-            if (BindingT == null)
+            var token = _cts?.Token ?? CancellationToken.None;
+
+            IsLoading = true;
+            try
             {
-                InfoLabel = "Errore: Socio non trovato nel database.";
-                FieldsEnabled = false;
+                var dto = await Q.FirstPerson(_idDaModificare, token);
+                token.ThrowIfCancellationRequested();
+                if (dto == null)
+                {
+                    InfoLabel = "Errore: Socio non trovato nel database.";
+                    FieldsEnabled = false;
+                    SetFocus(EscFocus);
+                }
+                else
+                {
+                    BindingT = new PersonMap(dto);
+                    Titolo1 = "per " + GetNomeCognome;
+                    BindingT.NumeroSocio = string.Empty;
+                    BindingT.NumeroTessera = string.Empty;
+                    SetFocus(NumeroSocioFocus);
+                }
+       
+                
             }
-            Titolo1 = "per " + GetNomeCognome;
-            NumeroSocio = string.Empty;
-            NumeroTessera = string.Empty;
-            await OnNumeroSocioFocus();
+            catch (OperationCanceledException)
+            {
+                Debug.WriteLine("Operazione annullata dall'utente");
+                return;
+            }
+            catch (Exception ex)
+            {
+                { Debug.WriteLine($"OnLoading Error: {ex.Message}"); }
+            }
+            finally { IsLoading = false; }
+
+
         }
        
 
@@ -53,63 +81,69 @@ namespace ViewModels
 
         protected async override Task OnSaving()
         {
+            IsLoading = true;
+            var token = _cts?.Token ?? CancellationToken.None;
 
             if (BindingT is null)
                 return;
 
-            if (int.TryParse(GetNumeroSocio, out int numeroSocio))
-            {
-                // 2. Se la conversione riesce, controlliamo il valore
-                if (numeroSocio <= 0) { }
-                else
-                {
-                    if (await Q.EsisteNumeroSocio(BindingT.NumeroSocio))
-                    {
-                        InfoLabel = "Codice Socio già in uso";
-                        await NumeroSocioFocus.Handle(Unit.Default);
-                        return;
-                    }
-                }
-            }
-            else
-            {
-                // 3. Se è stringa vuota o contiene lettere, finisce qui senza crash
-                // (In questo caso considerala come se fosse <= 0)
-                InfoLabel = "Codice Socio non può essere zero";
-                await NumeroSocioFocus.Handle(Unit.Default);
-                return;
-            }
-
-            if (int.TryParse(GetNumeroTessera, out int numeroTessera))
-            {
-                // 2. Se la conversione riesce, controlliamo il valore
-                if (numeroTessera <= 0) { }
-                else
-                {
-                    if (await Q.EsisteNumeroTessera(BindingT.NumeroTessera))
-                    {
-                        InfoLabel = "Tessera già in uso";
-                        await NumeroTesseraFocus.Handle(Unit.Default);
-                        return;
-                    }
-                }
-
-            }
-            else
-            {
-                // 3. Se è stringa vuota o contiene lettere, finisce qui senza crash
-                // (In questo caso considerala come se fosse <= 0)
-                InfoLabel = "Numero Tessera non può essere zero";
-                await NumeroTesseraFocus.Handle(Unit.Default);
-                return;
-            }
-
-
-
             try
             {
-                idsocio = await Q.AddCodiceSocio(BindingT);
-                //await Host.Router.NavigateBack.Execute();
+                if (int.TryParse(GetNumeroSocio, out int numeroSocio))
+                {
+                    // 2. Se la conversione riesce, controlliamo il valore
+                    if (numeroSocio <= 0) { }
+                    else
+                    {
+                        if (await Q.EsisteNumeroSocio(BindingT.NumeroSocio, token))
+                        {
+                            InfoLabel = "Codice Socio già in uso";
+                            SetFocus(NumeroSocioFocus);
+                            return;
+                        }
+                    }
+                }
+                else
+                {
+                    // 3. Se è stringa vuota o contiene lettere, finisce qui senza crash
+                    // (In questo caso considerala come se fosse <= 0)
+                    InfoLabel = "Codice Socio non può essere zero";
+                    SetFocus(NumeroSocioFocus);
+                    return;
+                }
+
+                if (int.TryParse(GetNumeroTessera, out int numeroTessera))
+                {
+                    // 2. Se la conversione riesce, controlliamo il valore
+                    if (numeroTessera <= 0) { }
+                    else
+                    {
+                        if (await Q.EsisteNumeroTessera(BindingT.NumeroTessera, token))
+                        {
+                            InfoLabel = "Tessera già in uso";
+                            SetFocus(NumeroTesseraFocus);
+                            return;
+                        }
+                    }
+
+                }
+                else
+                {
+                    // 3. Se è stringa vuota o contiene lettere, finisce qui senza crash
+                    // (In questo caso considerala come se fosse <= 0)
+                    InfoLabel = "Numero Tessera non può essere zero";
+                    SetFocus(NumeroTesseraFocus);
+                    return;
+                }
+
+                idsocio = await Q.AddCodiceSocio(BindingT.ToDto(), token);
+
+
+            }
+            catch (OperationCanceledException)
+            {
+                Debug.WriteLine("Operazione annullata dall'utente");
+                return;
             }
             catch (Exception ex)
             {
@@ -117,14 +151,14 @@ namespace ViewModels
             }
             finally
             {
+                IsLoading = false;
                 if (idsocio == -1)
                 {
-                    InfoLabel = "Errore durante il salvataggio. Verificare i dati e riprovare.";
-                    await NumeroSocioFocus.Handle(Unit.Default);
+                    SetFocus(NumeroSocioFocus);
                 }
                 else
                 {
-                    OnBack(_idDaModificare);
+                    await OnBack(_idDaModificare);
                 }
             }
         }

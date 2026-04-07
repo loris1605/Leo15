@@ -39,23 +39,30 @@ namespace ViewModels
 
         protected async override Task OnSaving()
         {
-            var ct = CancellationToken.None;
+            IsLoading = true;
+            var token = _cts?.Token ?? CancellationToken.None;
 
-            if (!await ValidaDati()) return;
+            if (!await ValidaDati())
+            {
+                IsLoading = false;
+                return;
+            }
 
             if (!int.TryParse(GetNumeroTessera, out int numeroTessera) || numeroTessera <= 0)
             {
                 InfoLabel = "Numero Tessera non valido o uguale a zero";
                 SetFocus(TesseraFocus);
+                IsLoading = false;
                 return;
             }
 
             try
             {
-                if (await Q.EsisteNumeroTessera(BindingT.NumeroTessera, ct))
+                if (await Q.EsisteNumeroTessera(BindingT.NumeroTessera, token))
                 {
                     InfoLabel = "Tessera già in uso";
                     SetFocus(TesseraFocus);
+                    IsLoading = false;
                     return;
                 }
             }
@@ -71,6 +78,7 @@ namespace ViewModels
 
 
 
+
             if (int.TryParse(GetNumeroSocio, out int numeroSocio))
             {
                 // 2. Se la conversione riesce, controlliamo il valore
@@ -79,16 +87,18 @@ namespace ViewModels
                 {
                     try
                     {
-                        if (await Q.EsisteNumeroSocio(BindingT.NumeroSocio, ct))
+                        if (await Q.EsisteNumeroSocio(BindingT.NumeroSocio, token))
                         {
                             InfoLabel = "Codice Socio già in uso";
                             SetFocus(SocioFocus);
+                            IsLoading = false;
                             return;
                         }
                     }
                     catch (OperationCanceledException)
                     {
                         Debug.WriteLine("Operazione annullata dall'utente");
+                        IsLoading = false;
                         return;
                     }
                     catch (Exception ex)
@@ -104,29 +114,33 @@ namespace ViewModels
                 // (In questo caso considerala come se fosse <= 0)
                 InfoLabel = "Codice Socio non può essere zero";
                 SetFocus(SocioFocus);
+                IsLoading = false;
                 return;
             }
 
             
-            if (await EsisteAnagrafica(ct))
+            if (await EsisteAnagrafica(token))
             {
                 InfoLabel = "Socio già registrato";
                 SetFocus(SocioFocus);
+                IsLoading = false;
                 return;
             }
 
             InfoLabel = "Salvataggio in corso...";
 
-            int newPersonId = await Q.Add(BindingT.ToDto(), ct);
+            int newPersonId = await Q.Add(BindingT.ToDto(), token);
 
             if (newPersonId == -1)
             {
                 InfoLabel = "Errore Db inserimento Socio";
                 SetFocus(CognomeFocus);
+                IsLoading = false;
                 return;
             }
 
-            OnBack(newPersonId);
+            IsLoading = false;
+            await OnBack(newPersonId);
         }
 
         private async Task<bool> EsisteAnagrafica(CancellationToken ct)

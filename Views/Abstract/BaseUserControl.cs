@@ -49,6 +49,8 @@ namespace Views
                 GC.Collect();
                 GC.WaitForPendingFinalizers();
                 GC.Collect();
+                Debug.WriteLine($"***** [VIEW] {this.GetType().Name} {this.GetHashCode()} deattivata, DataContext rimosso. *****");
+                
 #endif
             });
         }

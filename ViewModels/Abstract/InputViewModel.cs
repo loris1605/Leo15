@@ -1,5 +1,6 @@
 ﻿using ReactiveUI;
 using System.Reactive;
+using System.Reactive.Disposables.Fluent;
 using System.Reactive.Linq;
 
 namespace ViewModels
@@ -20,7 +21,14 @@ namespace ViewModels
         
         public InputViewModel(IScreen host) : base(host)
         {
-            SaveCommand = ReactiveCommand.CreateFromTask(OnSaving);
+            SaveCommand = ReactiveCommand.CreateFromTask(OnSaving,
+                            canExecute: this.WhenAnyValue(x => x.IsLoading, loading => !loading));
+
+            this.WhenActivated(d =>
+            {
+                SaveCommand?.DisposeWith(d);
+                EscPressedCommand?.DisposeWith(d);
+            });
         }
 
         protected override Task OnLoading()

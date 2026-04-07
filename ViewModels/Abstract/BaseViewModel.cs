@@ -23,6 +23,8 @@ namespace ViewModels
 
         protected int _deadEntries;
 
+        protected CancellationTokenSource _cts;
+
         // Implementazione di IActivatableViewModel
         public ViewModelActivator Activator { get; } = new();
 
@@ -53,6 +55,7 @@ namespace ViewModels
             // Gestione dell'attivazione/disattivazione
             this.WhenActivated(disposables =>
             {
+                _cts = new CancellationTokenSource();
 
                 Observable.Return(Unit.Default)
                 .InvokeCommand(LoadCommand)
@@ -69,6 +72,8 @@ namespace ViewModels
                 .DisposeWith(disposables);
 
                 Disposable.Create(() => {
+
+                    _cts.Cancel();
 
                     OnFinalDestruction();
 #if DEBUG

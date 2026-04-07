@@ -85,10 +85,15 @@ internal class Program
     private static void RegisterIViewForSoci(IServiceCollection services)
     {
         services.AddTransient<IViewFor<PersonGroupViewModel>, PersonGroupView>();
+
         services.AddTransient<IViewFor<PersonAddViewModel>, PersonInputView>();
         services.AddTransient<IViewFor<PersonUpdViewModel>, PersonInputView>();
         services.AddTransient<IViewFor<PersonDelViewModel>, PersonInputView>();
         services.AddTransient<IViewFor<PersonSearchViewModel>, PersonSearchView>();
+
+        services.AddTransient<IViewFor<CodiceSocioAddViewModel>, SocioInputView>();
+        services.AddTransient<IViewFor<CodiceSocioDelViewModel>, SocioInputView>();
+        services.AddTransient<IViewFor<CodiceSocioUpdViewModel>, SocioInputView>();
     }
 
 

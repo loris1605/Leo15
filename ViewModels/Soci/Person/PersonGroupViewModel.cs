@@ -44,6 +44,11 @@ namespace ViewModels
                                    item.CodiceSocio == 0 &&
                                    !loading);
 
+            var canSocioUpdate = this.WhenAnyValue(x => x.GroupBindingT, x => x.IsLoading,
+                (item, loading) => item != null &&
+                                   item.CodiceSocio != 0 &&
+                                   !loading);
+
             var canSocioDelete = this.WhenAnyValue(x => x.GroupBindingT, x => x.IsLoading,
                 (item, loading) => item != null &&
                                    item.CodiceSocio != 0 &&
@@ -72,18 +77,21 @@ namespace ViewModels
                 () => NavigateToInput(new PersonDelViewModel(ConfigHost, GroupBindingT!.Id,
                                                              Locator.Current.GetService<IPersonRepository>())), canDelete);
 
-            //AddCodiceSocioCommand = ReactiveCommand.CreateFromObservable(
-            //    () => NavigateToInput(new CodiceSocioAddViewModel(ConfigHost, GroupBindingT!.Id)), canAction);
+            AddCodiceSocioCommand = ReactiveCommand.CreateFromObservable(
+                () => NavigateToInput(new CodiceSocioAddViewModel(ConfigHost, GroupBindingT!.Id,
+                                                             Locator.Current.GetService<IPersonRepository>())), canAction);
 
-            //DelCodiceSocioCommand = ReactiveCommand.CreateFromObservable(
-            //    () => NavigateToInput(new CodiceSocioDelViewModel(ConfigHost,
-            //                                                        GroupBindingT.CodiceSocio,
-            //                                                        GroupBindingT.Id)), canSocioDelete);
+            DelCodiceSocioCommand = ReactiveCommand.CreateFromObservable(
+                () => NavigateToInput(new CodiceSocioDelViewModel(ConfigHost,
+                                                                    GroupBindingT.CodiceSocio,
+                                                                    GroupBindingT.Id,
+                                                                    Locator.Current.GetService<IPersonRepository>())), canSocioDelete);
 
-            //UpdCodiceSocioCommand = ReactiveCommand.CreateFromObservable(
-            //    () => NavigateToInput(new CodiceSocioUpdViewModel(ConfigHost,
-            //                                                        GroupBindingT.CodiceSocio,
-            //                                                        GroupBindingT.Id)), canDelete);
+            UpdCodiceSocioCommand = ReactiveCommand.CreateFromObservable(
+                () => NavigateToInput(new CodiceSocioUpdViewModel(ConfigHost,
+                                                                    GroupBindingT.CodiceSocio,
+                                                                    GroupBindingT.Id,
+                                                                    Locator.Current.GetService<IPersonRepository>())), canSocioUpdate);
 
             //AddTesseraCommand = ReactiveCommand.CreateFromObservable(
             //    () => NavigateToInput(new TesseraAddViewModel(ConfigHost,
@@ -161,7 +169,7 @@ namespace ViewModels
 
         public async Task CaricaDataSource(int id = 0)
         {
-            var token = _cts.Token;
+            var token = _cts?.Token ?? CancellationToken.None;
             try
             {
                 var data = await Q.Load(id, token);
@@ -171,32 +179,35 @@ namespace ViewModels
             catch (OperationCanceledException) { }
         }
 
-        public async Task CaricaByModel(object model)
+        public override async Task CaricaByModel(object model)
         {
-            var token = _cts.Token;
-            try
-            {
-                var data = await Q.LoadByModel(model, token);
-                token.ThrowIfCancellationRequested();
-                UpdateCollection(data, 0);
-            }
-            catch (OperationCanceledException) { }
+
+            var view = new DataGridCollectionView((List<PersonMap>)model);
+            view.GroupDescriptions.Add(new DataGridPathGroupDescription("Titolo"));
+
+            GroupedDataSource = view;
+            GroupFocus = true;
+            IdIndex = 0;
+            await Task.CompletedTask;
         }
 
         protected IObservable<Unit> NavigateToReset(IRoutableViewModel vm)
         {
             if (ConfigHost == null) return Observable.Return(Unit.Default);
 
+            IsLoading = true;
             return ConfigHost.GroupRouter
                 .NavigateAndReset
                 .Execute(vm)
-                .Select(_ => Unit.Default);
+                .Select(_ => Unit.Default)
+                .Finally(() => this.IsLoading = false);
         }
 
         protected IObservable<Unit> NavigateToInput(IRoutableViewModel vm)
         {
             if (ConfigHost == null) return Observable.Return(Unit.Default);
 
+            IsLoading = true;
             var stringa = GroupBindingT is null ? "" : GroupBindingT.CodiceSocio.ToString();
 
             Debug.WriteLine($"canDelete {stringa}");
@@ -204,7 +215,7 @@ namespace ViewModels
             // Esegue il cambio di stato della UI e poi naviga
             return Observable.Start(() => ConfigHost.GroupEnabled = false, RxApp.MainThreadScheduler)
                 .SelectMany(_ => ConfigHost.InputRouter.Navigate.Execute(vm))
-                .Select(_ => Unit.Default);
+                .Select(_ => Unit.Default).Finally(() => this.IsLoading = false);
         }
 
         public string NumeroSocio => BindingT is null ? "" : GroupBindingT.NumeroSocio;

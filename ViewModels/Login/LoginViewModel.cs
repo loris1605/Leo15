@@ -38,11 +38,12 @@ namespace ViewModels
             var canEntra = this.WhenAnyValue(
                x => x.PasswordText,
                x => x.BindingT,
-               (pass, operatore) =>
+               x => x.IsLoading,
+               (pass, operatore, loading) =>
                    !string.IsNullOrWhiteSpace(pass) &&
                    operatore != null &&
-                   pass == operatore.Password);
-
+                   pass == operatore.Password && !loading);
+            
 
             EntraCommand = ReactiveCommand.CreateFromTask(OnEntra, canEntra);
             //EntraCommand = ReactiveCommand.CreateFromTask(OnEntra);
@@ -64,8 +65,8 @@ namespace ViewModels
                     _loadingCts.Dispose();
                 }).DisposeWith(d);
 
-                EntraCommand.DisposeWith(d);
-                EsciCommand.DisposeWith(d);
+                EntraCommand?.DisposeWith(d);
+                EsciCommand?.DisposeWith(d);
             });
  
         }
@@ -86,7 +87,7 @@ namespace ViewModels
             {
                 IsLoading = true;
                 //Q = new(); // Istanza locale del Repository
-                List<LoginDTO> dbData = await Q.GetOperatoriAbilitati();
+                List<LoginDTO> dbData = await Q.GetOperatoriAbilitati(token);
 
                 token.ThrowIfCancellationRequested();
 

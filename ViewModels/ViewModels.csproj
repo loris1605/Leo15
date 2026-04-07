@@ -35,10 +35,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Remove="Soci\CodiceSocio\CodiceSocioAddViewModel.cs" />
-    <Compile Remove="Soci\CodiceSocio\CodiceSocioDelViewModel.cs" />
-    <Compile Remove="Soci\CodiceSocio\CodiceSocioInputBase.cs" />
-    <Compile Remove="Soci\CodiceSocio\CodiceSocioUpdViewModel.cs" />
     <Compile Remove="Soci\Tessera\TesseraAddViewModel.cs" />
     <Compile Remove="Soci\Tessera\TesseraDelViewModel.cs" />
     <Compile Remove="Soci\Tessera\TesseraInputBase.cs" />
@@ -61,7 +57,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Soci\CodiceSocio\" />
     <Folder Include="Soci\Tessera\" />
   </ItemGroup>
 

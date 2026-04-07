@@ -31,12 +31,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <AvaloniaXaml Remove="Views\Soci\Socio\SocioInputView.axaml" />
     <AvaloniaXaml Remove="Views\Soci\Tessera\TesseraInputView.axaml" />
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Remove="Views\Soci\Socio\SocioInputView.axaml.cs" />
     <Compile Remove="Views\Soci\Tessera\TesseraInputView.axaml.cs" />
   </ItemGroup>
 
@@ -56,7 +54,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Views\Soci\Socio\" />
     <Folder Include="Views\Soci\Tessera\" />
   </ItemGroup>
 

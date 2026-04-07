@@ -41,15 +41,15 @@ namespace ViewModels
                     await HostScreen.Router.NavigateAndReset.Execute(page);
             });
 
-            CassaCommand = ReactiveCommand.Create<string>(param => OnCassa(param));
+            CassaCommand = ReactiveCommand.CreateFromTask<string>(param => OnCassa(param));
             LogoutCommand = ReactiveCommand.CreateFromTask(GoToLogin);
                                    
 
             this.WhenActivated(d => 
             {
-                LogoutCommand.DisposeWith(d);
-                CassaCommand.DisposeWith(d);
-                NavigateCommand.DisposeWith(d);
+                LogoutCommand?.DisposeWith(d);
+                CassaCommand?.DisposeWith(d);
+                NavigateCommand?.DisposeWith(d);
                                
             });
                 
@@ -136,8 +136,9 @@ namespace ViewModels
 
         }
 
-        private void OnCassa(string x)
+        private async Task OnCassa(string x)
         {
+            await Task.CompletedTask;
             //GlobalValuesC.MyPostazione = new()
             //{
             //    DESCPOSTAZIONE = x

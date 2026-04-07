@@ -1,17 +1,24 @@
-﻿using Models.Repository;
+﻿using DTO.Repository;
+using Models.Repository;
 using ReactiveUI;
+using Splat;
 using SysNet;
 using SysNet.Converters;
+using System.Diagnostics;
+using ViewModels.BindableObjects;
 
 namespace ViewModels
 {
     public class CodiceSocioUpdViewModel : CodiceSocioInputBase
     {
-        private PersonR Q { get; set; }
+        private IPersonRepository Q;
         private readonly int _idDaModificare;
         private readonly int _idRitorno;
 
-        public CodiceSocioUpdViewModel(IScreen host, int idsocio, int idperson) : base(host)
+        public CodiceSocioUpdViewModel(IScreen host,
+                                       int idsocio,
+                                       int idperson,
+                                       IPersonRepository personRepository = null) : base(host)
         {
             _idDaModificare = idsocio;
             _idRitorno = idperson;
@@ -20,72 +27,123 @@ namespace ViewModels
             FieldsVisibile = true;
             FieldVisibile = false;
 
-            Q = Create<PersonR>.Instance();
+            Q = personRepository ?? Locator.Current.GetService<IPersonRepository>();
 
-            OnNumeroSocioFocus().FireAndForget();
+            SaveCommand = ReactiveCommand.CreateFromTask(OnSaving, 
+                            canExecute: this.WhenAnyValue(x => x.IsLoading, loading => !loading));
+
+            SetFocus(NumeroSocioFocus);
             
         }
 
         protected override void OnFinalDestruction()
         {
-            Q?.Dispose();
             Q = null;
         }
 
         protected override async Task OnLoading()
         {
-            BindingT = await Q.FirstSocio(_idDaModificare);
-            if (BindingT == null)
-            {
-                InfoLabel = "Errore: Socio non trovato nel database.";
-                FieldsEnabled = false;
-            }
-            Titolo = "Modifica Codice Socio per ";
-            Titolo1 = "per " + GetNomeCognome;
+            var token = _cts?.Token ?? CancellationToken.None;
 
-            await OnNumeroSocioFocus();
+            IsLoading = true;
+            try
+            {
+                var data = await Q.FirstSocio(_idDaModificare, token);
+                token.ThrowIfCancellationRequested();
+
+                if (data == null)
+                {
+                    InfoLabel = "Errore: Socio non trovato nel database.";
+                    FieldsEnabled = false;
+                    SetFocus(EscFocus);
+                }
+                else
+                {
+                    BindingT = new PersonMap(data);
+                    Titolo = "Modifica Codice Socio per ";
+                    Titolo1 = "per " + GetNomeCognome;
+                    SetFocus(NumeroSocioFocus);
+                }
+            }
+            catch (OperationCanceledException)
+            {
+                Debug.WriteLine("Operazione annullata dall'utente");
+                return;
+            }
+            catch (Exception ex)
+            {
+                { Debug.WriteLine($"OnLoading Error: {ex.Message}"); }
+            }
+            finally { IsLoading = false; }
+
         }
 
         protected override async Task OnSaving()
         {
+
             if (BindingT is null)
                 return;
 
-            if (int.TryParse(GetNumeroSocio, out int numeroSocio))
+            var token = _cts?.Token ?? CancellationToken.None;
+
+            try
             {
-                // 2. Se la conversione riesce, controlliamo il valore
-                if (numeroSocio <= 0) { }
-                else
+                if (int.TryParse(GetNumeroSocio, out int numeroSocio))
                 {
-                    if (await Q.EsisteNumeroSocioUpd(BindingT))
+                    // 2. Se la conversione riesce, controlliamo il valore
+                    if (numeroSocio <= 0) { }
+                    else
                     {
-                        InfoLabel = "Codice Socio già in uso";
-                        await OnNumeroSocioFocus();
-                        return;
+                        if (await Q.EsisteNumeroSocioUpd(BindingT.ToDto(), token))
+                        {
+                            InfoLabel = "Codice Socio già in uso";
+                            SetFocus(NumeroSocioFocus);
+                            return;
+                        }
                     }
                 }
+                else
+                {
+                    // 3. Se è stringa vuota o contiene lettere, finisce qui senza crash
+                    // (In questo caso considerala come se fosse <= 0)
+                    InfoLabel = "Codice Socio non può essere zero";
+                    SetFocus(NumeroSocioFocus);
+                    return;
+                }
+
+                InfoLabel = "";
+
+                if (!await Q.UpdSocio(BindingT.ToDto(), token))
+                {
+                    InfoLabel = "Errore Db modifica person";
+                    SetFocus(NumeroSocioFocus);
+                    return;
+                }
+
+                OnBack(_idRitorno);
+
+
             }
-            else
+            catch (OperationCanceledException)
             {
-                // 3. Se è stringa vuota o contiene lettere, finisce qui senza crash
-                // (In questo caso considerala come se fosse <= 0)
-                InfoLabel = "Codice Socio non può essere zero";
-                await OnNumeroSocioFocus();
+                Debug.WriteLine("Operazione annullata dall'utente");
                 return;
             }
+            catch (Exception ex)
+            {
+                { Debug.WriteLine($"OnLoading Error: {ex.Message}"); }
+            }
+            
+
+
+
+
 
             
 
-            InfoLabel = "";
+            
 
-            if (!await Q.UpdSocio(BindingT))
-            {
-                InfoLabel = "Errore Db modifica person";
-                await OnNumeroSocioFocus();
-                return;
-            }
-
-            OnBack(_idRitorno);
+            
 
         }
 

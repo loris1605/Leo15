@@ -9,10 +9,34 @@ using System.Reactive.Disposables.Fluent;
 using System.Reactive.Linq;
 using ViewModels;
 
-namespace Leonardo;
+namespace Views;
 
-public partial class SocioInputView : ReactiveUserControl<CodiceSocioInputBase>
+public partial class SocioInputView : BaseUserControl<CodiceSocioInputBase>,
+                                        IViewFor<CodiceSocioAddViewModel>,
+                                        IViewFor<CodiceSocioDelViewModel>,
+                                        IViewFor<CodiceSocioUpdViewModel>
+
 {
+    protected override string RootControlName => "MainGrid";
+
+    CodiceSocioAddViewModel? IViewFor<CodiceSocioAddViewModel>.ViewModel
+    {
+        get => ViewModel as CodiceSocioAddViewModel;
+        set => ViewModel = value;
+    }
+
+    CodiceSocioDelViewModel? IViewFor<CodiceSocioDelViewModel>.ViewModel
+    {
+        get => ViewModel as CodiceSocioDelViewModel;
+        set => ViewModel = value;
+    }
+
+    CodiceSocioUpdViewModel? IViewFor<CodiceSocioUpdViewModel>.ViewModel
+    {
+        get => ViewModel as CodiceSocioUpdViewModel;
+        set => ViewModel = value;
+    }
+
     public SocioInputView()
     {
         InitializeComponent();
@@ -62,13 +86,13 @@ public partial class SocioInputView : ReactiveUserControl<CodiceSocioInputBase>
 
             //Bind Codice Socio to TextBox
             this.Bind(ViewModel,
-                      vm => vm.NumeroSocio,
+                      vm => vm.BindingT.NumeroSocio,
                       v => v.CodiceSocioBox.Text)
                 .DisposeWith(d);
 
             //Bind Numero Tessera to TextBox
             this.Bind(ViewModel,
-                      vm => vm.NumeroTessera,
+                      vm => vm.BindingT.NumeroTessera,
                       v => v.NumeroTesseraBox.Text)
                 .DisposeWith(d);
 
@@ -114,24 +138,6 @@ public partial class SocioInputView : ReactiveUserControl<CodiceSocioInputBase>
 
 
             #endregion
-
-            #region Commands
-
-            this.Bind(ViewModel,
-                    vm => vm.EscPressedCommand,
-                    v => v.InputSaveBox.ExitCommand).DisposeWith(d);
-
-            this.Bind(ViewModel,
-                vm => vm.SaveCommand,
-                v => v.InputSaveBox.SaveCommand).DisposeWith(d);
-
-
-            #endregion
-
-            Disposable.Create(() => {
-                this.DataContext = null;
-                System.Diagnostics.Debug.WriteLine(">>> [VIEW] SocioInputView deattivata, DataContext rimosso.");
-            }).DisposeWith(d);
 
 
         });

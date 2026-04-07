@@ -1,4 +1,5 @@
-﻿using ReactiveUI;
+﻿using DTO.Entity;
+using ReactiveUI;
 using System.Reactive;
 using System.Reactive.Disposables.Fluent;
 using System.Reactive.Linq;
@@ -7,7 +8,7 @@ namespace ViewModels
 {
     public interface ISociScreen : IGroupScreen
     {
-        void AggiornaGrid(object model);
+        void AggiornaGridByObject(object model);
         
 
     }
@@ -32,44 +33,34 @@ namespace ViewModels
 
         protected override void OnFinalDestruction()
         {
-            GroupRouter.NavigationStack.Clear();
-            InputRouter.NavigationStack.Clear();
+            //GroupRouter.NavigationStack.Clear();
+            //InputRouter.NavigationStack.Clear();
         }
 
         protected override async Task OnLoading()
         {
+            GroupRouter.NavigationStack.Clear();
+            InputRouter.NavigationStack.Clear();
             await GroupRouter.NavigateAndReset.Execute(new PersonGroupViewModel(this));
 
         }
 
         private async Task OnGoToMenu()
         {
+
             await HostScreen.Router.NavigateAndReset.Execute(new MenuViewModel(HostScreen));
         }
 
-
-        public void AggiornaGrid(object model)
+        public void AggiornaGridByObject(object model)
         {
             if (GroupRouter.GetCurrentViewModel() is IGroupViewModelBase groupVm)
             {
-                if (model is int n)
-                {
-                    AggiornaGrid(n);
-                    
-                }
-                else
-                {
-                    groupVm.CaricaByModel(model);
-                }
-                    // Passiamo l'ID al metodo di caricamento della lista
-                    
-
-                // Se hai un comando di ricarica nel GroupViewModel:
-                // groupVm.LoadCommand.Execute().Subscribe();
+                groupVm.CaricaByModel(model);
             }
         }
+        
 
-        public void AggiornaGrid(int id)
+        public void AggiornaGridByInt(int id)
         {
             if (GroupRouter.GetCurrentViewModel() is IGroupViewModelBase groupVm)
             {

@@ -31,7 +31,9 @@ namespace ViewModels
 
         protected override async Task OnLoading()
         {
-            var token = CancellationToken.None;
+            IsLoading = true;
+            var token = _cts?.Token ?? CancellationToken.None;
+
             try
             {
                 var data = await Q.FirstPerson(_idDaModificare, token);
@@ -40,6 +42,7 @@ namespace ViewModels
             catch (OperationCanceledException)
             {
                 Debug.WriteLine("Operazione annullata dall'utente");
+                IsLoading = false;
                 return;
             }
             catch (Exception ex)
@@ -52,8 +55,10 @@ namespace ViewModels
             {
                 InfoLabel = "Errore: Socio non trovato nel database.";
                 FieldsEnabled = false;
+                IsLoading = false;
             }
 
+            IsLoading = false;
             SetFocus(EscFocus);
         }
 
@@ -61,7 +66,8 @@ namespace ViewModels
 
         protected async override Task OnSaving()
         {
-            var token = CancellationToken.None;
+            IsLoading = true;
+            var token = _cts?.Token ?? CancellationToken.None;
 
             try
             {
@@ -69,20 +75,24 @@ namespace ViewModels
                 {
                     InfoLabel = "Errore Db eliminazione person";
                     await TriggerInteraction(EscFocus, Unit.Default);
+                    IsLoading = false;
                     return;
                 }
-                OnBack(-100);
+                await OnBack(-100);
             }
             catch (OperationCanceledException)
             {
                 Debug.WriteLine("Operazione annullata dall'utente");
+                IsLoading = false;
                 return;
             }
             catch (Exception ex)
             {
                 { Debug.WriteLine($"Del Person Error: {ex.Message}"); }
             }
-           
+
+            IsLoading = false;
+
         }
 
         

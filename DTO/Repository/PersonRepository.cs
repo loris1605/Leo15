@@ -5,6 +5,7 @@ using Models.Context;
 using Models.Entity;
 using Models.Projections;
 using Models.Repository;
+using Models.StoreProcedure;
 using Models.Tables;
 using System;
 using System.Collections.Generic;
@@ -19,13 +20,14 @@ namespace DTO.Repository
     public interface IPersonRepository
     {
         Task<int> Add(PersonDTO map, CancellationToken ctk = default);
+        Task<int> AddCodiceSocio(PersonDTO map, CancellationToken ctk = default);
         Task<bool> Del(PersonDTO map, CancellationToken ctk = default);
         Task<bool> DelSocio(PersonDTO map, CancellationToken ctk = default);
         Task<bool> DelTessera(PersonDTO map, CancellationToken ctk = default);
         Task<bool> EsisteCodiceUnivoco(string codiceunivoco, CancellationToken ctk = default);
         Task<bool> EsisteCodiceUnivoco(string codiceunivoco, int id, CancellationToken ctk = default);
         Task<bool> EsisteNumeroSocio(string numeroSocio, CancellationToken ctk = default);
-        Task<bool> EsisteNumeroSocioUpd(PersonMap dT, CancellationToken ctk = default);
+        Task<bool> EsisteNumeroSocioUpd(PersonDTO dT, CancellationToken ctk = default);
         Task<bool> EsisteNumeroTessera(string numeroTessera, CancellationToken ctk = default);
         Task<bool> EsisteNumeroTesseraUpd(PersonDTO dT, CancellationToken ctk = default);
         Task<int> FirstIdPersonByNumeroSocio(string numeroSocio, CancellationToken ctk = default);
@@ -92,6 +94,7 @@ namespace DTO.Repository
                     NumeroTessera = x.tessera != null ? x.tessera.NumeroTessera : string.Empty,
                     Scadenza = x.tessera != null ? x.tessera.Scadenza : 0
                 })
+                .OrderBy(o => o.Cognome)
                 .Take(100)
                 .ToListAsync(ctk);
         }
@@ -306,6 +309,50 @@ namespace DTO.Repository
                 return -1;
             }
         }
+        public async Task<int> AddCodiceSocio(PersonDTO map, CancellationToken ctk = default)
+        {
+            ctk.ThrowIfCancellationRequested();
+
+            using PeopleDbContext _ctx = new();
+            var socio = new Socio
+            {
+                NumeroSocio = map.NumeroSocio,
+                PersonId = map.Id, // Assumiamo che map.Id sia già valorizzato con l'ID della Person esistente
+                // Colleghiamo la Tessera direttamente al Socio
+                Tessere =
+                [
+                    new Tessera
+                    {
+                        NumeroTessera = map.NumeroTessera,
+                        Scadenza = map.Scadenza
+                    }
+                ]
+
+            };
+
+            // 2. Aggiungiamo solo la "radice" (Person). EF aggiungerà i figli a cascata.
+            _ctx.Soci.Add(socio);
+
+            ctk.ThrowIfCancellationRequested();
+
+            try
+            {
+                await _ctx.SaveChangesAsync(ctk);
+                return socio.Id;
+            }
+            catch (OperationCanceledException)
+            {
+                Debug.WriteLine(">>> [INFO] Inserimento Codice Socio annullato dall'utente.");
+                return -1;
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($">>> [ERROR] Add: {ex.InnerException?.Message ?? ex.Message}");
+                return -1;
+            }
+
+        }
+
         public async Task<bool> Upd(PersonDTO map, CancellationToken ctk = default)
         {
             ctk.ThrowIfCancellationRequested();
@@ -588,7 +635,7 @@ namespace DTO.Repository
             }
 
         }
-        public async Task<bool> EsisteNumeroSocioUpd(PersonMap dT, CancellationToken ctk = default)
+        public async Task<bool> EsisteNumeroSocioUpd(PersonDTO dT, CancellationToken ctk = default)
         {
             ctk.ThrowIfCancellationRequested();
             using PeopleDbContext _ctx = new();

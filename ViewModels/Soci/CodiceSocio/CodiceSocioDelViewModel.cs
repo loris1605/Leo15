@@ -1,17 +1,23 @@
-﻿using Models.Repository;
+﻿using DTO.Repository;
 using ReactiveUI;
+using Splat;
 using SysNet;
 using SysNet.Converters;
+using System.Diagnostics;
+using ViewModels.BindableObjects;
 
 namespace ViewModels
 {
     public class CodiceSocioDelViewModel : CodiceSocioInputBase
     {
-        private PersonR Q { get; set; }
+        private IPersonRepository Q;
         private readonly int _idDaModificare;
         private readonly int _idRitorno;
 
-        public CodiceSocioDelViewModel(IScreen host, int idsocio, int idperson) : base(host)
+        public CodiceSocioDelViewModel(IScreen host, 
+                                       int idsocio, 
+                                       int idperson,
+                                       IPersonRepository personRepository = null) : base(host)
         {
             _idDaModificare = idsocio;
             _idRitorno = idperson;
@@ -19,42 +25,82 @@ namespace ViewModels
             FieldsVisibile = false;
             FieldsEnabled = false;
 
-            Q = Create<PersonR>.Instance();
+            Q = personRepository ?? Locator.Current.GetService<IPersonRepository>();
 
-            OnEscFocus().FireAndForget();
+            SetFocus(EscFocus);
             
         }
 
         protected override void OnFinalDestruction()
         {
-            Q.Dispose();
             Q = null;
         }
 
         protected override async Task OnLoading()
         {
-            BindingT = await Q.FirstSocio(_idDaModificare);
-            if (BindingT == null)
+            IsLoading = true;
+            var token = _cts?.Token ?? CancellationToken.None;
+           
+            try
             {
-                InfoLabel = "Errore: Socio non trovato nel database.";
-                FieldsEnabled = false;
+
+                var data = await Q.FirstSocio(_idDaModificare, token);
+                token.ThrowIfCancellationRequested();
+                if (data == null)
+                {
+                    InfoLabel = "Errore: Socio non trovato nel database.";
+                    FieldsEnabled = false;
+                    
+                }
+                else
+                {
+                    BindingT = new PersonMap(data);
+                    Titolo = "Elimina Codice Socio : " + GetNumeroSocio;
+                    Titolo1 = "per " + GetNomeCognome;
+                }
+                   
             }
-            Titolo = "Elimina Codice Socio : " + GetNumeroSocio;
-            Titolo1 = "per " + GetNomeCognome;
-            
-            await OnEscFocus();
+            catch (OperationCanceledException)
+            {
+                Debug.WriteLine("Operazione annullata dall'utente");
+                return;
+            }
+            catch (Exception ex)
+            {
+                { Debug.WriteLine($"OnLoading Error: {ex.Message}"); }
+            }
+            finally { IsLoading = false; }
+
+            SetFocus(EscFocus);
+
         }
  
         protected async override Task OnSaving()
         {
-
-            if (!await Q.DelSocio(BindingT))
+            IsLoading = true;
+            var token = _cts?.Token ?? CancellationToken.None;
+            
+            try
             {
-                InfoLabel = "Errore Db eliminazione person";
-                await OnEscFocus();
+                if (!await Q.DelSocio(BindingT.ToDto(), token))
+                {
+                    InfoLabel = "Errore Db eliminazione person";
+                    SetFocus(EscFocus);
+                    return;
+                }
+            }
+            catch (OperationCanceledException)
+            {
+                Debug.WriteLine("Operazione annullata dall'utente");
                 return;
             }
-            OnBack(_idRitorno);
+            catch (Exception ex)
+            {
+                { Debug.WriteLine($"OnLoading Error: {ex.Message}"); }
+            }
+            finally { IsLoading = false; }
+
+            await OnBack(_idRitorno);
         }
     }
 }

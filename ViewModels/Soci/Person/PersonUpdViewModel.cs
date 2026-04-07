@@ -32,7 +32,8 @@ namespace ViewModels
 
         protected override async Task OnLoading()
         {
-            var token = CancellationToken.None;
+            IsLoading = true;
+            var token = _cts?.Token ?? CancellationToken.None;
 
             try
             {
@@ -45,6 +46,7 @@ namespace ViewModels
                     InfoLabel = "Errore: Socio non trovato.";
                     FieldsEnabled = false;
                 }
+                IsLoading = false;
                 SetFocus(CognomeFocus);
             }
             catch (OperationCanceledException)
@@ -55,52 +57,59 @@ namespace ViewModels
             {
                 { Debug.WriteLine($"OnLoading Error: {ex.Message}"); }
             }
+            finally { IsLoading = false; }
 
         }
 
         protected override async Task OnSaving()
         {
-            if (!await ValidaDati()) return;
+            IsLoading = true;
+            var token = _cts?.Token ?? CancellationToken.None;
 
-            if (await EsisteAnagraficaUpd())
+            if (!await ValidaDati())
+            {
+                IsLoading = false;
+                return;
+            }
+
+            if (await EsisteAnagraficaUpd(token))
             {
                 InfoLabel = "Socio già registrato";
+                IsLoading = false;
                 return;
             }
 
             InfoLabel = "Updating Database...";
 
-            var token = CancellationToken.None;
-
             try
             {
-                if (!await Q.Upd(BindingT.ToDto()))
+                if (!await Q.Upd(BindingT.ToDto(), token))
                 {
                     InfoLabel = "Errore Db modifica person";
                     SetFocus(CognomeFocus);
+                    IsLoading = false;
                     return;
                 }
             }
             catch (OperationCanceledException)
             {
-                InfoLabel = "Operazione annullata dall'utente";
+                InfoLabel = "Person Upd annullata dall'utente";
 
             }
             catch (Exception ex)
             {
                 InfoLabel = $"Person Upd Error: {ex.Message}";
             }
+            finally { IsLoading = false; }
 
-            OnBack(_idDaModificare);
+            await OnBack(_idDaModificare);
             
         }
 
         
 
-        private async Task<bool> EsisteAnagraficaUpd()
+        private async Task<bool> EsisteAnagraficaUpd(CancellationToken token)
         {
-            var token = CancellationToken.None;
-
             string srvcognome = (GetCognome ?? "").PadRight(3);
             string srvnome = (GetNome ?? "").PadRight(3);
 

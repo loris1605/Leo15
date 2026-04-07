@@ -44,6 +44,13 @@
     <Setter Property="VerticalContentAlignment" Value="Center"/>
     <Setter Property="ToolTip.Tip" Value="{Binding ToolTipText, RelativeSource={RelativeSource Self}}"/>
     <Setter Property="CornerRadius" Value="8"/>
+    <Setter Property="Transitions">
+        <Transitions>
+            <!-- Effetto fluido al passaggio del mouse -->
+            <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.1"/>
+            <BrushTransition Property="Background" Duration="0:0:0.2"/>
+        </Transitions>
+    </Setter>
 
     <!-- DEFINIZIONE DEL TEMPLATE (Sostituisce quello che faceva StyleKeyOverride) -->
         <Setter Property="Template">
@@ -61,6 +68,10 @@
             </ControlTemplate>
         </Setter>
         
+</Style>
+
+<Style Selector="local|UiButton.UiButtonStyle:pressed">
+    <Setter Property="RenderTransform" Value="scale(0.80)"/>
 </Style>
 
 <Style Selector="local|UiButton.UiButtonStyle:pointerover">

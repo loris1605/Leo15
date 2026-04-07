@@ -5,6 +5,7 @@ using System.Reactive;
 using System.Reactive.Concurrency;
 using System.Reactive.Disposables.Fluent;
 using System.Reactive.Linq;
+using System.Runtime.CompilerServices;
 using ViewModels.BindableObjects;
 
 namespace ViewModels
@@ -18,8 +19,8 @@ namespace ViewModels
         protected int CodiceTessera => BindingT is null ? 0 : BindingT.CodiceTessera;
         protected string CodiceUnivoco => BindingT?.CodiceUnivoco?.Trim() ?? "";
 
-        protected bool IsCognomeEmpty => (BindingT is null || BindingT.Cognome.Trim() == string.Empty) ? true : false;
-        protected bool IsNomeEmpty => BindingT.Nome.Trim() == string.Empty ? true : false;
+        protected bool IsCognomeEmpty => string.IsNullOrWhiteSpace(BindingT?.Cognome);
+        protected bool IsNomeEmpty => string.IsNullOrWhiteSpace(BindingT?.Nome);
         protected bool CheckLess2Surname => BindingT.Cognome.Length < 2;
         protected bool CheckLess2FirstName => BindingT.Nome.Length < 2;
         
@@ -31,13 +32,11 @@ namespace ViewModels
         protected string GetCognome => BindingT?.Cognome?.Trim() ?? "";
         protected string GetNome => BindingT?.Nome?.Trim() ?? "";
 
-        protected CancellationTokenSource _cts;
-
-
         public PersonInputBase(IScreen host) : base(host)
         {
 
-            EscPressedCommand = ReactiveCommand.Create(OnBackEsc);
+            EscPressedCommand = ReactiveCommand.CreateFromTask(OnBackEsc,
+                                canExecute: this.WhenAnyValue(x => x.IsLoading, loading => !loading));
 
             this.WhenActivated(d =>
             {
@@ -45,6 +44,15 @@ namespace ViewModels
                 this.WhenAnyValue(x => x.DataNascitaOffSet)
                     .Where(_ => BindingT != null)
                     .Subscribe(val => BindingT.Natoil = val.DateTimeOffsetToDateInt())
+                    .DisposeWith(d);
+
+                this.WhenAnyValue(x => x.BindingT.Natoil) // Monitora specificamente questa proprietà
+                    .Where(natoil => natoil != default)   // O != 0, a seconda del tipo di Natoil
+                    .Subscribe(natoil =>
+                    {
+                        // Qui 'natoil' è già il valore della proprietà specifica, non l'intero oggetto BindingT
+                        this.DataNascitaOffSet = natoil.DateIntToDateTimeOffset();
+                    })
                     .DisposeWith(d);
 
             });
@@ -89,27 +97,34 @@ namespace ViewModels
         }
 
         
-        private void OnBackEsc()
+        private async Task  OnBackEsc()
         {
+            IsLoading = true;
             if (HostScreen is ISociScreen sociHost)
             {
                 RxApp.MainThreadScheduler.Schedule(() => {
                     sociHost.InputRouter.NavigationStack.Clear();
                     sociHost.GroupEnabled = true;
+                    IsLoading = false;
                 });
             }
+
+            await Task.CompletedTask;
         }
 
-        protected void OnBack(int value = 0)
+        protected async Task OnBack(int value = 0)
         {
+            IsLoading = true;
             if (HostScreen is ISociScreen sociHost)
             {
                 // Svuota completamente lo stack del router di input
-                sociHost.InputRouter.NavigateBack.Execute();
+                await sociHost.InputRouter.NavigateBack.Execute();
                 sociHost.InputRouter.NavigationStack.Clear();
-                sociHost.AggiornaGrid(value);
+                sociHost.AggiornaGridByInt(value);
                 sociHost.GroupEnabled = true;
             }
+
+            await Task.CompletedTask;
         }
     }
 
@@ -122,23 +137,12 @@ namespace ViewModels
             get => datanascitaoffset;
             set => this.RaiseAndSetIfChanged(ref datanascitaoffset, value);
         }
-        
 
         private PersonMap bindingt = Create<PersonMap>.Instance();
         public PersonMap BindingT
         {
             get => bindingt;
-            set
-            {
-                // 1. Aggiorna il riferimento (fondamentale per RaiseAndSetIfChanged)
-                this.RaiseAndSetIfChanged(ref bindingt, value);
-
-                // 2. Se carichi un socio, allinea la UI al modello
-                if (value != null)
-                {
-                    this.DataNascitaOffSet = value.Natoil.DateIntToDateTimeOffset();
-                }
-            }
+            set => this.RaiseAndSetIfChanged(ref bindingt, value);
         }
 
         private List<PersonMap> _datasource = [];
