@@ -38,39 +38,21 @@ namespace ViewModels
 
         protected override async Task OnLoading()
         {
-            IsLoading = true;
-            var token = _cts?.Token ?? CancellationToken.None;
-           
-            try
+            var data = await Q.FirstSocio(_idDaModificare, token);
+            token.ThrowIfCancellationRequested();
+            if (data == null)
             {
+                InfoLabel = "Errore: Socio non trovato nel database.";
+                FieldsEnabled = false;
 
-                var data = await Q.FirstSocio(_idDaModificare, token);
-                token.ThrowIfCancellationRequested();
-                if (data == null)
-                {
-                    InfoLabel = "Errore: Socio non trovato nel database.";
-                    FieldsEnabled = false;
-                    
-                }
-                else
-                {
-                    BindingT = new PersonMap(data);
-                    Titolo = "Elimina Codice Socio : " + GetNumeroSocio;
-                    Titolo1 = "per " + GetNomeCognome;
-                }
-                   
             }
-            catch (OperationCanceledException)
+            else
             {
-                Debug.WriteLine("Operazione annullata dall'utente");
-                return;
+                BindingT = new PersonMap(data);
+                Titolo = "Elimina Codice Socio : " + GetNumeroSocio;
+                Titolo1 = "per " + GetNomeCognome;
             }
-            catch (Exception ex)
-            {
-                { Debug.WriteLine($"OnLoading Error: {ex.Message}"); }
-            }
-            finally { IsLoading = false; }
-
+            
             SetFocus(EscFocus);
 
         }

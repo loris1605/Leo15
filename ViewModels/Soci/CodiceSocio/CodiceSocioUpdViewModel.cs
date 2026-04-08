@@ -40,98 +40,62 @@ namespace ViewModels
 
         protected override async Task OnLoading()
         {
-            var token = _cts?.Token ?? CancellationToken.None;
+            var data = await Q.FirstSocio(_idDaModificare, token);
+            token.ThrowIfCancellationRequested();
 
-            IsLoading = true;
-            try
+            if (data == null)
             {
-                var data = await Q.FirstSocio(_idDaModificare, token);
-                token.ThrowIfCancellationRequested();
-
-                if (data == null)
-                {
-                    InfoLabel = "Errore: Socio non trovato nel database.";
-                    FieldsEnabled = false;
-                    SetFocus(EscFocus);
-                }
-                else
-                {
-                    BindingT = new PersonMap(data);
-                    Titolo = "Modifica Codice Socio per ";
-                    Titolo1 = "per " + GetNomeCognome;
-                    SetFocus(NumeroSocioFocus);
-                }
+                InfoLabel = "Errore: Socio non trovato nel database.";
+                FieldsEnabled = false;
+                SetFocus(EscFocus);
             }
-            catch (OperationCanceledException)
+            else
             {
-                Debug.WriteLine("Operazione annullata dall'utente");
-                return;
+                BindingT = new PersonMap(data);
+                Titolo = "Modifica Codice Socio per ";
+                Titolo1 = "per " + GetNomeCognome;
+                SetFocus(NumeroSocioFocus);
             }
-            catch (Exception ex)
-            {
-                { Debug.WriteLine($"OnLoading Error: {ex.Message}"); }
-            }
-            finally { IsLoading = false; }
-
+            
         }
 
         protected override async Task OnSaving()
         {
-            IsLoading = true;
+            if (BindingT is null) return;
 
-            var token = _cts?.Token ?? CancellationToken.None;
-
-            try
+            if (int.TryParse(GetNumeroSocio, out int numeroSocio))
             {
-                if (BindingT is null)
-                    return;
-
-                if (int.TryParse(GetNumeroSocio, out int numeroSocio))
-                {
-                    // 2. Se la conversione riesce, controlliamo il valore
-                    if (numeroSocio <= 0) { }
-                    else
-                    {
-                        if (await Q.EsisteNumeroSocioUpd(BindingT.ToDto(), token))
-                        {
-                            InfoLabel = "Codice Socio già in uso";
-                            SetFocus(NumeroSocioFocus);
-                            return;
-                        }
-                    }
-                }
+                // 2. Se la conversione riesce, controlliamo il valore
+                if (numeroSocio <= 0) { }
                 else
                 {
-                    // 3. Se è stringa vuota o contiene lettere, finisce qui senza crash
-                    // (In questo caso considerala come se fosse <= 0)
-                    InfoLabel = "Codice Socio non può essere zero";
-                    SetFocus(NumeroSocioFocus);
-                    return;
+                    if (await Q.EsisteNumeroSocioUpd(BindingT.ToDto(), token))
+                    {
+                        InfoLabel = "Codice Socio già in uso";
+                        SetFocus(NumeroSocioFocus);
+                        return;
+                    }
                 }
-
-                InfoLabel = "";
-
-                if (!await Q.UpdSocio(BindingT.ToDto(), token))
-                {
-                    InfoLabel = "Errore Db modifica person";
-                    SetFocus(NumeroSocioFocus);
-                    return;
-                }
-
-                await OnBack(_idRitorno);
-
             }
-            catch (OperationCanceledException)
+            else
             {
-                Debug.WriteLine("Operazione annullata dall'utente");
+                // 3. Se è stringa vuota o contiene lettere, finisce qui senza crash
+                // (In questo caso considerala come se fosse <= 0)
+                InfoLabel = "Codice Socio non può essere zero";
+                SetFocus(NumeroSocioFocus);
                 return;
             }
-            catch (Exception ex)
+
+            InfoLabel = "";
+
+            if (!await Q.UpdSocio(BindingT.ToDto(), token))
             {
-                { Debug.WriteLine($"OnLoading Error: {ex.Message}"); }
+                InfoLabel = "Errore Db modifica person";
+                SetFocus(NumeroSocioFocus);
+                return;
             }
-            finally { IsLoading = false; }
-        
+
+            await OnBack(_idRitorno);
 
         }
 

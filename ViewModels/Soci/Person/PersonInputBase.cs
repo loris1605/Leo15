@@ -97,13 +97,12 @@ namespace ViewModels
       
         protected override async Task OnEsc()
         {
-            IsLoading = true;
             if (HostScreen is ISociScreen sociHost)
             {
                 RxApp.MainThreadScheduler.Schedule(() => {
                     sociHost.InputRouter.NavigationStack.Clear();
                     sociHost.GroupEnabled = true;
-                    IsLoading = false;
+                    
                 });
             }
 

@@ -24,22 +24,14 @@ namespace ViewModels
 
         public CodiceSocioInputBase(IScreen host) : base(host)
         {
-            EscPressedCommand = ReactiveCommand.CreateFromTask(OnBackEsc, 
-                                canExecute: this.WhenAnyValue(x => x.IsLoading, loading => !loading));
-
-            this.WhenActivated(d =>
-            {
-                EscPressedCommand.DisposeWith(d);
-            });
+           
         }
 
         protected async override Task OnSaving() { await Task.CompletedTask; }
         protected async override Task OnLoading() { await Task.CompletedTask; }
-        protected async override Task OnEsc() { await Task.CompletedTask; }
-
-        protected async Task OnBackEsc()
+        
+        protected async override Task OnEsc()
         {
-            IsLoading = true;
             if (HostScreen is ISociScreen sociHost)
             {
                 RxApp.MainThreadScheduler.Schedule(() => {
