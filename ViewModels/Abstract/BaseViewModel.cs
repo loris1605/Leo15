@@ -24,6 +24,7 @@ namespace ViewModels
         protected int _deadEntries;
 
         protected CancellationTokenSource _cts;
+        protected CancellationToken token => _cts?.Token ?? CancellationToken.None;
 
         // Implementazione di IActivatableViewModel
         public ViewModelActivator Activator { get; } = new();
@@ -31,6 +32,12 @@ namespace ViewModels
         
         public ReactiveCommand<Unit, Unit> AppExitCommand { get; }
         public ReactiveCommand<Unit, Unit> LoadCommand { get; }
+        public ReactiveCommand<Unit, Unit> EscPressedCommand { get; set; }
+        public ReactiveCommand<Unit, Unit> SaveCommand { get; set; }
+
+        protected virtual IObservable<bool> canSave => Observable.Return(true);
+
+        
 
         public BaseViewModel(IScreen hostScreen, string urlPathSegment = null)
         {
@@ -38,9 +45,18 @@ namespace ViewModels
 
             HostScreen = hostScreen;
             UrlPathSegment = urlPathSegment ?? this.GetType().Name;
-            
-            LoadCommand = ReactiveCommand.CreateFromTask(OnLoading);
+
+            var canExecuteSave = this.WhenAnyValue(
+                 x => x.IsLoading,
+                 loading => !loading
+             ).CombineLatest(canSave, (isNotLoading, childCanSave) => isNotLoading && childCanSave);
+
+            LoadCommand = ReactiveCommand.CreateFromTask(ExecuteLoading,
+                    this.WhenAnyValue(x => x.IsLoading, loading => !loading));
+            SaveCommand = ReactiveCommand.CreateFromTask(ExecuteSaving, canExecuteSave);
             AppExitCommand = ReactiveCommand.Create(OnAppShutDown);
+
+
             
 
 #if DEBUG
@@ -74,6 +90,8 @@ namespace ViewModels
                 Disposable.Create(() => {
 
                     _cts.Cancel();
+                    _cts.Dispose();
+                    _cts = null;
 
                     OnFinalDestruction();
 #if DEBUG
@@ -81,12 +99,56 @@ namespace ViewModels
 #endif
                 }).DisposeWith(disposables);
 
-                AppExitCommand.DisposeWith(disposables);
-                LoadCommand.DisposeWith(disposables);
+                AppExitCommand?.DisposeWith(disposables);
+                SaveCommand?.DisposeWith(disposables);
+                EscPressedCommand?.DisposeWith(disposables);
             });
         }
 
-        
+        private async Task ExecuteLoading()
+        {
+            IsLoading = true;
+            try
+            {
+                await OnLoading();
+            }
+            catch (OperationCanceledException)
+            {
+                Debug.WriteLine($"***** [VM] {this.GetType().Name} Caricamento annullato.");
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"***** [VM] {this.GetType().Name} ERRORE: {ex.Message}");
+                // Qui puoi settare una InfoLabel comune se l'hai nella base
+            }
+            finally
+            {
+                IsLoading = false;
+            }
+        }
+
+        private async Task ExecuteSaving()
+        {
+            IsLoading = true;
+            try
+            {
+                await OnSaving();
+            }
+            catch (OperationCanceledException)
+            {
+                Debug.WriteLine($"***** [VM] {this.GetType().Name} Caricamento annullato.");
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"***** [VM] {this.GetType().Name} ERRORE: {ex.Message}");
+                // Qui puoi settare una InfoLabel comune se l'hai nella base
+            }
+            finally
+            {
+                IsLoading = false;
+            }
+        }
+
         protected virtual void OnFinalDestruction()
         {
             GC.Collect();
@@ -106,6 +168,7 @@ namespace ViewModels
 #endif
 
         protected abstract Task OnLoading();
+        protected abstract Task OnSaving();
 
         protected void OnAppShutDown()
         {

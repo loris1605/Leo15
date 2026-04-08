@@ -71,6 +71,11 @@ namespace ViewModels
                 // groupVm.LoadCommand.Execute().Subscribe();
             }
         }
+
+        protected override Task OnSaving()
+        {
+            throw new NotImplementedException();
+        }
     }
 
     public partial class SociViewModel

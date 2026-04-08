@@ -29,8 +29,11 @@ namespace ViewModels
 
             Q = personRepository ?? Locator.Current.GetService<IPersonRepository>();
 
-            SaveCommand = ReactiveCommand.CreateFromTask(OnSaving, 
-                            canExecute: this.WhenAnyValue(x => x.IsLoading, loading => !loading));
+            SaveCommand = ReactiveCommand.CreateFromTask(OnSaving,
+                    this.WhenAnyValue(x => x.IsLoading, loading => !loading));
+
+            //SaveCommand = ReactiveCommand.CreateFromTask(OnSaving, 
+            //                canExecute: this.WhenAnyValue(x => x.IsLoading, loading => !loading));
 
             SetFocus(NumeroSocioFocus);
             

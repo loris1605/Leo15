@@ -35,7 +35,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Remove="Soci\Tessera\TesseraDelViewModel.cs" />
     <Compile Remove="Soci\Tessera\TesseraUpdViewModel.cs" />
   </ItemGroup>
 

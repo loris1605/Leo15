@@ -19,5 +19,10 @@ namespace ViewModels
         {
             return Task.CompletedTask;
         }
+
+        protected override Task OnSaving()
+        {
+            throw new NotImplementedException();
+        }
     }
 }

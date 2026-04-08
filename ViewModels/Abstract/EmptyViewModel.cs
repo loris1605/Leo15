@@ -14,6 +14,11 @@ namespace ViewModels
             return Task.CompletedTask;
         }
 
+        protected override Task OnSaving()
+        {
+            throw new NotImplementedException();
+        }
+
         public EmptyViewModel(IScreen host) : base(host) { }
     }
 }

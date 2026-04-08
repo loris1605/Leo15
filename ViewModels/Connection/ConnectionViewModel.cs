@@ -150,6 +150,10 @@ namespace ViewModels
 
         }
 
+        protected override Task OnSaving()
+        {
+            throw new NotImplementedException();
+        }
     }
 
     public partial class ConnectionViewModel

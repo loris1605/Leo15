@@ -14,6 +14,7 @@ using System.Reactive.Disposables;
 using System.Reactive.Disposables.Fluent;
 using System.Reactive.Linq;
 using ViewModels.BindableObjects;
+using Windows.Security.EnterpriseData;
 
 namespace ViewModels
 {
@@ -26,26 +27,22 @@ namespace ViewModels
 
         private CancellationTokenSource _loadingCts;
 
-        //public LoginViewModel() { }
+        protected override IObservable<bool> canSave => this.WhenAnyValue(
+            x => x.PasswordText,
+            x => x.BindingT,
+            (pass, operatore) =>
+                !string.IsNullOrWhiteSpace(pass) &&
+                operatore != null &&
+                pass == operatore.Password);
 
+        
         public LoginViewModel(IScreen host,
                               ILoginRepository loginRepository = null) : base(host)
         {
             Q = loginRepository ?? Locator.Current.GetService<ILoginRepository>();
 
-            _loadingCts = new CancellationTokenSource();
 
-            var canEntra = this.WhenAnyValue(
-               x => x.PasswordText,
-               x => x.BindingT,
-               x => x.IsLoading,
-               (pass, operatore, loading) =>
-                   !string.IsNullOrWhiteSpace(pass) &&
-                   operatore != null &&
-                   pass == operatore.Password && !loading);
-            
-
-            EntraCommand = ReactiveCommand.CreateFromTask(OnEntra, canEntra);
+            EntraCommand = SaveCommand;
             //EntraCommand = ReactiveCommand.CreateFromTask(OnEntra);
 
             EsciCommand = ReactiveCommand.Create(() =>
@@ -56,15 +53,7 @@ namespace ViewModels
 
             this.WhenActivated(d =>
             {
-                if (_loadingCts.IsCancellationRequested)
-                    _loadingCts = new CancellationTokenSource();
-
-                Disposable.Create(() =>
-                {
-                    _loadingCts.Cancel();
-                    _loadingCts.Dispose();
-                }).DisposeWith(d);
-
+               
                 EntraCommand?.DisposeWith(d);
                 EsciCommand?.DisposeWith(d);
             });
@@ -81,35 +70,24 @@ namespace ViewModels
 
         protected override async Task OnLoading()
         {
-            var token = _loadingCts.Token;
+            IsLoading = true;
+            //Q = new(); // Istanza locale del Repository
+            List<LoginDTO> dbData = await Q.GetOperatoriAbilitati(token);
 
-            try
+            token.ThrowIfCancellationRequested();
+
+            if (dbData != null && dbData.Count != 0)
             {
-                IsLoading = true;
-                //Q = new(); // Istanza locale del Repository
-                List<LoginDTO> dbData = await Q.GetOperatoriAbilitati(token);
 
-                token.ThrowIfCancellationRequested();
+                // Trasforma l'Expression in una funzione e usala con LINQ .Select()
+                // Aggiorna la DataSource della UI
+                DataSource = dbData.Select(dto => new LoginMap(dto)).ToList();
 
-                if (dbData != null && dbData.Count != 0)
-                {
-                
-                    // Trasforma l'Expression in una funzione e usala con LINQ .Select()
-                    // Aggiorna la DataSource della UI
-                    DataSource = dbData.Select(dto => new LoginMap(dto)).ToList();
-
-                    // Seleziona il primo
-                    BindingT = DataSource[0];
-                }
+                // Seleziona il primo
+                BindingT = DataSource[0];
             }
-            catch (OperationCanceledException) { Debug.WriteLine("Caricamento Login Annullato."); }
-            catch (Exception ex) { Debug.WriteLine($"Errore: {ex.Message}"); }
-            finally { IsLoading = false; }
-
-            if (!token.IsCancellationRequested)
-            {
-                SetFocus(PasswordFocus);
-            }
+            SetFocus(PasswordFocus);
+            
             
         }
 
@@ -129,7 +107,7 @@ namespace ViewModels
         //    }
         //}
 
-        private async Task OnEntra()
+        protected override async Task OnSaving()
         {
             try
             {

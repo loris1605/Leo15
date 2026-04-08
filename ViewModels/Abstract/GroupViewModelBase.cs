@@ -173,9 +173,12 @@ namespace ViewModels
             set => this.RaiseAndSetIfChanged(ref _groupedDataSource, value);
         }
 
-        protected override Task OnLoading() => Task.CompletedTask;  
-        
-        
+        protected override Task OnLoading() => Task.CompletedTask;
+
+        protected override Task OnSaving()
+        {
+            throw new NotImplementedException();
+        }
     }
 
 

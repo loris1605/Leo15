@@ -1,6 +1,7 @@
 ﻿using ReactiveUI;
 using SysNet;
 using SysNet.Converters;
+using System.Diagnostics;
 using System.Reactive;
 using System.Reactive.Concurrency;
 using System.Reactive.Disposables.Fluent;
@@ -114,18 +115,37 @@ namespace ViewModels
 
         protected async Task OnBack(int value = 0)
         {
-            IsLoading = true;
             if (HostScreen is ISociScreen sociHost)
             {
-                // Svuota completamente lo stack del router di input
-                await sociHost.InputRouter.NavigateBack.Execute();
-                sociHost.InputRouter.NavigationStack.Clear();
-                sociHost.AggiornaGridByInt(value);
-                sociHost.GroupEnabled = true;
-            }
+                // 1. PROTEZIONE CRITICA: 
+                // Se il primo click ha già svuotato lo stack, il secondo click 
+                // deve uscire subito senza fare nulla.
+                if (sociHost.InputRouter.NavigationStack.Count == 0)
+                {
+                    return;
+                }
 
-            await Task.CompletedTask;
+                // 2. Impostiamo IsLoading per disabilitare la UI
+                IsLoading = true;
+
+                try
+                {
+                    // 3. Eseguiamo il back solo perché abbiamo verificato che il Count > 0
+                    await sociHost.InputRouter.NavigateBack.Execute();
+
+                    // 4. Pulizia finale
+                    sociHost.InputRouter.NavigationStack.Clear();
+                    sociHost.AggiornaGridByInt(value);
+                    sociHost.GroupEnabled = true;
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine($"Errore durante la navigazione: {ex.Message}");
+                }
+            }
         }
+
+
     }
 
     public partial class PersonInputBase

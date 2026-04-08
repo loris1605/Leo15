@@ -77,29 +77,15 @@ namespace ViewModels
  
         protected async override Task OnSaving()
         {
-            IsLoading = true;
-            var token = _cts?.Token ?? CancellationToken.None;
-            
-            try
+            if (BindingT is null) return;
+
+            if (!await Q.DelSocio(BindingT.ToDto(), token))
             {
-                if (!await Q.DelSocio(BindingT.ToDto(), token))
-                {
-                    InfoLabel = "Errore Db eliminazione person";
-                    SetFocus(EscFocus);
-                    return;
-                }
-            }
-            catch (OperationCanceledException)
-            {
-                Debug.WriteLine("Operazione annullata dall'utente");
+                InfoLabel = "Errore Db eliminazione person";
+                SetFocus(EscFocus);
                 return;
             }
-            catch (Exception ex)
-            {
-                { Debug.WriteLine($"OnLoading Error: {ex.Message}"); }
-            }
-            finally { IsLoading = false; }
-
+            
             await OnBack(_idRitorno);
         }
     }

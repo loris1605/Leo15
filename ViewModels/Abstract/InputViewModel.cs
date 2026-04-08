@@ -1,4 +1,5 @@
 ﻿using ReactiveUI;
+using System.Diagnostics;
 using System.Reactive;
 using System.Reactive.Disposables.Fluent;
 using System.Reactive.Linq;
@@ -13,17 +14,13 @@ namespace ViewModels
 
         public RoutingState Router => HostScreen.Router;
 
-        public ReactiveCommand<Unit,Unit> EscPressedCommand { get; set; }
-        public ReactiveCommand<Unit, Unit> SaveCommand { get; set; }
+        
 
         public Interaction<Unit, Unit> EscFocus { get; } = new();
 
         
         public InputViewModel(IScreen host) : base(host)
         {
-            SaveCommand = ReactiveCommand.CreateFromTask(OnSaving,
-                            canExecute: this.WhenAnyValue(x => x.IsLoading, loading => !loading));
-
             this.WhenActivated(d =>
             {
                 SaveCommand?.DisposeWith(d);
@@ -35,9 +32,6 @@ namespace ViewModels
         {
             return Task.CompletedTask;
         }
-
-        protected abstract Task OnSaving();
-
         
     }
 
