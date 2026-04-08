@@ -19,6 +19,9 @@ namespace ViewModels
             throw new NotImplementedException();
         }
 
+        protected override Task OnEsc() => Task.CompletedTask;
+        
+
         public EmptyViewModel(IScreen host) : base(host) { }
     }
 }

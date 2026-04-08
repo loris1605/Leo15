@@ -25,12 +25,12 @@ namespace ViewModels
         {
             Q = menuRepository ?? Locator.Current.GetService<IMenuRepository>();
 
+            var canExecute = this.WhenAnyValue(x => x.IsLoading, x => !x);
 
             NavigateCommand = ReactiveCommand.CreateFromTask<string>(async (dest) =>
             {
                 IRoutableViewModel page = dest switch
                 {
-                    "Login" => new LoginViewModel(HostScreen),
                     "Connection" => new ConnectionViewModel(HostScreen),
                     "Soci" => new SociViewModel(HostScreen),
                     "Configurazione" => new ConfigurazioneViewModel(HostScreen), // Corretto l'errore precedente
@@ -41,8 +41,8 @@ namespace ViewModels
                     await HostScreen.Router.NavigateAndReset.Execute(page);
             });
 
-            CassaCommand = ReactiveCommand.CreateFromTask<string>(param => OnCassa(param));
-            LogoutCommand = ReactiveCommand.CreateFromTask(GoToLogin);
+            CassaCommand = ReactiveCommand.CreateFromTask<string>(param => OnCassa(param), canExecute);
+            LogoutCommand = ReactiveCommand.CreateFromTask(GoToLogin, canExecute);
                                    
 
             this.WhenActivated(d => 
@@ -50,7 +50,7 @@ namespace ViewModels
                 LogoutCommand?.DisposeWith(d);
                 CassaCommand?.DisposeWith(d);
                 NavigateCommand?.DisposeWith(d);
-                               
+                              
             });
                 
         }
@@ -68,15 +68,14 @@ namespace ViewModels
             if (GlobalValuesC.MySetting == null) return;
 
             AttivaPermessi();
-           
 
-            List<PostazioneDTO> listaDto = await Q.CaricaPostazioniCassa(GlobalValuesC.MySetting.IDOPERATORE);
+            List<PostazioneDTO> listaDto = await Q.CaricaPostazioniCassa(GlobalValuesC.MySetting.IDOPERATORE, token);
 
             CassaPostazioniDataSource = listaDto
                                         .Select(dto => new PostazioneMap(dto))
                                         .ToList();
 
-            ApriGiornataEnabled = !(await Q.EsisteGiornataAperta());
+            ApriGiornataEnabled = !(await Q.EsisteGiornataAperta(token));
             if (GlobalValuesC.MySetting is null) await Task.CompletedTask;
             if (GlobalValuesC.MySetting.POSTAZIONI is not null)
             {
@@ -152,7 +151,9 @@ namespace ViewModels
             await HostScreen.Router.NavigateAndReset.Execute(new LoginViewModel(HostScreen));
         }
 
-        protected override Task OnSaving()
+        protected override async Task OnSaving() => await Task.CompletedTask;
+
+        protected override Task OnEsc()
         {
             throw new NotImplementedException();
         }

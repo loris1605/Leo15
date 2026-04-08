@@ -40,6 +40,8 @@ namespace ViewModels
         }
 
         protected async override Task OnSaving() { await Task.CompletedTask; }
+        protected async override Task OnLoading() { await Task.CompletedTask; }
+        protected async override Task OnEsc() { await Task.CompletedTask; }
 
         public async Task OnNumeroTesseraFocus()
         {

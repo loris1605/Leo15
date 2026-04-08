@@ -32,75 +32,37 @@ namespace ViewModels
 
         protected override async Task OnLoading()
         {
-            IsLoading = true;
-            var token = _cts?.Token ?? CancellationToken.None;
+            var data = await Q.FirstPerson(_idDaModificare, token);
+            BindingT = new BindableObjects.PersonMap(data);
 
-            try
+            if (BindingT.Id == 0)
             {
-                // Passa il token al repository
-                var data = await Q.FirstPerson(_idDaModificare, token);
-                BindingT = new BindableObjects.PersonMap(data);
-
-                if (BindingT.Id == 0)
-                {
-                    InfoLabel = "Errore: Socio non trovato.";
-                    FieldsEnabled = false;
-                }
-                IsLoading = false;
-                SetFocus(CognomeFocus);
+                InfoLabel = "Errore: Socio non trovato.";
+                FieldsEnabled = false;
             }
-            catch (OperationCanceledException)
-            {
-                InfoLabel = "Errore: Operazione fermata dall'utente.";
-            }
-            catch (Exception ex)
-            {
-                { Debug.WriteLine($"OnLoading Error: {ex.Message}"); }
-            }
-            finally { IsLoading = false; }
+            SetFocus(CognomeFocus);
 
         }
 
         protected override async Task OnSaving()
         {
-            IsLoading = true;
-            var token = _cts?.Token ?? CancellationToken.None;
+            if (!await ValidaDati()) return;
+           
 
-            if (!await ValidaDati())
-            {
-                IsLoading = false;
-                return;
-            }
-
-            if (await EsisteAnagraficaUpd(token))
+            if (await EsisteAnagraficaUpd())
             {
                 InfoLabel = "Socio già registrato";
-                IsLoading = false;
                 return;
             }
 
             InfoLabel = "Updating Database...";
 
-            try
+            if (!await Q.Upd(BindingT.ToDto(), token))
             {
-                if (!await Q.Upd(BindingT.ToDto(), token))
-                {
-                    InfoLabel = "Errore Db modifica person";
-                    SetFocus(CognomeFocus);
-                    IsLoading = false;
-                    return;
-                }
+                InfoLabel = "Errore Db modifica person";
+                SetFocus(CognomeFocus);
+                return;
             }
-            catch (OperationCanceledException)
-            {
-                InfoLabel = "Person Upd annullata dall'utente";
-
-            }
-            catch (Exception ex)
-            {
-                InfoLabel = $"Person Upd Error: {ex.Message}";
-            }
-            finally { IsLoading = false; }
 
             await OnBack(_idDaModificare);
             
@@ -108,7 +70,7 @@ namespace ViewModels
 
         
 
-        private async Task<bool> EsisteAnagraficaUpd(CancellationToken token)
+        private async Task<bool> EsisteAnagraficaUpd()
         {
             string srvcognome = (GetCognome ?? "").PadRight(3);
             string srvnome = (GetNome ?? "").PadRight(3);
@@ -120,7 +82,7 @@ namespace ViewModels
 
             try
             {
-                return await Q.EsisteCodiceUnivoco(CodiceUnivoco, BindingT.Id);
+                return await Q.EsisteCodiceUnivoco(CodiceUnivoco, BindingT.Id, token);
             }
             catch (OperationCanceledException)
             {

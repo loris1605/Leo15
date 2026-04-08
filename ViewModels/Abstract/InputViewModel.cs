@@ -13,26 +13,19 @@ namespace ViewModels
         public virtual int ParentIndex { get; set; }
 
         public RoutingState Router => HostScreen.Router;
-
-        
+    
 
         public Interaction<Unit, Unit> EscFocus { get; } = new();
 
         
         public InputViewModel(IScreen host) : base(host)
         {
-            this.WhenActivated(d =>
-            {
-                SaveCommand?.DisposeWith(d);
-                EscPressedCommand?.DisposeWith(d);
-            });
+            //this.WhenActivated(d =>
+            //{
+                
+            //});
         }
 
-        protected override Task OnLoading()
-        {
-            return Task.CompletedTask;
-        }
-        
     }
 
     public partial class InputViewModel

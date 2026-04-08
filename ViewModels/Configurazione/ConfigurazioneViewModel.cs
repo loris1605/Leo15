@@ -65,10 +65,10 @@ namespace ViewModels
             await HostScreen.Router.NavigateAndReset.Execute(new MenuViewModel(HostScreen));
         }
 
-        protected override Task OnSaving()
-        {
-            throw new NotImplementedException();
-        }
+        protected override Task OnSaving() => Task.CompletedTask;
+        
+        protected override Task OnEsc() => Task.CompletedTask;
+        
     }
 
     public partial class ConfigurazioneViewModel

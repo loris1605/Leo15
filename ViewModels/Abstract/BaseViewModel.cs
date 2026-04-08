@@ -33,11 +33,12 @@ namespace ViewModels
         public ReactiveCommand<Unit, Unit> AppExitCommand { get; }
         public ReactiveCommand<Unit, Unit> LoadCommand { get; }
         public ReactiveCommand<Unit, Unit> EscPressedCommand { get; set; }
-        public ReactiveCommand<Unit, Unit> SaveCommand { get; set; }
+        public ReactiveCommand<Unit, Unit> SaveCommand { get; }
 
         protected virtual IObservable<bool> canSave => Observable.Return(true);
+        protected virtual IObservable<bool> canEsc => Observable.Return(true);
 
-        
+
 
         public BaseViewModel(IScreen hostScreen, string urlPathSegment = null)
         {
@@ -51,12 +52,16 @@ namespace ViewModels
                  loading => !loading
              ).CombineLatest(canSave, (isNotLoading, childCanSave) => isNotLoading && childCanSave);
 
+            var canExecuteEsc = this.WhenAnyValue(
+                 x => x.IsLoading,
+                 loading => !loading
+             ).CombineLatest(canSave, (isNotLoading, childCanSave) => isNotLoading && childCanSave);
+
             LoadCommand = ReactiveCommand.CreateFromTask(ExecuteLoading,
                     this.WhenAnyValue(x => x.IsLoading, loading => !loading));
             SaveCommand = ReactiveCommand.CreateFromTask(ExecuteSaving, canExecuteSave);
             AppExitCommand = ReactiveCommand.Create(OnAppShutDown);
-
-
+            EscPressedCommand = ReactiveCommand.CreateFromTask(ExecuteEscing, canExecuteEsc);
             
 
 #if DEBUG
@@ -101,11 +106,12 @@ namespace ViewModels
 
                 AppExitCommand?.DisposeWith(disposables);
                 SaveCommand?.DisposeWith(disposables);
+                LoadCommand?.DisposeWith(disposables);
                 EscPressedCommand?.DisposeWith(disposables);
             });
         }
 
-        private async Task ExecuteLoading()
+        protected async Task ExecuteLoading()
         {
             IsLoading = true;
             try
@@ -127,12 +133,34 @@ namespace ViewModels
             }
         }
 
-        private async Task ExecuteSaving()
+        protected async Task ExecuteSaving()
         {
             IsLoading = true;
             try
             {
                 await OnSaving();
+            }
+            catch (OperationCanceledException)
+            {
+                Debug.WriteLine($"***** [VM] {this.GetType().Name} Caricamento annullato.");
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"***** [VM] {this.GetType().Name} ERRORE: {ex.Message}");
+                // Qui puoi settare una InfoLabel comune se l'hai nella base
+            }
+            finally
+            {
+                IsLoading = false;
+            }
+        }
+
+        protected async Task ExecuteEscing()
+        {
+            IsLoading = true;
+            try
+            {
+                await OnEsc();
             }
             catch (OperationCanceledException)
             {
@@ -169,6 +197,7 @@ namespace ViewModels
 
         protected abstract Task OnLoading();
         protected abstract Task OnSaving();
+        protected abstract Task OnEsc();
 
         protected void OnAppShutDown()
         {

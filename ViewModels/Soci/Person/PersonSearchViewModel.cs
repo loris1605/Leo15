@@ -53,73 +53,43 @@ namespace ViewModels
 
         protected override async Task OnLoading()
         {
-            IsLoading = true;
             ResetAllCombos();
             AnagraficaChecked = true;
-            IsLoading = false;
             SetFocus(CognomeFocus);
             await Task.CompletedTask;
         }
 
         protected async override Task OnSaving()
         {
-            IsLoading = true;
-            var token = _cts?.Token ?? CancellationToken.None;
-
+            
             // se il numero di tessera è diverso da zero esegue la ricerca solo sulla tessera
             if (TesseraChecked && GetNumeroTessera != "")
             {
-                try
+                int personid = await Q.FirstIdPersonByNumeroTessera(GetNumeroTessera, token);
+                if (personid != 0) { await OnBack(personid); }
+                else
                 {
-                    int personid = await Q.FirstIdPersonByNumeroTessera(GetNumeroTessera, token);
-                    if (personid != 0) { await OnBack(personid); }
-                    else
-                    {
-                        InfoLabel = "Nessuna persona trovata";
-                        SetFocus(TesseraFocus);
-                    }
+                    InfoLabel = "Nessuna persona trovata";
+                    SetFocus(TesseraFocus);
                 }
-                catch (OperationCanceledException)
-                {
-                    Debug.WriteLine("Operazione annullata dall'utente");
-                    return;
-                }
-                catch (Exception ex)
-                {
-                    { Debug.WriteLine($"OnSaving Error: {ex.Message}"); }
-                }
-
                 return;
             }
 
             // se il numero socio è diverso da zero esegue la ricerca solo sul socio
             if (SocioChecked && GetNumeroSocio != "")
             {
-                try
-                {
-                    int personid = await Q.FirstIdPersonByNumeroSocio(GetNumeroSocio, token);
+                int personid = await Q.FirstIdPersonByNumeroSocio(GetNumeroSocio, token);
 
-                    if (personid != 0) { await OnBack(personid); }
-                    else
-                    {
-                        InfoLabel = "Nessuna persona trovata";
-                        SetFocus(SocioFocus);
-                    }
-                }
-                catch (OperationCanceledException)
+                if (personid != 0) { await OnBack(personid); }
+                else
                 {
-                    Debug.WriteLine("Operazione annullata dall'utente");
-                    return;
+                    InfoLabel = "Nessuna persona trovata";
+                    SetFocus(SocioFocus);
                 }
-                catch (Exception ex)
-                {
-                    { Debug.WriteLine($"OnSaving Error: {ex.Message}"); }
-                }
-
                 return;
             }
 
-            await StartSearch(CognomeSelectedValue, NomeSelectedValue, NatoilSelectedValue);
+            await StartSearch(CognomeSelectedValue, NomeSelectedValue, NatoilSelectedValue, token);
         }
 
         void ResetAllCombos()
@@ -129,75 +99,19 @@ namespace ViewModels
             NatoilSelectedValue = 0;
         }
 
-        private async Task StartSearch(int cognomeFlag, int nomeFlag, int natoilFlag)
+        private async Task StartSearch(int cognomeFlag, int nomeFlag, int natoilFlag, CancellationToken ct)
         {
-            IsLoading = true;
-            var ct = _cts?.Token ?? CancellationToken.None;
-
             List<PersonDTO> dbData = new();
 
-            try
+            if (cognomeFlag > 0)
             {
-                if (cognomeFlag > 0)
-                {
-                    
 
-                    if (cognomeFlag == 1) dbData = await Q.LoadByCognomeExact(GetCognome, ct);
-                    else if (cognomeFlag == 2) dbData = await Q.LoadStartByCognome(GetCognome, ct);
-                    else dbData = await Q.LoadContainsCognome(GetCognome, ct);
-                    
-                    DataSource = dbData.Select(dto => new PersonMap(dto)).ToList();
 
-                    if (DataSource == null || DataSource.Count == 0)
-                    {
-                        InfoLabel = "Nessuna persona trovata";
-                        SetFocus(CognomeFocus);
-                        return;
-                    }
+                if (cognomeFlag == 1) dbData = await Q.LoadByCognomeExact(GetCognome, ct);
+                else if (cognomeFlag == 2) dbData = await Q.LoadStartByCognome(GetCognome, ct);
+                else dbData = await Q.LoadContainsCognome(GetCognome, ct);
 
-                    //dopo il nome
-                    EstractNome();
-
-                    if (DataSource == null || DataSource.Count == 0)
-                    {
-                        InfoLabel = "Nessuna persona trovata";
-                        SetFocus(NomeFocus);
-                        return;
-                    }
-
-                    //dopo la data di nascita
-                    EstractNatoil();
-
-                }
-                else if (nomeFlag > 0)
-                {
-                    if (nomeFlag == 1) dbData = await Q.LoadByNomeExact(GetNome, ct);
-                    else if (nomeFlag == 2) dbData = await Q.LoadStartByNome(GetNome, ct);
-                    else dbData = await Q.LoadContainsNome(GetNome, ct);
-
-                    DataSource = dbData.Select(dto => new PersonMap(dto)).ToList();
-
-                    if (DataSource == null || DataSource.Count == 0)
-                    {
-                        InfoLabel = "Nessuna persona trovata";
-                        SetFocus(NomeFocus);
-                        return;
-                    }
-
-                    //dopo la data di nascita
-                    EstractNatoil();
-
-                }
-
-                else if (natoilFlag > 0)
-                {
-                    if (natoilFlag == 1) dbData = await Q.LoadByNatoilExact(Natoil, ct);
-                    else if (natoilFlag == 2) dbData = await Q.LoadMinorNato(Natoil, ct);
-                    else dbData = await Q.LoadMaiorNato(Natoil, ct);
-
-                    DataSource = dbData.Select(dto => new PersonMap(dto)).ToList();
-
-                }
+                DataSource = dbData.Select(dto => new PersonMap(dto)).ToList();
 
                 if (DataSource == null || DataSource.Count == 0)
                 {
@@ -205,14 +119,59 @@ namespace ViewModels
                     SetFocus(CognomeFocus);
                     return;
                 }
+
+                //dopo il nome
+                EstractNome();
+
+                if (DataSource == null || DataSource.Count == 0)
+                {
+                    InfoLabel = "Nessuna persona trovata";
+                    SetFocus(NomeFocus);
+                    return;
+                }
+
+                //dopo la data di nascita
+                EstractNatoil();
+
             }
-            catch (OperationCanceledException) { Debug.WriteLine("Caricamento Person Search Annullato."); }
-            catch (Exception ex) { Debug.WriteLine($"Errore: {ex.Message}"); }
-            finally { IsLoading = false; }
+            else if (nomeFlag > 0)
+            {
+                if (nomeFlag == 1) dbData = await Q.LoadByNomeExact(GetNome, ct);
+                else if (nomeFlag == 2) dbData = await Q.LoadStartByNome(GetNome, ct);
+                else dbData = await Q.LoadContainsNome(GetNome, ct);
+
+                DataSource = dbData.Select(dto => new PersonMap(dto)).ToList();
+
+                if (DataSource == null || DataSource.Count == 0)
+                {
+                    InfoLabel = "Nessuna persona trovata";
+                    SetFocus(NomeFocus);
+                    return;
+                }
+
+                //dopo la data di nascita
+                EstractNatoil();
+
+            }
+
+            else if (natoilFlag > 0)
+            {
+                if (natoilFlag == 1) dbData = await Q.LoadByNatoilExact(Natoil, ct);
+                else if (natoilFlag == 2) dbData = await Q.LoadMinorNato(Natoil, ct);
+                else dbData = await Q.LoadMaiorNato(Natoil, ct);
+
+                DataSource = dbData.Select(dto => new PersonMap(dto)).ToList();
+
+            }
+
+            if (DataSource == null || DataSource.Count == 0)
+            {
+                InfoLabel = "Nessuna persona trovata";
+                SetFocus(CognomeFocus);
+                return;
+            }
 
             //1.Caricamento iniziale dei dati(scegli la query più restrittiva per performance)
-
-            IsLoading = false;
             OnBackFiltered();
 
 
@@ -267,44 +226,6 @@ namespace ViewModels
             }
         }
 
-
-
-        private void OnRicerca()
-        {
-            
-
-            //// se il campo codice socio è diverso da zero esegue la ricerca solo su quello
-            //if (SocioChecked && NumeroSocio != "0")
-            //{
-            //    int personid = Q.FirstIdByNumeroSocio(NumeroSocio);
-
-            //    if (personid != 0)
-            //    {
-            //        InputNavigator.NotifyColleagues("BackSaved", personid);
-            //    }
-            //    else
-            //    {
-            //        InfoLabel2 = "Nessuna persona trovata";
-            //        NumeroSocioFocus = true;
-            //    }
-            //    return;
-            //}
-
-            ////Inizia la ricerca sulla base delle combos selezionate
-            //StartSearch(CognomeSelectedValue, NomeSelectedValue, NatoilSelectedValue);
-            ////SocioParent.PersonVD.SelectedIndex = 0;
-            ////// riallinea il contratto con la SociVM
-
-            //if (IsModelEmpty())
-            //{
-            //    InfoLabel2 = "Nessuna persona trovata";
-            //    CognomeFocus = true;
-            //    return;
-            //}
-
-            //InputNavigator.NotifyColleagues("BackFiltered", DataSource);
-            //return;
-        }
     }
 
         public partial class PersonSearchViewModel

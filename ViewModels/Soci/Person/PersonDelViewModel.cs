@@ -19,8 +19,7 @@ namespace ViewModels
             Titolo = "Elimina Socio";
             FieldsEnabled = false;
             FieldsVisibile = false; ;
-            SaveCommand = ReactiveCommand.CreateFromTask(OnSaving);
-            
+                       
         }
 
         protected override void OnFinalDestruction()
@@ -31,68 +30,29 @@ namespace ViewModels
 
         protected override async Task OnLoading()
         {
-            IsLoading = true;
-            var token = _cts?.Token ?? CancellationToken.None;
-
-            try
-            {
-                var data = await Q.FirstPerson(_idDaModificare, token);
-                BindingT = new BindableObjects.PersonMap(data);
-            }
-            catch (OperationCanceledException)
-            {
-                Debug.WriteLine("Operazione annullata dall'utente");
-                IsLoading = false;
-                return;
-            }
-            catch (Exception ex)
-            {
-                { Debug.WriteLine($"OnLoading Error: {ex.Message}"); }
-            }
-
+            var data = await Q.FirstPerson(_idDaModificare, token);
+            BindingT = new BindableObjects.PersonMap(data);
 
             if (BindingT == null)
             {
                 InfoLabel = "Errore: Socio non trovato nel database.";
                 FieldsEnabled = false;
-                IsLoading = false;
             }
-
-            IsLoading = false;
             SetFocus(EscFocus);
         }
-
         
 
         protected async override Task OnSaving()
         {
-            IsLoading = true;
-            var token = _cts?.Token ?? CancellationToken.None;
-
-            try
+            if (!await Q.Del(BindingT.ToDto(), token))
             {
-                if (!await Q.Del(BindingT.ToDto(), token))
-                {
-                    InfoLabel = "Errore Db eliminazione person";
-                    await TriggerInteraction(EscFocus, Unit.Default);
-                    IsLoading = false;
-                    return;
-                }
-                await OnBack(-100);
-            }
-            catch (OperationCanceledException)
-            {
-                Debug.WriteLine("Operazione annullata dall'utente");
+                InfoLabel = "Errore Db eliminazione person";
+                await TriggerInteraction(EscFocus, Unit.Default);
                 IsLoading = false;
                 return;
             }
-            catch (Exception ex)
-            {
-                { Debug.WriteLine($"Del Person Error: {ex.Message}"); }
-            }
-
-            IsLoading = false;
-
+            await OnBack(-100);
+            
         }
 
         

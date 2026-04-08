@@ -9,6 +9,7 @@ using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Disposables.Fluent;
 using System.Reactive.Linq;
+using System.Reactive.Threading.Tasks;
 using ViewModels.BindableObjects;
 
 namespace ViewModels
@@ -19,14 +20,24 @@ namespace ViewModels
         private IPersonRepository Q;
 
         public ReactiveCommand<Unit, Unit> AddCodiceSocioCommand { get; }
-        public ReactiveCommand<Unit, Unit> DelCodiceSocioCommand { get; private set; }
-        public ReactiveCommand<Unit, Unit> UpdCodiceSocioCommand { get; private set; }
-        public ReactiveCommand<Unit, Unit> AddTesseraCommand { get; private set; }
-        public ReactiveCommand<Unit, Unit> DelTesseraCommand { get; private set; }
-        public ReactiveCommand<Unit, Unit> UpdTesseraCommand { get; private set; }
+        public ReactiveCommand<Unit, Unit> DelCodiceSocioCommand { get; }
+        public ReactiveCommand<Unit, Unit> UpdCodiceSocioCommand { get; }
+        public ReactiveCommand<Unit, Unit> AddTesseraCommand { get; }
+        public ReactiveCommand<Unit, Unit> DelTesseraCommand { get; }
+        public ReactiveCommand<Unit, Unit> UpdTesseraCommand { get; }
         public ReactiveCommand<Unit, Unit> PersonSearchCommand { get; }
 
         protected IGroupScreen ConfigHost => HostScreen as IGroupScreen;
+
+        protected override IObservable<bool> canDel => this.WhenAnyValue(
+            x => x.GroupBindingT,
+            x => x.GroupBindingT.CodiceSocio, // Osserva esplicitamente la proprietà interna
+            (item, codiceSocio) => item != null && codiceSocio == 0
+        );
+
+        protected override IObservable<bool> canUpd => this.WhenAnyValue(x => x.GroupBindingT)
+                                                           .Select(item => item != null);
+
 
         public PersonGroupViewModel(IScreen host,
                               IPersonRepository personRepository = null) : base(host)
@@ -38,11 +49,7 @@ namespace ViewModels
 
             var canAction = this.WhenAnyValue(x => x.GroupBindingT, x => x.IsLoading,
             (item, loading) => item != null && !loading);
-
-            var canDelete = this.WhenAnyValue(x => x.GroupBindingT, x => x.IsLoading,
-                (item, loading) => item != null &&
-                                   item.CodiceSocio == 0 &&
-                                   !loading);
+        
 
             var canSocioUpdate = this.WhenAnyValue(x => x.GroupBindingT, x => x.IsLoading,
                 (item, loading) => item != null &&
@@ -63,19 +70,7 @@ namespace ViewModels
 
             var isNotLoading = this.WhenAnyValue(x => x.IsLoading)
                 .Select(loading => !loading);
-
-            // 2. Definizione Comandi tramite i metodi della Base
-            AddCommand = ReactiveCommand.CreateFromObservable(
-                () => NavigateToInput(new PersonAddViewModel(ConfigHost, Locator.Current.GetService<IPersonRepository>())),
-                this.WhenAnyValue(x => x.IsLoading, x => !x));
-
-            UpdCommand = ReactiveCommand.CreateFromObservable(
-                () => NavigateToInput(new PersonUpdViewModel(ConfigHost, GroupBindingT!.Id,
-                                                             Locator.Current.GetService<IPersonRepository>())), canAction);
-
-            DelCommand = ReactiveCommand.CreateFromObservable(
-                () => NavigateToInput(new PersonDelViewModel(ConfigHost, GroupBindingT!.Id,
-                                                             Locator.Current.GetService<IPersonRepository>())), canDelete);
+           
 
             AddCodiceSocioCommand = ReactiveCommand.CreateFromObservable(
                 () => NavigateToInput(new CodiceSocioAddViewModel(ConfigHost, GroupBindingT!.Id,
@@ -136,42 +131,50 @@ namespace ViewModels
 
         protected override async Task OnLoading()
         {
-            var token = _cts?.Token ?? CancellationToken.None;
-
-            IsLoading = true;
-            try
+            // 1. Recupero dati (IsLoading è già TRUE grazie al wrapper)
+            var data = await Q.Load(0, token);
+            
+            if (data != null && data.Count > 0)
             {
-                var data = await Q.Load(0, token);
+                // 2. Aggiorna tutto il blocco dati
+                UpdateCollection(data, 0);
 
-                token.ThrowIfCancellationRequested();
-
-                if (data?.Count > 0)
-                {
-                    UpdateCollection(data, 0);
-                    GroupBindingT = DataSource[0];
-                }
+                // 3. Seleziona l'elemento SENZA scatenare ricalcoli intermedi
+                // Accertati che IdIndex o la logica di selezione non faccia scattare altri comandi
+                GroupBindingT = DataSource.FirstOrDefault();
             }
-            catch (OperationCanceledException) { /* Caricamento interrotto dal cambio pagina */ }
-            catch (Exception ex) { Debug.WriteLine($"Load Error: {ex.Message}"); }
-            finally { IsLoading = false; }
+            else
+            {
+                DataSource = new List<PersonMap>();
+                GroupedDataSource = null;
+                GroupBindingT = null;
+            }
+
+            // Al termine, il wrapper della base metterà IsLoading = false
+            // I pulsanti passeranno da Disabilitato a Abilitato UNA SOLA VOLTA.
         }
 
         private void UpdateCollection(List<PersonDTO> data, int id)
         {
-            DataSource = data.Select(dto => new PersonMap(dto)).ToList(); ;
+            // Trasformazione dati
+            var mapped = data.Select(dto => new PersonMap(dto)).ToList();
 
-            // Creiamo la collezione raggruppata
-            var view = new DataGridCollectionView(DataSource);
+            // Assegnazione singola (DataSource deve notificare una volta sola)
+            //DataSource = mapped;
+
+            // Configurazione View
+            var view = new DataGridCollectionView(mapped);
             view.GroupDescriptions.Add(new DataGridPathGroupDescription("Titolo"));
 
+            // Assegnazione alla UI
             GroupedDataSource = view;
-            GroupFocus = true;
             IdIndex = id;
+            GroupFocus = true;
         }
+
 
         public async Task CaricaDataSource(int id = 0)
         {
-            var token = _cts?.Token ?? CancellationToken.None;
             try
             {
                 var data = await Q.Load(id, token);
@@ -183,13 +186,14 @@ namespace ViewModels
 
         public override async Task CaricaByModel(object model)
         {
-
+            IsLoading = true;
             var view = new DataGridCollectionView((List<PersonMap>)model);
             view.GroupDescriptions.Add(new DataGridPathGroupDescription("Titolo"));
 
             GroupedDataSource = view;
             GroupFocus = true;
             IdIndex = 0;
+            IsLoading = false;
             await Task.CompletedTask;
         }
 
@@ -207,18 +211,34 @@ namespace ViewModels
 
         protected IObservable<Unit> NavigateToInput(IRoutableViewModel vm)
         {
-            if (ConfigHost == null) return Observable.Return(Unit.Default);
-
-            IsLoading = true;
-            var stringa = GroupBindingT is null ? "" : GroupBindingT.CodiceSocio.ToString();
-
-            Debug.WriteLine($"canDelete {stringa}");
-
-            // Esegue il cambio di stato della UI e poi naviga
             return Observable.Start(() => ConfigHost.GroupEnabled = false, RxApp.MainThreadScheduler)
                 .SelectMany(_ => ConfigHost.InputRouter.Navigate.Execute(vm))
-                .Select(_ => Unit.Default).Finally(() => this.IsLoading = false);
+                .Select(_ => Unit.Default);
         }
+
+        protected async override Task OnAdding()
+        {
+            await NavigateToInput(new PersonAddViewModel(ConfigHost, 
+                                      Locator.Current.GetService<IPersonRepository>())).ToTask();
+        }
+
+        protected async override Task OnDeleting()
+        {
+            await NavigateToInput(new PersonDelViewModel(ConfigHost, 
+                                                         GroupBindingT!.Id,
+                                      Locator.Current.GetService<IPersonRepository>())).ToTask();
+
+        }
+
+        protected async override Task OnUpdating()
+        {
+            await NavigateToInput(new PersonUpdViewModel(ConfigHost,
+                                                         GroupBindingT!.Id,
+                                      Locator.Current.GetService<IPersonRepository>())).ToTask();
+        }
+
+        protected override Task OnEsc() => Task.CompletedTask;
+        
 
         public string NumeroSocio => BindingT is null ? "" : GroupBindingT.NumeroSocio;
         public string NumeroTessera => BindingT is null ? "" : GroupBindingT.NumeroTessera;

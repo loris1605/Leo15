@@ -132,6 +132,7 @@
 
                         <ui:UiButton x:Name="AddSocioButton"
                                      MinWidth="50"
+                                     MinHeight="50"
                                      Margin="20,5"
                                      ToolTipText="AGGIUNGI CODICE SOCIO"
                                      HorizontalAlignment="Center"
@@ -143,6 +144,7 @@
 
                         <ui:UiButton x:Name="DelSocioButton"
                                      MinWidth="50"
+                                     MinHeight="50"
                                      Margin="20,5"
                                      ToolTipText="CANCELLA CODICE SOCIO"
                                      HorizontalAlignment="Center"
@@ -154,6 +156,7 @@
 
                         <ui:UiButton x:Name="UpdSocioButton"
                                      MinWidth="50"
+                                     MinHeight="50"
                                      Margin="20,5"
                                      ToolTipText="MODIFICA CODICE SOCIO"
                                      HorizontalAlignment="Center"
@@ -192,6 +195,7 @@
 
                         <ui:UiButton x:Name="AddTesseraButton"
                                      MinWidth="50"
+                                     MinHeight="50"
                                      Margin="20,5"
                                      ToolTipText="AGGIUNGI NUMERO TESSERA"
                                      HorizontalAlignment="Center"
@@ -203,6 +207,7 @@
 
                         <ui:UiButton x:Name="DelTesseraButton"
                                      MinWidth="50"
+                                     MinHeight="50"
                                      Margin="20,5"
                                      ToolTipText="CANCELLA NUMERO TESSERA"
                                      HorizontalAlignment="Center"
@@ -213,7 +218,7 @@
                         </ui:UiButton>
 
                         <ui:UiButton x:Name="UpdTesseraButton"
-                                     MinWidth="50"
+                                     MinHeight="50"
                                      Margin="20,5"
                                      ToolTipText="MODIFICA NUMERO TESSERA"
                                      HorizontalAlignment="Center"

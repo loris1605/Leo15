@@ -23,7 +23,9 @@ namespace ViewModels
 
         public SociViewModel(IScreen host) : base(host)
         {
-            EsciCommand = ReactiveCommand.CreateFromTask(OnGoToMenu);
+            var canExecute = this.WhenAnyValue(x => x.IsLoading, x => !x);
+
+            EsciCommand = ReactiveCommand.CreateFromTask(OnGoToMenu, canExecute);
 
             this.WhenActivated(d =>
             {
@@ -47,7 +49,6 @@ namespace ViewModels
 
         private async Task OnGoToMenu()
         {
-
             await HostScreen.Router.NavigateAndReset.Execute(new MenuViewModel(HostScreen));
         }
 
@@ -73,6 +74,11 @@ namespace ViewModels
         }
 
         protected override Task OnSaving()
+        {
+            throw new NotImplementedException();
+        }
+
+        protected override Task OnEsc()
         {
             throw new NotImplementedException();
         }

@@ -39,45 +39,22 @@ namespace ViewModels
 
         protected async override Task OnSaving()
         {
-            IsLoading = true;
-            var token = _cts?.Token ?? CancellationToken.None;
-
-            if (!await ValidaDati())
-            {
-                IsLoading = false;
-                return;
-            }
+            if (!await ValidaDati()) return;
+            
 
             if (!int.TryParse(GetNumeroTessera, out int numeroTessera) || numeroTessera <= 0)
             {
                 InfoLabel = "Numero Tessera non valido o uguale a zero";
                 SetFocus(TesseraFocus);
-                IsLoading = false;
                 return;
             }
 
-            try
+            if (await Q.EsisteNumeroTessera(BindingT.NumeroTessera, token))
             {
-                if (await Q.EsisteNumeroTessera(BindingT.NumeroTessera, token))
-                {
-                    InfoLabel = "Tessera già in uso";
-                    SetFocus(TesseraFocus);
-                    IsLoading = false;
-                    return;
-                }
-            }
-            catch (OperationCanceledException)
-            {
-                Debug.WriteLine("Operazione annullata dall'utente");
+                InfoLabel = "Tessera già in uso";
+                SetFocus(TesseraFocus);
                 return;
             }
-            catch (Exception ex)
-            {
-                { Debug.WriteLine($"OnSaving Error: {ex.Message}"); }
-            }
-
-
-
 
             if (int.TryParse(GetNumeroSocio, out int numeroSocio))
             {
@@ -85,28 +62,15 @@ namespace ViewModels
                 if (numeroSocio <= 0) { }
                 else
                 {
-                    try
+                    if (await Q.EsisteNumeroSocio(BindingT.NumeroSocio, token))
                     {
-                        if (await Q.EsisteNumeroSocio(BindingT.NumeroSocio, token))
-                        {
-                            InfoLabel = "Codice Socio già in uso";
-                            SetFocus(SocioFocus);
-                            IsLoading = false;
-                            return;
-                        }
-                    }
-                    catch (OperationCanceledException)
-                    {
-                        Debug.WriteLine("Operazione annullata dall'utente");
+                        InfoLabel = "Codice Socio già in uso";
+                        SetFocus(SocioFocus);
                         IsLoading = false;
                         return;
                     }
-                    catch (Exception ex)
-                    {
-                        { Debug.WriteLine($"Esiste Numero Socio Error: {ex.Message}"); }
-                    }
-
                 }
+
             }
             else
             {
@@ -114,16 +78,13 @@ namespace ViewModels
                 // (In questo caso considerala come se fosse <= 0)
                 InfoLabel = "Codice Socio non può essere zero";
                 SetFocus(SocioFocus);
-                IsLoading = false;
                 return;
             }
-
             
-            if (await EsisteAnagrafica(token))
+            if (await EsisteAnagrafica())
             {
                 InfoLabel = "Socio già registrato";
                 SetFocus(SocioFocus);
-                IsLoading = false;
                 return;
             }
 
@@ -135,15 +96,13 @@ namespace ViewModels
             {
                 InfoLabel = "Errore Db inserimento Socio";
                 SetFocus(CognomeFocus);
-                IsLoading = false;
                 return;
             }
 
-            IsLoading = false;
             await OnBack(newPersonId);
         }
 
-        private async Task<bool> EsisteAnagrafica(CancellationToken ct)
+        private async Task<bool> EsisteAnagrafica()
         {
             if (BindingT is null) return false;
 
@@ -158,7 +117,7 @@ namespace ViewModels
 
             try
             {
-                return await Q.EsisteCodiceUnivoco(BindingT.CodiceUnivoco, ct);
+                return await Q.EsisteCodiceUnivoco(BindingT.CodiceUnivoco, token);
             }
             catch (OperationCanceledException)
             {

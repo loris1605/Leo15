@@ -25,8 +25,6 @@ namespace ViewModels
         public ReactiveCommand<Unit, Unit> EntraCommand { get; }
         public ReactiveCommand<Unit, Unit> EsciCommand { get; }
 
-        private CancellationTokenSource _loadingCts;
-
         protected override IObservable<bool> canSave => this.WhenAnyValue(
             x => x.PasswordText,
             x => x.BindingT,
@@ -41,15 +39,10 @@ namespace ViewModels
         {
             Q = loginRepository ?? Locator.Current.GetService<ILoginRepository>();
 
-
             EntraCommand = SaveCommand;
             //EntraCommand = ReactiveCommand.CreateFromTask(OnEntra);
 
-            EsciCommand = ReactiveCommand.Create(() =>
-            {
-                if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime lifetime)
-                    lifetime.Shutdown();
-            });
+            EsciCommand = EscPressedCommand;
 
             this.WhenActivated(d =>
             {
@@ -70,12 +63,8 @@ namespace ViewModels
 
         protected override async Task OnLoading()
         {
-            IsLoading = true;
-            //Q = new(); // Istanza locale del Repository
             List<LoginDTO> dbData = await Q.GetOperatoriAbilitati(token);
-
-            token.ThrowIfCancellationRequested();
-
+            
             if (dbData != null && dbData.Count != 0)
             {
 
@@ -88,24 +77,7 @@ namespace ViewModels
             }
             SetFocus(PasswordFocus);
             
-            
         }
-
-        //private async Task OnPasswordFocus()
-        //{
-        //    // Fondamentale: aspetta un attimo che la View sia "viva" e l'handler registrato
-        //    await Task.Delay(200);
-
-        //    try
-        //    {
-        //        await PasswordFocus.Handle(Unit.Default);
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        // Evita crash se l'handler non è ancora pronto o la vista è già chiusa
-        //        System.Diagnostics.Debug.WriteLine("Interaction Focus fallita: " + ex.Message);
-        //    }
-        //}
 
         protected override async Task OnSaving()
         {
@@ -130,6 +102,16 @@ namespace ViewModels
         {
             await HostScreen.Router.NavigateAndReset.Execute(new EmptyViewModel(HostScreen));
             await HostScreen.Router.NavigateAndReset.Execute(new MenuViewModel(HostScreen));
+        }
+
+        protected async override Task OnEsc()
+        {
+            if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime lifetime)
+                lifetime.Shutdown();
+
+            await Task.CompletedTask;
+
+            
         }
     }
         

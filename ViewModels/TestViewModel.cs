@@ -15,6 +15,11 @@ namespace ViewModels
 
         }
 
+        protected override Task OnEsc()
+        {
+            throw new NotImplementedException();
+        }
+
         protected override Task OnLoading()
         {
             return Task.CompletedTask;

@@ -18,22 +18,44 @@ namespace ViewModels
 
     }
 
-    public partial class GroupViewModelBase<TMap> : BaseViewModel where TMap : class, new()
+    public abstract partial class GroupViewModelBase<TMap> : BaseViewModel where TMap : class, new()
     {
 
-        public ReactiveCommand<Unit, Unit> AddCommand { get; protected set; }
-        public ReactiveCommand<Unit, Unit> UpdCommand { get; protected set; }
-        public ReactiveCommand<Unit, Unit> DelCommand { get; protected set; }
-        public ReactiveCommand<Unit, Unit> FilterCommand { get; protected set; }
+        public ReactiveCommand<Unit, Unit> AddCommand { get; }
+        public ReactiveCommand<Unit, Unit> UpdCommand { get; }
+        public ReactiveCommand<Unit, Unit> DelCommand { get; }
+        public ReactiveCommand<Unit, Unit> FilterCommand { get; }
+
+        protected virtual IObservable<bool> canAdd => Observable.Return(true);
+        protected virtual IObservable<bool> canDel => Observable.Return(true);
+        protected virtual IObservable<bool> canUpd => Observable.Return(true);
 
         public GroupViewModelBase(IScreen host) : base(host)
         {
+            var canExecuteAdd = this.WhenAnyValue(
+                 x => x.IsLoading,
+                 loading => !loading
+             ).CombineLatest(canAdd, (isNotLoading, childCanSave) => isNotLoading && childCanSave);
+
+            var canExecuteDel = this.WhenAnyValue(
+                 x => x.IsLoading,
+                 loading => !loading
+             ).CombineLatest(canDel, (isNotLoading, childCanSave) => isNotLoading && childCanSave);
+
+            var canExecuteUpd = this.WhenAnyValue(
+                 x => x.IsLoading,
+                 loading => !loading
+             ).CombineLatest(canUpd, (isNotLoading, childCanSave) => isNotLoading && childCanSave);
+
+            AddCommand = ReactiveCommand.CreateFromTask(ExecuteAdding, canExecuteAdd);
+            DelCommand = ReactiveCommand.CreateFromTask(ExecuteDeleting, canExecuteDel);
+            UpdCommand = ReactiveCommand.CreateFromTask(ExecuteUpdating, canExecuteUpd);
+            FilterCommand = ReactiveCommand.CreateFromTask(ExecuteLoading);
+
             this.WhenActivated(d =>
             {
                 Disposable.Create(() =>
                 {
-                    _cts.Cancel();
-
                     // PULIZIA CRITICA: Sgancia la View della griglia
                     GroupedDataSource = null;
                     DataSource = null;
@@ -62,6 +84,74 @@ namespace ViewModels
         }
 
         public virtual Task CaricaByModel(object model) { return Task.CompletedTask; }
+
+        public async Task ExecuteAdding()
+        {
+            IsLoading = true;
+            try
+            {
+                await OnAdding();
+            }
+            catch (OperationCanceledException)
+            {
+                Debug.WriteLine($"***** [VM] {this.GetType().Name} Caricamento annullato.");
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"***** [VM] {this.GetType().Name} ERRORE: {ex.Message}");
+                // Qui puoi settare una InfoLabel comune se l'hai nella base
+            }
+            finally
+            {
+                IsLoading = false;
+            }
+        }
+        public async Task ExecuteDeleting()
+        {
+            IsLoading = true;
+            try
+            {
+                await OnDeleting();
+            }
+            catch (OperationCanceledException)
+            {
+                Debug.WriteLine($"***** [VM] {this.GetType().Name} Caricamento annullato.");
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"***** [VM] {this.GetType().Name} ERRORE: {ex.Message}");
+                // Qui puoi settare una InfoLabel comune se l'hai nella base
+            }
+            finally
+            {
+                IsLoading = false;
+            }
+        }
+        public async Task ExecuteUpdating()
+        {
+            IsLoading = true;
+            try
+            {
+                await OnUpdating();
+            }
+            catch (OperationCanceledException)
+            {
+                Debug.WriteLine($"***** [VM] {this.GetType().Name} Caricamento annullato.");
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"***** [VM] {this.GetType().Name} ERRORE: {ex.Message}");
+                // Qui puoi settare una InfoLabel comune se l'hai nella base
+            }
+            finally
+            {
+                IsLoading = false;
+            }
+        }
+
+        protected abstract Task OnAdding();
+        protected abstract Task OnDeleting();
+        protected abstract Task OnUpdating();
 
 
         #region DataSource

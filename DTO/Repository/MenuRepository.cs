@@ -4,25 +4,45 @@ using Microsoft.EntityFrameworkCore;
 using Models.Context;
 using Models.Repository;
 using Models.Tables;
+using System.Diagnostics;
 
 namespace DTO.Repository
 {
     public interface IMenuRepository
     {
-        Task<List<PostazioneDTO>> CaricaPostazioniCassa(int CodiceOperatore);
-        Task<bool> EsisteGiornataAperta();
+        Task<List<PostazioneDTO>> CaricaPostazioniCassa(int CodiceOperatore, CancellationToken ctk = default);
+        Task<bool> EsisteGiornataAperta(CancellationToken ctk = default);
     }
 
     public class MenuRepository : BaseRepository<MenuDbContext, Permesso>, IMenuRepository
     {
-        public async Task<bool> EsisteGiornataAperta()
+        public async Task<bool> EsisteGiornataAperta(CancellationToken ctk = default)
         {
+            ctk.ThrowIfCancellationRequested();
             using MenuDbContext _ctx = new();
-            return await _ctx.Giornate.AnyAsync(p => p.Aperta);
+
+            try
+            {
+                var result = await _ctx.Giornate.AnyAsync(p => p.Aperta, ctk);
+                return result;
+            }
+            catch (OperationCanceledException)
+            {
+                Debug.WriteLine(">>> [INFO] Operazione annullata dall'utente.");
+                return false;
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($">>> [ERROR] Add: {ex.InnerException?.Message ?? ex.Message}");
+                return false;
+            }
+            
         }
 
-        public async Task<List<PostazioneDTO>> CaricaPostazioniCassa(int CodiceOperatore)
+        public async Task<List<PostazioneDTO>> CaricaPostazioniCassa(int CodiceOperatore, CancellationToken ctk = default)
         {
+            ctk.ThrowIfCancellationRequested();
+
             using MenuDbContext _ctx = new();
             IQueryable<Permesso> query =
                 _ctx.Permessi
@@ -31,7 +51,21 @@ namespace DTO.Repository
                     .Where(p => p.Postazione!.TipoPostazioneId == 2)
                     .Where(p => p.PostazioneId > 0);
 
-            return await query.Select(PermessoMapper.ToPostazioneDTO).ToListAsync();
+            try
+            {
+                var result = await query.Select(PermessoMapper.ToPostazioneDTO).ToListAsync(ctk);
+                return result;
+            }
+            catch (OperationCanceledException)
+            {
+                Debug.WriteLine(">>> [INFO] Operazione annullata dall'utente.");
+                return new List<PostazioneDTO>();
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($">>> [ERROR] Add: {ex.InnerException?.Message ?? ex.Message}");
+                return new List<PostazioneDTO>();
+            }
 
         }
     }

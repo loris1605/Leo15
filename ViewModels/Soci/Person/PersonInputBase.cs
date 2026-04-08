@@ -35,10 +35,7 @@ namespace ViewModels
 
         public PersonInputBase(IScreen host) : base(host)
         {
-
-            EscPressedCommand = ReactiveCommand.CreateFromTask(OnBackEsc,
-                                canExecute: this.WhenAnyValue(x => x.IsLoading, loading => !loading));
-
+            
             this.WhenActivated(d =>
             {
                 
@@ -61,7 +58,8 @@ namespace ViewModels
         }
 
         protected async override Task OnSaving() { await Task.CompletedTask; }
-
+        protected async override Task OnLoading() { await Task.CompletedTask; }
+        
         protected async Task<bool> ValidaDati()
         {
             if (IsCognomeEmpty)
@@ -96,9 +94,8 @@ namespace ViewModels
             InfoLabel = ""; // Pulisce eventuali errori precedenti
             return true;
         }
-
-        
-        private async Task  OnBackEsc()
+      
+        protected override async Task OnEsc()
         {
             IsLoading = true;
             if (HostScreen is ISociScreen sociHost)
