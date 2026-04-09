@@ -54,13 +54,14 @@ namespace ViewModels
         protected async override Task OnSaving()
         {
 
-            //if (!await Q.DelTessera(BindingT))
-            //{
-            //    InfoLabel = "Errore Db eliminazione person";
-            //    await OnEscFocus();
-            //    return;
-            //}
-            //OnBack(_idRitorno);
+            if (!await Q.DelTessera(BindingT.ToDto(), token))
+            {
+                InfoLabel = "Errore Db eliminazione person";
+                SetFocus(EscFocus);
+                return;
+            }
+
+            await OnBack(_idRitorno);
         }
     }
 }

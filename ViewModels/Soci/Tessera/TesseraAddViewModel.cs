@@ -38,104 +38,65 @@ namespace ViewModels
 
         protected override async Task OnLoading()
         {
-            IsLoading = true;
-            var token = _cts?.Token ?? CancellationToken.None;
 
-            try
+            var dto = await Q.FirstSocio(_idDaModificare, token);
+            token.ThrowIfCancellationRequested();
+            if (dto == null)
             {
-                var dto = await Q.FirstSocio(_idDaModificare, token);
-                token.ThrowIfCancellationRequested();
-                if (dto == null)
-                {
-                    InfoLabel = "Errore: Socio non trovato nel database.";
-                    FieldsEnabled = false;
-                    SetFocus(EscFocus);
-                }
-                else
-                {
-                    BindingT = new PersonMap(dto);
-                    Titolo = "Nuova Tessera per " + GetNomeCognome;
-                    Titolo1 = "Numero Socio : " + GetNumeroSocio;
-                    BindingT.NumeroTessera = string.Empty;
-                    await OnNumeroTesseraFocus();
-                }
-                    
+                InfoLabel = "Errore: Socio non trovato nel database.";
+                FieldsEnabled = false;
+                SetFocus(EscFocus);
             }
-            catch (OperationCanceledException)
+            else
             {
-                Debug.WriteLine("Operazione annullata dall'utente");
-                return;
+                BindingT = new PersonMap(dto);
+                Titolo = "Nuova Tessera per " + GetNomeCognome;
+                Titolo1 = "Numero Socio : " + GetNumeroSocio;
+                BindingT.NumeroTessera = string.Empty;
+                await OnNumeroTesseraFocus();
             }
-            catch (Exception ex)
-            {
-                { Debug.WriteLine($"OnLoading Error: {ex.Message}"); }
-            }
-            finally { IsLoading = false; }
-
-
-
+            
         }
 
         protected async override Task OnSaving()
         {
-            IsLoading = true;
-            var token = _cts?.Token ?? CancellationToken.None;
+            if (BindingT is null) { return; }
 
-            try
+            if (int.TryParse(GetNumeroTessera, out int numeroTessera))
             {
-                if (BindingT is null) { return; }
-
-                if (int.TryParse(GetNumeroTessera, out int numeroTessera))
+                // 2. Se la conversione riesce, controlliamo il valore
+                if (numeroTessera <= 0) { }
+                else
                 {
-                    // 2. Se la conversione riesce, controlliamo il valore
-                    if (numeroTessera <= 0) { }
-                    else
+                    if (await Q.EsisteNumeroTessera(BindingT.NumeroTessera, token))
                     {
-                        if (await Q.EsisteNumeroTessera(BindingT.NumeroTessera, token))
-                        {
-                            InfoLabel = "Tessera già in uso";
-                            SetFocus(NumeroTesseraFocus);
-                            return;
-                        }
+                        InfoLabel = "Tessera già in uso";
+                        SetFocus(NumeroTesseraFocus);
+                        return;
                     }
                 }
-                else
-                {
-                    // 3. Se è stringa vuota o contiene lettere, finisce qui senza crash
-                    // (In questo caso considerala come se fosse <= 0)
-                    InfoLabel = "Numero Tessera non può essere zero";
-                    SetFocus(NumeroTesseraFocus);
-                    return;
-                }
-
-                idtessera = await Q.AddTessera(BindingT.ToDto(), token);
-
-                if (idtessera == -1)
-                {
-                    InfoLabel = "Errore durante il salvataggio. Verificare i dati e riprovare.";
-                    await OnNumeroTesseraFocus();
-                }
-                else
-                {
-                    await OnBack(_idRitorno);
-                }
-
             }
-            catch (OperationCanceledException)
+            else
             {
-                Debug.WriteLine("Operazione annullata dall'utente");
+                // 3. Se è stringa vuota o contiene lettere, finisce qui senza crash
+                // (In questo caso considerala come se fosse <= 0)
+                InfoLabel = "Numero Tessera non può essere zero";
+                SetFocus(NumeroTesseraFocus);
                 return;
             }
-            catch (Exception ex)
-            {
-                InfoLabel = $"Errore durante il salvataggio: {ex.Message}";
-            }
-            finally
-            { 
-                IsLoading = false;
-                
-            }
 
+            idtessera = await Q.AddTessera(BindingT.ToDto(), token);
+
+            if (idtessera == -1)
+            {
+                InfoLabel = "Errore durante il salvataggio. Verificare i dati e riprovare.";
+                await OnNumeroTesseraFocus();
+            }
+            else
+            {
+                await OnBack(_idRitorno);
+            }
+            
         }
     }
 }

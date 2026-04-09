@@ -94,16 +94,21 @@ namespace ViewModels
                                                                 GroupBindingT.CodiceSocio,
                                                                 Locator.Current.GetService<IPersonRepository>())), canSocioUpdate);
 
-            //DelTesseraCommand = ReactiveCommand.CreateFromObservable(
-            //    () => NavigateToInput(new TesseraDelViewModel(ConfigHost,
-            //                            GroupBindingT.CodiceTessera, GroupBindingT.Id)), canTesseraDelete);
+            DelTesseraCommand = ReactiveCommand.CreateFromObservable(
+                () => NavigateToInput(new TesseraDelViewModel(ConfigHost,
+                                                              GroupBindingT.CodiceTessera, 
+                                                              GroupBindingT.Id,
+                                                              Locator.Current.GetService<IPersonRepository>())), canTesseraDelete);
 
-            //UpdTesseraCommand = ReactiveCommand.CreateFromObservable(
-            //    () => NavigateToInput(new TesseraUpdViewModel(ConfigHost,
-            //                            GroupBindingT.CodiceTessera, GroupBindingT.Id)), canTesseraDelete);
+            UpdTesseraCommand = ReactiveCommand.CreateFromObservable(
+                () => NavigateToInput(new TesseraUpdViewModel(ConfigHost,
+                                                              GroupBindingT.CodiceTessera, 
+                                                              GroupBindingT.Id,
+                                                              Locator.Current.GetService<IPersonRepository>())), canTesseraDelete);
 
             PersonSearchCommand = ReactiveCommand.CreateFromObservable(
-                () => NavigateToInput(new PersonSearchViewModel(ConfigHost, Locator.Current.GetService<IPersonRepository>())),
+                () => NavigateToInput(new PersonSearchViewModel(ConfigHost, 
+                                                                Locator.Current.GetService<IPersonRepository>())),
                 this.WhenAnyValue(x => x.IsLoading, x => !x));
 
             this.WhenActivated(d =>

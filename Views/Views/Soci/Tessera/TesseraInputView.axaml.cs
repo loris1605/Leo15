@@ -15,13 +15,27 @@ using ViewModels;
 namespace Views;
 
 public partial class TesseraInputView : BaseUserControl<TesseraInputBase>,
-                                        IViewFor<TesseraAddViewModel>
+                                        IViewFor<TesseraAddViewModel>,
+                                        IViewFor<TesseraDelViewModel>,
+                                        IViewFor<TesseraUpdViewModel>
 {
     protected override string RootControlName => "MainGrid";
 
     TesseraAddViewModel? IViewFor<TesseraAddViewModel>.ViewModel
     {
         get => ViewModel as TesseraAddViewModel;
+        set => ViewModel = value;
+    }
+
+    TesseraDelViewModel? IViewFor<TesseraDelViewModel>.ViewModel
+    {
+        get => ViewModel as TesseraDelViewModel;
+        set => ViewModel = value;
+    }
+
+    TesseraUpdViewModel? IViewFor<TesseraUpdViewModel>.ViewModel
+    {
+        get => ViewModel as TesseraUpdViewModel;
         set => ViewModel = value;
     }
 

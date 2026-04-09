@@ -8,25 +8,21 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <AvaloniaXaml Remove="Configurazione\Operatore\**" />
     <AvaloniaXaml Remove="Configurazione\Permessi\**" />
     <AvaloniaXaml Remove="Configurazione\Postazione\**" />
     <AvaloniaXaml Remove="Configurazione\Settore\**" />
     <AvaloniaXaml Remove="Configurazione\Tariffa\**" />
     <AvaloniaXaml Remove="Mappings\**" />
-    <Compile Remove="Configurazione\Operatore\**" />
     <Compile Remove="Configurazione\Permessi\**" />
     <Compile Remove="Configurazione\Postazione\**" />
     <Compile Remove="Configurazione\Settore\**" />
     <Compile Remove="Configurazione\Tariffa\**" />
     <Compile Remove="Mappings\**" />
-    <EmbeddedResource Remove="Configurazione\Operatore\**" />
     <EmbeddedResource Remove="Configurazione\Permessi\**" />
     <EmbeddedResource Remove="Configurazione\Postazione\**" />
     <EmbeddedResource Remove="Configurazione\Settore\**" />
     <EmbeddedResource Remove="Configurazione\Tariffa\**" />
     <EmbeddedResource Remove="Mappings\**" />
-    <None Remove="Configurazione\Operatore\**" />
     <None Remove="Configurazione\Permessi\**" />
     <None Remove="Configurazione\Postazione\**" />
     <None Remove="Configurazione\Settore\**" />
@@ -35,7 +31,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Remove="Soci\Tessera\TesseraUpdViewModel.cs" />
+    <Compile Remove="Configurazione\Operatore\OperatoreAddViewModel.cs" />
+    <Compile Remove="Configurazione\Operatore\OperatoreDelViewModel.cs" />
+    <Compile Remove="Configurazione\Operatore\OperatoreGroupViewModel.cs" />
+    <Compile Remove="Configurazione\Operatore\OperatoreInputBase.cs" />
+    <Compile Remove="Configurazione\Operatore\OperatoreUpdViewModel.cs" />
   </ItemGroup>
 
   <ItemGroup>
@@ -51,6 +51,10 @@
   <ItemGroup>
     <ProjectReference Include="..\DTO\DTO.csproj" />
     <ProjectReference Include="..\SysNet\SysNet.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Configurazione\Operatore\" />
   </ItemGroup>
 
 </Project>

@@ -4,10 +4,11 @@ using System.Reactive.Disposables;
 using System.Reactive.Disposables.Fluent;
 using ViewModels;
 
-namespace Leonardo;
+namespace Views;
 
-public partial class ConfigurazioneView : ReactiveUserControl<ConfigurazioneViewModel>
+public partial class ConfigurazioneView : BaseUserControl<ConfigurazioneViewModel>
 {
+    protected override string RootControlName => "MainGrid";
     public ConfigurazioneView()
     {
         InitializeComponent();
@@ -15,18 +16,7 @@ public partial class ConfigurazioneView : ReactiveUserControl<ConfigurazioneView
         this.WhenActivated(d =>
         {
 
-            // Esc Key Pressed
-
-
-            // Enter Key Pressed
-
-            #region TwoWay
-
-            //Bind PasswordText to TextBox
-
-
-            #endregion
-
+            
             #region OneWay
 
             this.OneWayBind(ViewModel,
@@ -36,19 +26,7 @@ public partial class ConfigurazioneView : ReactiveUserControl<ConfigurazioneView
 
             #endregion
 
-            #region Commands
-
-            this.Bind(ViewModel,
-                vm => vm.EsciCommand,
-                v => v.Title.ExitCommand).DisposeWith(d);
-
-            #endregion
-
-            Disposable.Create(() => {
-                this.DataContext = null;
-                System.Diagnostics.Debug.WriteLine(">>> [VIEW] ConfigurazioneView deattivata, DataContext rimosso.");
-            }).DisposeWith(d);
-
+           
         });
     }
 }

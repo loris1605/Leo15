@@ -7,7 +7,7 @@ using System.Reactive.Linq;
 
 namespace ViewModels
 {
-    public class OperatoreGroupViewModel : GroupViewModel<OperatoreMap, OperatoreR>
+    public class OperatoreGroupViewModel : GroupViewModelBase<OperatoreMap>
     {
         public ReactiveCommand<Unit, Unit> PostazioniCommand { get; }
         public ReactiveCommand<Unit, Unit> SettoriCommand { get; }
@@ -67,5 +67,24 @@ namespace ViewModels
 
         }
 
+        protected override Task OnAdding()
+        {
+            throw new NotImplementedException();
+        }
+
+        protected override Task OnDeleting()
+        {
+            throw new NotImplementedException();
+        }
+
+        protected override Task OnUpdating()
+        {
+            throw new NotImplementedException();
+        }
+
+        protected override Task OnEsc()
+        {
+            throw new NotImplementedException();
+        }
     }
 }

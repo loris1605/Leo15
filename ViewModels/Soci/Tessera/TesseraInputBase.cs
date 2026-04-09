@@ -30,19 +30,12 @@ namespace ViewModels
         
         public TesseraInputBase(IScreen host) : base(host)
         {
-            EscPressedCommand = ReactiveCommand.CreateFromTask(OnBackEsc,
-                                canExecute: this.WhenAnyValue(x => x.IsLoading, loading => !loading));
-
-            this.WhenActivated(d =>
-            {
-                EscPressedCommand.DisposeWith(d);
-            });
+            
         }
 
         protected async override Task OnSaving() { await Task.CompletedTask; }
         protected async override Task OnLoading() { await Task.CompletedTask; }
-        protected async override Task OnEsc() { await Task.CompletedTask; }
-
+        
         public async Task OnNumeroTesseraFocus()
         {
             // Fondamentale: aspetta un attimo che la View sia "viva" e l'handler registrato
@@ -50,9 +43,8 @@ namespace ViewModels
             SetFocus(NumeroTesseraFocus);
         }
 
-        protected async Task OnBackEsc()
+        protected override async Task OnEsc()
         {
-            IsLoading = true;
             if (HostScreen is ISociScreen sociHost)
             {
                 RxApp.MainThreadScheduler.Schedule(() => {

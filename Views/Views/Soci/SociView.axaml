@@ -29,7 +29,7 @@
 
         <lc:TitleView TitoloPagina="GESTIONE SOCI"
                       ButtonText="Esci"
-                      ExitCommand="{Binding EsciCommand}"
+                      ExitCommand="{Binding EscPressedCommand}"
                       x:Name="Title"/>
         
         <Grid x:Name="MainGrid"

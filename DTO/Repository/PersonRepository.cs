@@ -288,7 +288,7 @@ namespace DTO.Repository
             };
 
             // 2. Aggiungiamo solo la "radice" (Person). EF aggiungerà i figli a cascata.
-            await _ctx.People.AddAsync(person);
+            await _ctx.People.AddAsync(person, ctk);
 
             try
             {
@@ -301,7 +301,7 @@ namespace DTO.Repository
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($">>> [ERROR] Add: {ex.InnerException?.Message ?? ex.Message}");
+                Debug.WriteLine($">>> [ERROR] Add Person: {ex.InnerException?.Message ?? ex.Message}");
                 return -1;
             }
         }
@@ -403,7 +403,7 @@ namespace DTO.Repository
             }
             catch (OperationCanceledException)
             {
-                Debug.WriteLine(">>> [INFO] Inserimento Persona annullato dall'utente.");
+                Debug.WriteLine(">>> [INFO] Modifica Persona annullato dall'utente.");
                 return false;
             }
             catch (Exception ex)

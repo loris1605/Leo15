@@ -10,7 +10,7 @@
              KeyboardNavigation.TabNavigation="Cycle"
              Background="LightSteelBlue"
              x:DataType="vm:ConfigurazioneViewModel"
-             x:Class="Leonardo.ConfigurazioneView">
+             x:Class="Views.ConfigurazioneView">
 
     <Grid >
     
@@ -21,7 +21,8 @@
 
         <lc:TitleView TitoloPagina="CONFIGURAZIONE"
                       x:Name="Title"
-                      ButtonText="Esci"/>
+                      ButtonText="Esci"
+                      ExitCommand="{Binding EscPressedCommand}"/>
        
         <Grid x:Name="MainGrid"
               ColumnDefinitions="2*,3*"

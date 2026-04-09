@@ -1,5 +1,7 @@
 ﻿using DTO.Entity;
+using DTO.Repository;
 using ReactiveUI;
+using Splat;
 using System.Reactive;
 using System.Reactive.Disposables.Fluent;
 using System.Reactive.Linq;
@@ -18,19 +20,10 @@ namespace ViewModels
         public RoutingState InputRouter { get; } = new RoutingState();
         public RoutingState Router => GroupRouter;
 
-        public ReactiveCommand<Unit, Unit> EsciCommand { get; }
-         
-
+    
         public SociViewModel(IScreen host) : base(host)
         {
-            var canExecute = this.WhenAnyValue(x => x.IsLoading, x => !x);
-
-            EsciCommand = ReactiveCommand.CreateFromTask(OnGoToMenu, canExecute);
-
-            this.WhenActivated(d =>
-            {
-                EsciCommand.DisposeWith(d);
-            });
+            
         }
 
         protected override void OnFinalDestruction()
@@ -47,11 +40,6 @@ namespace ViewModels
 
         }
 
-        private async Task OnGoToMenu()
-        {
-            await HostScreen.Router.NavigateAndReset.Execute(new MenuViewModel(HostScreen));
-        }
-
         public void AggiornaGridByObject(object model)
         {
             if (GroupRouter.GetCurrentViewModel() is IGroupViewModelBase groupVm)
@@ -59,7 +47,7 @@ namespace ViewModels
                 groupVm.CaricaByModel(model);
             }
         }
-        
+      
 
         public void AggiornaGridByInt(int id)
         {
@@ -73,15 +61,14 @@ namespace ViewModels
             }
         }
 
-        protected override Task OnSaving()
-        {
-            throw new NotImplementedException();
-        }
+        protected override async Task OnSaving() => await Task.CompletedTask;
 
-        protected override Task OnEsc()
-        {
-            throw new NotImplementedException();
-        }
+        protected override async Task OnEsc() => await HostScreen
+                                                      .Router
+                                                      .NavigateAndReset
+                                                      .Execute(new MenuViewModel(HostScreen,
+                                                                        Locator.Current.GetService<IMenuRepository>()));
+
     }
 
     public partial class SociViewModel

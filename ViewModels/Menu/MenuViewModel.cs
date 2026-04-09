@@ -39,7 +39,7 @@ namespace ViewModels
 
                 if (page != null)
                     await HostScreen.Router.NavigateAndReset.Execute(page);
-            });
+            }, canExecute);
 
             CassaCommand = ReactiveCommand.CreateFromTask<string>(param => OnCassa(param), canExecute);
             LogoutCommand = ReactiveCommand.CreateFromTask(GoToLogin, canExecute);
@@ -50,7 +50,7 @@ namespace ViewModels
                 LogoutCommand?.DisposeWith(d);
                 CassaCommand?.DisposeWith(d);
                 NavigateCommand?.DisposeWith(d);
-                              
+                             
             });
                 
         }

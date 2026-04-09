@@ -19,5 +19,14 @@ namespace DTO.Mapper
             NomeOperatore = entity.Nome,
             Password = entity.Password
         };
+
+        public static Expression<Func<Operatore, OperatoreDTO>> ToOperatoreDto => entity => new OperatoreDTO
+        {
+            Id = entity.Id,
+            NomeOperatore = entity.Nome,
+            Password = entity.Password,
+            Abilitato = entity.Abilitato,
+            Badge = entity.Pass
+        };
     }
 }

@@ -54,6 +54,7 @@ internal class Program
         services.AddTransient<ILoginRepository, LoginRepository>();
         services.AddTransient<IMenuRepository, MenuRepository>();
         services.AddTransient<IPersonRepository, PersonRepository>();
+        services.AddTransient<IOperatoreRepository, OperatoreRepository>();
     }
 
     private static void RegisterViewModels(IServiceCollection services)
@@ -72,8 +73,9 @@ internal class Program
         services.AddTransient<IViewFor<ConnectionViewModel>, ConnectionView>();
         services.AddTransient<IViewFor<MenuViewModel>, MenuView>();
         //services.AddTransient<IViewFor<TestViewModel>, TestView>();
-        services.AddTransient<IViewFor<SociViewModel>, SociView>();
+        
         RegisterIViewForSoci(services);
+        RegisterIViewForConfigurazione(services);
 
     }
 
@@ -84,6 +86,8 @@ internal class Program
 
     private static void RegisterIViewForSoci(IServiceCollection services)
     {
+        services.AddTransient<IViewFor<SociViewModel>, SociView>();
+
         services.AddTransient<IViewFor<PersonGroupViewModel>, PersonGroupView>();
 
         services.AddTransient<IViewFor<PersonAddViewModel>, PersonInputView>();
@@ -96,6 +100,13 @@ internal class Program
         services.AddTransient<IViewFor<CodiceSocioUpdViewModel>, SocioInputView>();
 
         services.AddTransient<IViewFor<TesseraAddViewModel>, TesseraInputView>();
+        services.AddTransient<IViewFor<TesseraDelViewModel>, TesseraInputView>();
+        services.AddTransient<IViewFor<TesseraUpdViewModel>, TesseraInputView>();
+    }
+
+    private static void RegisterIViewForConfigurazione(IServiceCollection services)
+    {
+        services.AddTransient<IViewFor<ConfigurazioneViewModel>, ConfigurazioneView>();
     }
 
 

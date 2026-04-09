@@ -1,4 +1,6 @@
-﻿using ReactiveUI;
+﻿using DTO.Repository;
+using ReactiveUI;
+using Splat;
 using System.Reactive;
 using System.Reactive.Disposables.Fluent;
 using System.Reactive.Linq;
@@ -22,16 +24,14 @@ namespace ViewModels
         public RoutingState InputRouter { get; } = new RoutingState();
         public RoutingState Router => GroupRouter;
 
-        public ReactiveCommand<Unit, Unit> EsciCommand { get; }
-
         public ConfigurazioneViewModel(IScreen host) : base(host)
         {
-            EsciCommand = ReactiveCommand.CreateFromTask(OnGoToMenu);
+            
 
-            this.WhenActivated(d =>
-            {
-                EsciCommand.DisposeWith(d);
-            });
+            //this.WhenActivated(d =>
+            //{
+                
+            //});
             
         }
 
@@ -60,15 +60,14 @@ namespace ViewModels
             }
         }
 
-        private async Task OnGoToMenu()
-        {
-            await HostScreen.Router.NavigateAndReset.Execute(new MenuViewModel(HostScreen));
-        }
-
         protected override Task OnSaving() => Task.CompletedTask;
         
-        protected override Task OnEsc() => Task.CompletedTask;
-        
+        protected async override Task OnEsc() => await HostScreen
+                                                        .Router
+                                                        .NavigateAndReset
+                                                        .Execute(new MenuViewModel(HostScreen,
+                                                            Locator.Current.GetService<IMenuRepository>()));
+
     }
 
     public partial class ConfigurazioneViewModel
