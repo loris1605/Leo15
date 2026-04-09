@@ -8,26 +8,30 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <AvaloniaXaml Remove="Views\Configurazione\Operatore\**" />
     <AvaloniaXaml Remove="Views\Configurazione\Permessi\**" />
     <AvaloniaXaml Remove="Views\Configurazione\Postazione\**" />
     <AvaloniaXaml Remove="Views\Configurazione\Settore\**" />
     <AvaloniaXaml Remove="Views\Configurazione\Tariffa\**" />
-    <Compile Remove="Views\Configurazione\Operatore\**" />
     <Compile Remove="Views\Configurazione\Permessi\**" />
     <Compile Remove="Views\Configurazione\Postazione\**" />
     <Compile Remove="Views\Configurazione\Settore\**" />
     <Compile Remove="Views\Configurazione\Tariffa\**" />
-    <EmbeddedResource Remove="Views\Configurazione\Operatore\**" />
     <EmbeddedResource Remove="Views\Configurazione\Permessi\**" />
     <EmbeddedResource Remove="Views\Configurazione\Postazione\**" />
     <EmbeddedResource Remove="Views\Configurazione\Settore\**" />
     <EmbeddedResource Remove="Views\Configurazione\Tariffa\**" />
-    <None Remove="Views\Configurazione\Operatore\**" />
     <None Remove="Views\Configurazione\Permessi\**" />
     <None Remove="Views\Configurazione\Postazione\**" />
     <None Remove="Views\Configurazione\Settore\**" />
     <None Remove="Views\Configurazione\Tariffa\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <AvaloniaXaml Remove="Views\Configurazione\Operatore\OperatoreInputView.axaml" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Remove="Views\Configurazione\Operatore\OperatoreInputView.axaml.cs" />
   </ItemGroup>
 
   <ItemGroup>

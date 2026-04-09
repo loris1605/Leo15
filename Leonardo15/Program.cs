@@ -107,6 +107,8 @@ internal class Program
     private static void RegisterIViewForConfigurazione(IServiceCollection services)
     {
         services.AddTransient<IViewFor<ConfigurazioneViewModel>, ConfigurazioneView>();
+
+        services.AddTransient<IViewFor<OperatoreGroupViewModel>, OperatoreGroupView>();
     }
 
 

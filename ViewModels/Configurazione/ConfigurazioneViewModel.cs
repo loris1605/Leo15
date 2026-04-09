@@ -43,7 +43,8 @@ namespace ViewModels
 
         protected override async Task OnLoading()
         {
-            //await GroupRouter.NavigateAndReset.Execute(new OperatoreGroupViewModel(this));
+            await GroupRouter.NavigateAndReset.Execute(new OperatoreGroupViewModel(this, 
+                                                       Locator.Current.GetService<IOperatoreRepository>()));
             await Task.CompletedTask;
             
         }

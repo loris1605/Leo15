@@ -12,7 +12,7 @@
              Background="Transparent"
              x:DataType="vm:OperatoreGroupViewModel"
              x:CompileBindings="True"
-             x:Class="Leonardo.OperatoreGroupView">
+             x:Class="Views.OperatoreGroupView">
 
     <Grid x:Name="MainGrid">
     

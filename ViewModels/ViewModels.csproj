@@ -33,7 +33,6 @@
   <ItemGroup>
     <Compile Remove="Configurazione\Operatore\OperatoreAddViewModel.cs" />
     <Compile Remove="Configurazione\Operatore\OperatoreDelViewModel.cs" />
-    <Compile Remove="Configurazione\Operatore\OperatoreGroupViewModel.cs" />
     <Compile Remove="Configurazione\Operatore\OperatoreInputBase.cs" />
     <Compile Remove="Configurazione\Operatore\OperatoreUpdViewModel.cs" />
   </ItemGroup>
@@ -51,10 +50,6 @@
   <ItemGroup>
     <ProjectReference Include="..\DTO\DTO.csproj" />
     <ProjectReference Include="..\SysNet\SysNet.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Configurazione\Operatore\" />
   </ItemGroup>
 
 </Project>

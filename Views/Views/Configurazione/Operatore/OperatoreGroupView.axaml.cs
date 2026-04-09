@@ -7,10 +7,13 @@ using System.Reactive.Disposables;
 using System.Reactive.Disposables.Fluent;
 using ViewModels;
 
-namespace Leonardo;
 
-public partial class OperatoreGroupView : ReactiveUserControl<OperatoreGroupViewModel>
+namespace Views;
+
+public partial class OperatoreGroupView : BaseUserControl<OperatoreGroupViewModel>
 {
+    protected override string RootControlName => "MainGrid";
+
     public OperatoreGroupView()
     {
         InitializeComponent();
@@ -28,12 +31,7 @@ public partial class OperatoreGroupView : ReactiveUserControl<OperatoreGroupView
 
             // Enter Key Pressed
 
-            #region TwoWay
-
-            //Bind PasswordText to TextBox
-
-
-            #endregion
+            
 
             #region OneWay
 
