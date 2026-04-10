@@ -14,15 +14,15 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
+using Windows.ApplicationModel.Chat;
 
 namespace DTO.Repository
 {
-    public interface IPersonRepository
+    public interface IPersonRepository : IBaseRepository<Person>
     {
-        Task<int> Add(PersonDTO map, CancellationToken ctk = default);
         Task<int> AddCodiceSocio(PersonDTO map, CancellationToken ctk = default);
+        Task<int> AddPerson(PersonDTO map);
         Task<int> AddTessera(PersonDTO map, CancellationToken ctk = default);
-        Task<bool> Del(PersonDTO map, CancellationToken ctk = default);
         Task<bool> DelSocio(PersonDTO map, CancellationToken ctk = default);
         Task<bool> DelTessera(PersonDTO map, CancellationToken ctk = default);
         Task<bool> EsisteCodiceUnivoco(string codiceunivoco, CancellationToken ctk = default);
@@ -48,7 +48,6 @@ namespace DTO.Repository
         Task<List<PersonDTO>> LoadMinorNato(int natoil, CancellationToken ctk = default);
         Task<List<PersonDTO>> LoadStartByCognome(string cognome, CancellationToken ctk = default);
         Task<List<PersonDTO>> LoadStartByNome(string nome, CancellationToken ctk = default);
-        Task<bool> Upd(PersonDTO map, CancellationToken ctk = default);
         Task<bool> UpdSocio(PersonDTO map, CancellationToken ctk = default);
         Task<bool> UpdTessera(PersonDTO map, CancellationToken ctk = default);
     }
@@ -80,24 +79,26 @@ namespace DTO.Repository
                     (combined, tessera) => new { combined.person, combined.socio, tessera });
 
             return await query
-                .Select(x => new PersonDTO // <--- Questa viene tradotta in SQL
+                .Select(x => new PersonDTO
                 {
                     Id = x.person.Id,
                     Cognome = x.person.SurName ?? string.Empty,
                     Nome = x.person.FirstName ?? string.Empty,
                     Natoil = x.person.Natoil,
+                    CodiceUnivoco = x.person.UniqueParam ?? string.Empty, // Aggiunto questo
 
-                    
                     CodiceSocio = x.socio != null ? x.socio.Id : 0,
-                    NumeroSocio = x.socio != null ? x.socio.NumeroSocio : string.Empty,
+                    NumeroSocio = (x.socio != null && x.socio.NumeroSocio != null) ? x.socio.NumeroSocio : string.Empty,
 
                     CodiceTessera = x.tessera != null ? x.tessera.Id : 0,
-                    NumeroTessera = x.tessera != null ? x.tessera.NumeroTessera : string.Empty,
+                    NumeroTessera = (x.tessera != null && x.tessera.NumeroTessera != null) ? x.tessera.NumeroTessera : string.Empty,
                     Scadenza = x.tessera != null ? x.tessera.Scadenza : 0
                 })
                 .OrderBy(o => o.Cognome)
+                .ThenBy(o => o.Nome) // Consiglio: aggiungi il secondo ordinamento
                 .Take(100)
                 .ToListAsync(ctk);
+
         }
 
 
@@ -257,16 +258,20 @@ namespace DTO.Repository
 
         }
 
-        public async Task<int> Add(PersonDTO map, CancellationToken ctk = default)
+        public async Task<int> AddPerson(PersonDTO map)
         {
+            using var cts = new CancellationTokenSource();
+            var ctk = cts.Token;
             using PeopleDbContext _ctx = new();
             // 1. Creiamo l'albero degli oggetti collegati
+
             var person = new Person
             {
                 FirstName = map.Nome ?? string.Empty,
                 SurName = map.Cognome ?? string.Empty,
                 Natoil = map.Natoil,
                 UniqueParam = map.CodiceUnivoco,
+
 
                 // Colleghiamo il Socio direttamente alla lista della Persona
                 Soci =
@@ -328,7 +333,7 @@ namespace DTO.Repository
 
             // 2. Aggiungiamo solo la "radice" (Person). EF aggiungerà i figli a cascata.
             await _ctx.Soci.AddAsync(socio);
-            
+
             try
             {
                 await _ctx.SaveChangesAsync(ctk);
@@ -381,38 +386,6 @@ namespace DTO.Repository
 
         }
 
-        public async Task<bool> Upd(PersonDTO map, CancellationToken ctk = default)
-        {
-            ctk.ThrowIfCancellationRequested();
-            using PeopleDbContext _ctx = new();
-            // 1. Cerchiamo l'entità (FindAsync è ottimo qui)
-            var person = await _ctx.People.FindAsync(map.Id, ctk);
-            if (person == null) return false;
-            // 2. Aggiorniamo le proprietà
-            person.FirstName = map.Nome ?? string.Empty;
-            person.SurName = map.Cognome ?? string.Empty;
-            person.Natoil = map.Natoil;
-            person.UniqueParam = map.CodiceUnivoco;
-
-            ctk.ThrowIfCancellationRequested();
-
-            try
-            {
-                await _ctx.SaveChangesAsync(ctk);
-                return true;
-            }
-            catch (OperationCanceledException)
-            {
-                Debug.WriteLine(">>> [INFO] Modifica Persona annullato dall'utente.");
-                return false;
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($">>> [ERROR] Add: {ex.InnerException?.Message ?? ex.Message}");
-                return false;
-            }
-
-        }
         public async Task<bool> UpdSocio(PersonDTO map, CancellationToken ctk = default)
         {
             ctk.ThrowIfCancellationRequested();
@@ -471,33 +444,6 @@ namespace DTO.Repository
 
         }
 
-        public async Task<bool> Del(PersonDTO map, CancellationToken ctk = default)
-        {
-            ctk.ThrowIfCancellationRequested();
-            using PeopleDbContext _ctx = new();
-            var person = await _ctx.People.FindAsync(map.Id, ctk);
-            if (person == null) return false;
-
-            _ctx.People.Remove(person);
-
-            ctk.ThrowIfCancellationRequested();
-
-            try
-            {
-                await _ctx.SaveChangesAsync(ctk);
-                return true;
-            }
-            catch (OperationCanceledException)
-            {
-                Debug.WriteLine(">>> [INFO] Cancellazione Persona annullato dall'utente.");
-                return false;
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($">>> [ERROR] Add: {ex.InnerException?.Message ?? ex.Message}");
-                return false;
-            }
-        }
         public async Task<bool> DelSocio(PersonDTO map, CancellationToken ctk = default)
         {
             ctk.ThrowIfCancellationRequested();

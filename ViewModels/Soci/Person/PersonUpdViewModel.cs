@@ -46,7 +46,7 @@ namespace ViewModels
 
         protected override async Task OnSaving()
         {
-            if (!await ValidaDati()) return;
+            if (ValidaDati()) return;
            
 
             if (await EsisteAnagraficaUpd())

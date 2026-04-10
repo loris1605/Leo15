@@ -1,4 +1,5 @@
-﻿using Models.Repository;
+﻿using DTO.Repository;
+using Models.Repository;
 using ReactiveUI;
 using SysNet;
 
@@ -6,16 +7,16 @@ namespace ViewModels
 {
     public class OperatoreDelViewModel : OperatoreInputBase
     {
-        private OperatoreR Q { get; set; }
+        private IOperatoreRepository Q;
         private readonly int _idDaModificare;
 
-        public OperatoreDelViewModel(IScreen host, int idoperatore) : base(host)
+        public OperatoreDelViewModel(IScreen host, int idoperatore, IOperatoreRepository Repository) : base(host)
         {
             _idDaModificare = idoperatore;
 
             Titolo = "Cancella Operatore";
-            
-            Q = Create<OperatoreR>.Instance();
+
+            Q = Repository;
         }
 
         protected override void OnFinalDestruction()
@@ -26,21 +27,22 @@ namespace ViewModels
 
         protected override async Task OnLoading()
         {
-            BindingT = await Q.GetById(_idDaModificare);
+var data = await Q.FirstOperatore(_idDaModificare);
+            BindingT = new BindableObjects.OperatoreMap(data);
             if (GetCodiceOperatore == 0)
             {
                 InfoLabel = "Errore: Operatore non trovato nel database.";
                 FieldsEnabled = false;
             }
-            await OnFocus(EscFocus);
+            SetFocus(EscFocus);
         }
 
         protected async override Task OnSaving()
         {
-            if (!await Q.Del(BindingT))
+            if (!await Q.Del(BindingT.ToDto()))
             {
                 InfoLabel = "Errore Db eliminazione operatore";
-                await OnEscFocus();
+                SetFocus(EscFocus);
                 return;
             }
             OnBack(-100);

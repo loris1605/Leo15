@@ -1,14 +1,46 @@
-﻿using SysNet.Converters;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using Models.Interfaces;
+using Models.Tables;
+using SysNet.Converters;
 
 namespace DTO.Entity
 {
-    public class PersonDTO : BaseDTO, IDTO
+    public class PersonDTO : BaseDTO, IMap, IMappable<Person>
     {
+        public PersonDTO() { }  
+
+        public PersonDTO(Person table)
+        {
+            this.Id = table.Id;
+            this.Cognome = table.SurName;
+            this.Nome = table.FirstName;
+            this.Natoil = table.Natoil;
+            this.CodiceUnivoco = table.UniqueParam;
+
+            var primoSocio = table.Soci.FirstOrDefault();
+
+            this.CodiceSocio = primoSocio?.Id ?? 0;
+            this.NumeroSocio = primoSocio?.NumeroSocio ?? "0";
+
+            var primaTessera = primoSocio?.Tessere?.FirstOrDefault();
+
+            this.CodiceTessera = primaTessera?.Id ?? 0;
+            this.NumeroTessera = primaTessera?.NumeroTessera ?? string.Empty;
+            this.Scadenza = primaTessera?.Scadenza ?? 0;
+        }
+
+        public Person ToTable()
+        {
+            return new Person
+            {
+                Id = this.Id,
+                SurName = this.Cognome,
+                FirstName = this.Nome,
+                Natoil = this.Natoil,
+                UniqueParam = this.CodiceUnivoco
+            };
+            
+        }
+
         public string Cognome { get; set; } = string.Empty;
         public int Natoil { get; set; }
         
@@ -23,13 +55,12 @@ namespace DTO.Entity
         public string CodiceUnivoco { get; set; } = string.Empty;
 
         // 2. Aggiungi un controllo di sicurezza sulle date (se l'int è 0, ToShortDateString crasha)
-        public override string? Titolo => $"{Nome} {Cognome} ({NatoilDate.ToShortDateString()})";
+        public override string? Titolo => $"{Nome} {Cognome} ({Natoil.DateIntToDate().ToShortDateString()})";
 
-        public DateTime NatoilDate => Natoil.DateIntToDate();
-        public DateTime ScadenzaDate => Scadenza.DateIntToDate();
-
-        public bool IsMaggiorenne => Natoil.IsLegalAge();
-
-        public override string Nome { get; set; } = string.Empty;
+        
     }
+
+    
+
+
 }

@@ -27,14 +27,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <AvaloniaXaml Remove="Views\Configurazione\Operatore\OperatoreInputView.axaml" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Compile Remove="Views\Configurazione\Operatore\OperatoreInputView.axaml.cs" />
-  </ItemGroup>
-
-  <ItemGroup>
     <PackageReference Include="Avalonia" Version="11.3.11" />
     <PackageReference Include="Avalonia.Controls.DataGrid" Version="11.3.11" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.14" />

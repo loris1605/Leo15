@@ -1,4 +1,5 @@
 ﻿using DTO.Entity;
+using Models.Tables;
 using ReactiveUI;
 
 namespace ViewModels.BindableObjects
@@ -14,6 +15,8 @@ namespace ViewModels.BindableObjects
             this.Password = dto.Password;
             this.Badge = dto.Badge;
             this.CodicePerson = dto.CodicePerson;
+            this.NomePostazione = dto.NomePostazione;
+            this.TipoPostazione = dto.TipoPostazione;
         }
 
         public OperatoreDTO ToDto()
@@ -28,6 +31,8 @@ namespace ViewModels.BindableObjects
 
             };
          }
+
+        
 
         private string _nomeoperatore = string.Empty;
         public string NomeOperatore

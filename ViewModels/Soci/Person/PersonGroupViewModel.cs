@@ -35,10 +35,6 @@ namespace ViewModels
             (item, codiceSocio) => item != null && codiceSocio == 0
         );
 
-        protected override IObservable<bool> canUpd => this.WhenAnyValue(x => x.GroupBindingT)
-                                                           .Select(item => item != null);
-
-
         public PersonGroupViewModel(IScreen host,
                               IPersonRepository personRepository = null) : base(host)
         {
@@ -142,7 +138,7 @@ namespace ViewModels
             if (data != null && data.Count > 0)
             {
                 // 2. Aggiorna tutto il blocco dati
-                UpdateCollection(data, 0);
+                await UpdateCollection(data, 0);
 
                 // 3. Seleziona l'elemento SENZA scatenare ricalcoli intermedi
                 // Accertati che IdIndex o la logica di selezione non faccia scattare altri comandi
@@ -159,10 +155,10 @@ namespace ViewModels
             // I pulsanti passeranno da Disabilitato a Abilitato UNA SOLA VOLTA.
         }
 
-        private void UpdateCollection(List<PersonDTO> data, int id)
+        private async Task UpdateCollection(List<PersonDTO> data, int id)
         {
             // Trasformazione dati
-            var mapped = data.Select(dto => new PersonMap(dto)).ToList();
+            var mapped = await Task.Run(() => data.Select(dto => new PersonMap(dto)).ToList());
 
             // Assegnazione singola (DataSource deve notificare una volta sola)
             //DataSource = mapped;
@@ -171,8 +167,14 @@ namespace ViewModels
             var view = new DataGridCollectionView(mapped);
             view.GroupDescriptions.Add(new DataGridPathGroupDescription("Titolo"));
 
+            IsLoading = true;
             // Assegnazione alla UI
+            var GroupBindingTBackup = GroupBindingT;
+            GroupBindingT = null;
             GroupedDataSource = view;
+            GroupBindingT = GroupBindingTBackup;
+            IsLoading = false;
+
             IdIndex = id;
             GroupFocus = true;
         }
@@ -184,7 +186,7 @@ namespace ViewModels
             {
                 var data = await Q.Load(id, token);
                 token.ThrowIfCancellationRequested();
-                UpdateCollection(data, id);
+                await UpdateCollection(data, id);
             }
             catch (OperationCanceledException) { }
         }

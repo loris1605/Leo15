@@ -26,7 +26,7 @@ internal class Program
         RegisterViews(services);
         RegisterViewModels(services);
         RegisterIViewFor(services);
-
+        
         // 2. PREPARA il resolver di Splat PRIMA di buildare
         var resolver = new MicrosoftDependencyResolver(services);
 
@@ -109,6 +109,16 @@ internal class Program
         services.AddTransient<IViewFor<ConfigurazioneViewModel>, ConfigurazioneView>();
 
         services.AddTransient<IViewFor<OperatoreGroupViewModel>, OperatoreGroupView>();
+
+        services.AddTransient<IViewFor<OperatoreAddViewModel>, OperatoreInputView>();
+        services.AddTransient<IViewFor<OperatoreUpdViewModel>, OperatoreInputView>();
+        services.AddTransient<IViewFor<OperatoreDelViewModel>, OperatoreInputView>();
+    }
+
+
+    private static void RegisterMappers()
+    {
+
     }
 
 

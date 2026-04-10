@@ -4,14 +4,16 @@ using DTO.Repository;
 using Models.Repository;
 using ReactiveUI;
 using Splat;
+using System.Linq;
 using System.Reactive;
 using System.Reactive.Disposables.Fluent;
 using System.Reactive.Linq;
+using System.Reactive.Threading.Tasks;
 using ViewModels.BindableObjects;
 
 namespace ViewModels
 {
-    public class OperatoreGroupViewModel : GroupViewModelBase<OperatoreMap>
+    public class OperatoreGroupViewModel : GroupViewModelBase<OperatoreMap>, IGroupViewModelBase
     {
         public ReactiveCommand<Unit, Unit> PostazioniCommand { get; }
         public ReactiveCommand<Unit, Unit> SettoriCommand { get; }
@@ -28,14 +30,10 @@ namespace ViewModels
             (item, codiceSocio) => item != null && codiceSocio == 0
         );
 
-        protected override IObservable<bool> canUpd => this.WhenAnyValue(x => x.GroupBindingT)
-                                                           .Select(item => item != null);
-
-
         public OperatoreGroupViewModel(IScreen host,
-                              IOperatoreRepository Repository = null) : base(host)
+                                       IOperatoreRepository Repository) : base(host)
         {
-            Q = Repository ?? Locator.Current.GetService<IOperatoreRepository>();
+            Q = Repository ?? throw new ArgumentNullException(nameof(Repository));
 
             var canAction = this.WhenAnyValue(x => x.GroupBindingT, x => x.IsLoading,
             (item, loading) => item != null && !loading);
@@ -49,12 +47,8 @@ namespace ViewModels
             var isNotLoading = this.WhenAnyValue(x => x.IsLoading)
                 .Select(loading => !loading);
 
-
-            // 2. Definizione Comandi tramite i metodi della Base
-            //AddCommand = ReactiveCommand.CreateFromObservable(
-            //    () => NavigateToInput(new OperatoreAddViewModel(ConfigHost)),
-            //    this.WhenAnyValue(x => x.IsLoading, x => !x));
-
+            
+            
             //UpdCommand = ReactiveCommand.CreateFromObservable(
             //    () => NavigateToInput(new OperatoreUpdViewModel(ConfigHost, GroupBindingT!.Id)), canAction);
 
@@ -103,7 +97,7 @@ namespace ViewModels
             if (data != null && data.Count > 0)
             {
                 // 2. Aggiorna tutto il blocco dati
-                UpdateCollection(data, 0);
+                await UpdateCollection(data, 0);
 
                 // 3. Seleziona l'elemento SENZA scatenare ricalcoli intermedi
                 // Accertati che IdIndex o la logica di selezione non faccia scattare altri comandi
@@ -120,10 +114,10 @@ namespace ViewModels
             // I pulsanti passeranno da Disabilitato a Abilitato UNA SOLA VOLTA.
         }
 
-        private void UpdateCollection(List<OperatoreDTO> data, int id)
+        private async Task UpdateCollection(List<OperatoreDTO> data, int id)
         {
             // Trasformazione dati
-            var mapped = data.Select(dto => new OperatoreMap(dto)).ToList();
+            var mapped = await Task.Run(() => data.Select(dto => new OperatoreMap(dto)).ToList());
 
             // Assegnazione singola (DataSource deve notificare una volta sola)
             //DataSource = mapped;
@@ -133,7 +127,14 @@ namespace ViewModels
             view.GroupDescriptions.Add(new DataGridPathGroupDescription("Titolo"));
 
             // Assegnazione alla UI
+            IsLoading = true;
+            // Assegnazione alla UI
+            var GroupBindingTBackup = GroupBindingT;
+            GroupBindingT = null;
             GroupedDataSource = view;
+            GroupBindingT = GroupBindingTBackup;
+            IsLoading = false;
+
             IdIndex = id;
             GroupFocus = true;
         }
@@ -143,8 +144,7 @@ namespace ViewModels
             try
             {
                 var data = await Q.Load(id, token);
-                token.ThrowIfCancellationRequested();
-                UpdateCollection(data, id);
+                await UpdateCollection(data, id);
             }
             catch (OperationCanceledException) { }
         }
@@ -168,19 +168,22 @@ namespace ViewModels
                 .Select(_ => Unit.Default);
         }
 
-        protected override Task OnAdding()
+        protected async override Task OnAdding()
         {
-            throw new NotImplementedException();
+            await NavigateToInput(new OperatoreAddViewModel(ConfigHost,
+                                      Locator.Current.GetService<IOperatoreRepository>())).ToTask();
         }
 
-        protected override Task OnDeleting()
+        protected async override Task OnDeleting()
         {
-            throw new NotImplementedException();
+            await NavigateToInput(new OperatoreDelViewModel(ConfigHost, GroupBindingT.Id,
+                                      Locator.Current.GetService<IOperatoreRepository>())).ToTask();
         }
 
-        protected override Task OnUpdating()
+        protected async override Task OnUpdating()
         {
-            throw new NotImplementedException();
+            await NavigateToInput(new OperatoreUpdViewModel(ConfigHost, GroupBindingT.Id,
+                                      Locator.Current.GetService<IOperatoreRepository>())).ToTask();
         }
 
         protected override Task OnEsc()

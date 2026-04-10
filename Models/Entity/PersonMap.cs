@@ -1,4 +1,5 @@
-﻿using SysNet.Converters;
+﻿using Models.Interfaces;
+using SysNet.Converters;
 
 namespace Models.Entity
 {

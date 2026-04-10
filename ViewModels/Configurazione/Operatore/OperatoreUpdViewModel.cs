@@ -1,5 +1,4 @@
-﻿using Models.Mappers;
-using Models.Repository;
+﻿using DTO.Repository;
 using Models.Tables;
 using ReactiveUI;
 using SysNet;
@@ -8,10 +7,10 @@ namespace ViewModels
 {
     public class OperatoreUpdViewModel : OperatoreInputBase
     {
-        private OperatoreR Q { get; set; }
+        private IOperatoreRepository Q;
         private readonly int _idDaModificare;
 
-        public OperatoreUpdViewModel(IScreen host, int idoperatore) : base(host)
+        public OperatoreUpdViewModel(IScreen host, int idoperatore, IOperatoreRepository Repository) : base(host)
         {
             _idDaModificare = idoperatore;
 
@@ -19,38 +18,38 @@ namespace ViewModels
             
             FieldsEnabled = true;
             
-            Q = Create<OperatoreR>.Instance();
+            Q = Repository;
         }
 
-        protected override void OnFinalDestruction()
-        {
-            Q?.Dispose();
-            Q = null;
-        }
+        protected override void OnFinalDestruction() => Q = null;
+        
 
         protected override async Task OnLoading()
         {
-            BindingT = await Q.GetById(_idDaModificare);
+            var data = await Q.FirstOperatore(_idDaModificare);
+
+            BindingT = new BindableObjects.OperatoreMap(data);
+
             if (GetCodiceOperatore == 0)
             {
                 InfoLabel = "Errore: Operatore non trovato nel database.";
                 FieldsEnabled = false;
-                await OnFocus(NomeFocus);
+                SetFocus(NomeFocus);
                 return;
             }
             NomeOperatoreEnabled = _idDaModificare != -1;
             if (NomeOperatoreEnabled)
             {
-                await OnFocus(NomeFocus);
+                SetFocus(NomeFocus);
             }
-            else await OnFocus(PasswordFocus);
+            else SetFocus(PasswordFocus);
         }
 
         protected override async Task OnSaving()
         {
-            if (!await ValidaDati()) return;
+            if (!ValidaDati()) return;
 
-            if (await Q.EsisteNomeUpd(BindingT))
+            if (await Q.EsisteNomeUpd(BindingT.ToDto()))
             {
                 InfoLabel = "Operatore già registrato";
                 return;
@@ -58,10 +57,10 @@ namespace ViewModels
 
             InfoLabel = "";
 
-            if (!await Q.Upd(BindingT))
+            if (!await Q.Upd(BindingT.ToDto()))
             {
                 InfoLabel = "Errore Db modifica operatore";
-                await OnFocus(NomeFocus);
+                SetFocus(NomeFocus);
                 return;
             }
 

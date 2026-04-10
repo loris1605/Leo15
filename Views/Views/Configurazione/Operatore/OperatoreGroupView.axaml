@@ -63,17 +63,17 @@
                 <DataGrid.Columns >
                     
                     <DataGridTextColumn Header="Cod." 
-                                        x:DataType="vmdt:OperatoreMapDataType"
+                                        x:DataType="vm:BindableObjects.OperatoreMap"
                                         Binding="{Binding CodicePermesso}" 
                                         IsVisible="False" />
 
                     <DataGridTextColumn Header="Nome" 
-                                        x:DataType="vmdt:OperatoreMapDataType"
+                                        x:DataType="vm:BindableObjects.OperatoreMap"
                                         Binding="{Binding NomePostazione}" 
                                         Width="Auto" />
 
                     <DataGridTextColumn Header="Tipo" 
-                                        x:DataType="vmdt:OperatoreMapDataType"
+                                        x:DataType="vm:BindableObjects.OperatoreMap"
                                         Binding="{Binding TipoPostazione}" 
                                         Width="Auto" />
                     

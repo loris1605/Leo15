@@ -20,11 +20,11 @@ namespace DTO.Repository
         public async Task<List<LoginDTO>> GetOperatoriAbilitati(CancellationToken ctk)
         {
             return await GetAll(
-                selector: OperatoreMapper.ToLoginDto,
+                selector: LoginDTO.ToLoginDto,
                 predicate: p => p.Abilitato == true,
                 ct : ctk);
         }
-
+      
         private async Task<List<PostazioneXC>> ListPostazioniByOperatore(int CodiceOperatore, CancellationToken ct)
         {
             using LoginDbContext _ctx = new();

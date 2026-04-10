@@ -9,10 +9,33 @@ using System.Reactive.Disposables.Fluent;
 using System.Reactive.Linq;
 using ViewModels;
 
-namespace Leonardo;
+namespace Views;
 
-public partial class OperatoreInputView : ReactiveUserControl<OperatoreInputBase>
+public partial class OperatoreInputView : BaseUserControl<OperatoreInputBase>,
+                                        IViewFor<OperatoreAddViewModel>,
+                                        IViewFor<OperatoreUpdViewModel>,
+                                        IViewFor<OperatoreDelViewModel>
 {
+    protected override string RootControlName => "MainGrid";
+
+    OperatoreAddViewModel? IViewFor<OperatoreAddViewModel>.ViewModel
+    {
+        get => ViewModel as OperatoreAddViewModel;
+        set => ViewModel = value;
+    }
+
+    OperatoreUpdViewModel? IViewFor<OperatoreUpdViewModel>.ViewModel
+    {
+        get => ViewModel as OperatoreUpdViewModel;
+        set => ViewModel = value;
+    }
+
+    OperatoreDelViewModel? IViewFor<OperatoreDelViewModel>.ViewModel
+    {
+        get => ViewModel as OperatoreDelViewModel;
+        set => ViewModel = value;
+    }
+
     public OperatoreInputView()
     {
         InitializeComponent();
@@ -58,19 +81,19 @@ public partial class OperatoreInputView : ReactiveUserControl<OperatoreInputBase
                 
                 //Bind Nome to TextBox
                 this.Bind(ViewModel,
-                          vm => vm.NomeOperatore,
+                          vm => vm.BindingT.NomeOperatore,
                           v => v.NomeBox.Text)
                     .DisposeWith(d);
 
                 //Bind Nome to TextBox
                 this.Bind(ViewModel,
-                          vm => vm.Password,
+                          vm => vm.BindingT.Password,
                           v => v.PasswordBox.Text)
                     .DisposeWith(d);
 
                 //Bind Nome to TextBox
                 this.Bind(ViewModel,
-                          vm => vm.Badge,
+                          vm => vm.BindingT.Badge,
                           v => v.BadgeBox.Text,
                           vmToView => vmToView.ToString(),          // Da int a string
                           viewToVm => int.TryParse(viewToVm, out var res) ? res : 0) // Da string a int
@@ -78,7 +101,7 @@ public partial class OperatoreInputView : ReactiveUserControl<OperatoreInputBase
 
                 //Bind Nome to TextBox
                 this.Bind(ViewModel,
-                          vm => vm.Abilitato,
+                          vm => vm.BindingT.Abilitato,
                           v => v.AbilitatoCheckBox.IsChecked)
                     .DisposeWith(d);
 
@@ -122,23 +145,6 @@ public partial class OperatoreInputView : ReactiveUserControl<OperatoreInputBase
 
                 #endregion
 
-                #region Commands
-
-                this.Bind(ViewModel,
-                    vm => vm.EscPressedCommand,
-                    v => v.InputSaveBox.ExitCommand).DisposeWith(d);
-
-                this.Bind(ViewModel,
-                    vm => vm.SaveCommand,
-                    v => v.InputSaveBox.SaveCommand).DisposeWith(d);
-
-
-                #endregion
-
-                Disposable.Create(() => {
-                    this.DataContext = null;
-                    System.Diagnostics.Debug.WriteLine(">>> [VIEW] OperatoreInputView deattivata, DataContext rimosso.");
-                }).DisposeWith(d);
             });
     }
 }

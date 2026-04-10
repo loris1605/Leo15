@@ -8,9 +8,5 @@
         public override string ToString() => Nome ?? string.Empty;
     }
 
-    public interface IMap
-    {
-        int Id { get; set; }
-        string Nome { get; set; }
-    }
+    
 }

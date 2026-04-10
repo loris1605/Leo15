@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Models.Entity
 {
-    public class ListinoMap : BaseMap, IMap
+    public class ListinoMap : BaseMap
     {
 
         #region CodiceSettore

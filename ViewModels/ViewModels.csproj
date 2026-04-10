@@ -31,13 +31,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Remove="Configurazione\Operatore\OperatoreAddViewModel.cs" />
-    <Compile Remove="Configurazione\Operatore\OperatoreDelViewModel.cs" />
-    <Compile Remove="Configurazione\Operatore\OperatoreInputBase.cs" />
-    <Compile Remove="Configurazione\Operatore\OperatoreUpdViewModel.cs" />
-  </ItemGroup>
-
-  <ItemGroup>
     <PackageReference Include="Avalonia.Controls.DataGrid" Version="11.3.11" />
     <PackageReference Include="Avalonia.ReactiveUI.Events" Version="0.10.22" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.14" />

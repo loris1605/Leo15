@@ -15,7 +15,7 @@ namespace ViewModels
 
         private IPersonRepository Q;
 
-        public PersonAddViewModel(IScreen host, IPersonRepository personRepository = null) : base(host)
+        public PersonAddViewModel(IScreen host, IPersonRepository personRepository) : base(host)
         {
             Q = personRepository; //?? Locator.Current.GetService<IPersonRepository>();
             Titolo = "Aggiungi Nuovo Socio";
@@ -39,7 +39,7 @@ namespace ViewModels
 
         protected async override Task OnSaving()
         {
-            if (!await ValidaDati()) return;
+            if (!ValidaDati()) return;
             
 
             if (!int.TryParse(GetNumeroTessera, out int numeroTessera) || numeroTessera <= 0)
@@ -90,7 +90,7 @@ namespace ViewModels
 
             InfoLabel = "Salvataggio in corso...";
 
-            int newPersonId = await Q.Add(BindingT.ToDto(), token);
+            int newPersonId = await Q.AddPerson(BindingT.ToDto());
 
             if (newPersonId == -1)
             {

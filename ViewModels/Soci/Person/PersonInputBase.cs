@@ -60,33 +60,33 @@ namespace ViewModels
         protected async override Task OnSaving() { await Task.CompletedTask; }
         protected async override Task OnLoading() { await Task.CompletedTask; }
         
-        protected async Task<bool> ValidaDati()
+        protected bool ValidaDati()
         {
             if (IsCognomeEmpty)
             {
                 InfoLabel = "Inserire il cognome del socio";
-                await CognomeFocus.Handle(Unit.Default);
+                SetFocus(CognomeFocus);
                 return false;
             }
 
             if (IsNomeEmpty)
             {
                 InfoLabel = "Inserire il nome del socio";
-                await NomeFocus.Handle(Unit.Default);
+                SetFocus(NomeFocus);
                 return false;
             }
 
             if (CheckLess2Surname || CheckLess2FirstName)
             {
                 InfoLabel = "Formato nome o cognome non valido (min. 2 caratteri)";
-                await (CheckLess2Surname ? CognomeFocus : NomeFocus).Handle(Unit.Default);
+                SetFocus(CheckLess2Surname ? CognomeFocus : NomeFocus);
                 return false;
             }
 
             if (!IsLegalAge)
             {
                 InfoLabel = "Il socio deve essere maggiorenne";
-                await NatoFocus.Handle(Unit.Default);
+                SetFocus(NatoFocus);
                 return false;
             }
         

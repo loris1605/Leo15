@@ -8,9 +8,21 @@ using System.Linq.Expressions;
 
 namespace Models.Repository
 {
-    public abstract class BaseRepository<TContext, Ttable> 
-                                where TContext : DbContext, new()
-                                where Ttable : class, IStandardTable, new()
+    public interface IBaseRepository<Ttable> where Ttable : class, IStandardTable, new()
+    {
+        Task<int> Add<TMap>(TMap map, CancellationToken ctk = default) where TMap : IMappable<Ttable>;
+        Task<bool> Del(IMap map, CancellationToken ctk = default);
+        void Dispose();
+        Task<bool> EsisteNome(IMap dT);
+        Task<bool> EsisteNomeUpd(IMap dT);
+        Task<List<TMap>> GetAll<TMap>(Expression<Func<Ttable, TMap>> selector, Expression<Func<Ttable, bool>>? predicate = null, Expression<Func<Ttable, object>>? orderBy = null) where TMap : class, new();
+        Task<List<TResult>> GetAll<TResult>(Expression<Func<Ttable, TResult>> selector, Expression<Func<Ttable, bool>>? predicate = null, CancellationToken ct = default);
+        Task<TMap> GetById<TMap>(int id, Expression<Func<Ttable, TMap>> selector, CancellationToken ctk = default) where TMap : class, new();
+        Task<bool> Upd<TMap>(TMap map, CancellationToken ctk = default) where TMap : IMappable<Ttable>, IMap;
+    }
+
+    public abstract class BaseRepository<TContext, Ttable> : IBaseRepository<Ttable> where TContext : DbContext, new()
+                                    where Ttable : class, IStandardTable, new()
     {
 
         public BaseRepository()
@@ -27,6 +39,7 @@ namespace Models.Repository
             Debug.WriteLine($"***** [GC] {this.GetType().Name} {this.GetHashCode()} DISTRUTTO *****");
         }
 #endif
+
 
         public async Task<bool> EsisteNome(IMap dT)
         {
@@ -54,7 +67,7 @@ namespace Models.Repository
             return await _ctx.Set<Ttable>().AnyAsync(p => p.Nome == dT.Nome && p.Id != dT.Id);
         }
 
-        public async Task<bool> Del(IMap map)
+        public async Task<bool> Del(IMap map, CancellationToken ctk = default)
         {
             using TContext _ctx = Create<TContext>.Instance();
             var row = await _ctx.Set<Ttable>().FindAsync(map.Id);
@@ -66,7 +79,7 @@ namespace Models.Repository
             try
             {
                 // 3. Applichiamo la modifica al DB
-                await _ctx.SaveChangesAsync();
+                await _ctx.SaveChangesAsync(ctk);
                 return true;
             }
             catch (Exception ex)
@@ -76,16 +89,16 @@ namespace Models.Repository
             }
         }
 
-        public async Task<int> Add<TMap>(TMap map)
+        public virtual async Task<int> Add<TMap>(TMap map, CancellationToken ctk = default)
                             where TMap : IMappable<Ttable> // Accetta solo mappe che sanno convertirsi
         {
             using TContext _ctx = new();
             var entity = map.ToTable(); // Chiama il tuo mapper manuale
-            _ctx.Set<Ttable>().Add(entity);
+            await _ctx.Set<Ttable>().AddAsync(entity);
             try
             {
                 // 3. Un'unica chiamata al database (Transazione atomica)
-                await _ctx.SaveChangesAsync();
+                await _ctx.SaveChangesAsync(ctk);
 
                 // Dopo SaveChanges, person.Id contiene l'ID reale generato dal DB
                 return entity.Id;
@@ -97,9 +110,9 @@ namespace Models.Repository
             }
         }
 
-        public async Task<bool> Upd<TMap>(TMap map)
+        public async Task<bool> Upd<TMap>(TMap map, CancellationToken ctk = default)
                             where TMap : IMappable<Ttable>, IMap
-                            // Deve avere l'ID per sapere cosa aggiornare
+            // Deve avere l'ID per sapere cosa aggiornare
         {
             using TContext _ctx = new();
 
@@ -113,12 +126,12 @@ namespace Models.Repository
             }
 
             // 2. Usiamo il mapper manuale per aggiornare l'entità esistente
-            map.UpdateTable(existing);
+            //map.UpdateTable(existing);
 
             try
             {
                 // 3. Salvataggio (EF rileva automaticamente le differenze)
-                await _ctx.SaveChangesAsync();
+                await _ctx.SaveChangesAsync(ctk);
                 return true;
             }
             catch (Exception ex)
@@ -128,7 +141,8 @@ namespace Models.Repository
             }
         }
 
-        public virtual async Task<TMap> GetById<TMap>(int id, Expression<Func<Ttable, TMap>> selector)
+        public virtual async Task<TMap> GetById<TMap>(int id, Expression<Func<Ttable, TMap>> selector,
+                                                      CancellationToken ctk = default)
                                             where TMap : class, new()
         {
             using TContext _ctx = new();
@@ -138,7 +152,7 @@ namespace Models.Repository
                                    .AsNoTracking()
                                    .Where(p => p.Id == id)
                                    .Select(selector)
-                                   .FirstOrDefaultAsync();
+                                   .FirstOrDefaultAsync(ctk);
 
             // Se non trova nulla, restituisce una nuova istanza pulita
             return result ?? new TMap();

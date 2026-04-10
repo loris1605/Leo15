@@ -1,4 +1,6 @@
-﻿namespace Models.Entity
+﻿using Models.Interfaces;
+
+namespace Models.Entity
 {
     public class PermessoMap : BaseMap, IMap
     {
