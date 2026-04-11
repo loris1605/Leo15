@@ -28,34 +28,7 @@ public partial class OperatoreGroupView : BaseUserControl<OperatoreGroupViewMode
                     .DisposeWith(d);
             }
 
-
-            // Enter Key Pressed
-
-            
-
-            #region OneWay
-
-            
-
-            //this.OneWayBind(ViewModel,
-            //        vm => vm.EnabledButton,
-            //        v => v.CodiceSocio.IsEnabled,
-            //        l => l)
-            //.DisposeWith(d);
-
-            #endregion
-
-            #region Commands
-       
-
-
-            #endregion
-
-            Disposable.Create(() => {
-                this.DataContext = null;
-                System.Diagnostics.Debug.WriteLine(">>> [VIEW] OperatoreGroupView deattivata, DataContext rimosso.");
-            }).DisposeWith(d);
-
+           
         });
     }
 

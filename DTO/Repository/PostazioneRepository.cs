@@ -3,12 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Models.Context;
 using Models.Repository;
 using Models.Tables;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Linq.Expressions;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace DTO.Repository
 {
@@ -17,6 +12,8 @@ namespace DTO.Repository
         Task<PostazioneDTO> FirstPostazione(int id);
         Task<List<PostazioneDTO>> Load(int id, CancellationToken ctk = default);
         Task<List<PostazioneDTO>> LoadPostazioni(Expression<Func<Postazione, bool>> predicate, CancellationToken ctk = default);
+        Task<List<TipoPostazioneDTO>> LoadTipiPostazione(CancellationToken ctk = default);
+        Task<List<TipoRientroDTO>> LoadTipiRientro(CancellationToken ctk = default);
     }
 
     public class PostazioneRepository : BaseRepository<PostazioneDbContext, Postazione>, IPostazioneRepository
@@ -50,5 +47,24 @@ namespace DTO.Repository
             return await GetById(id, selector: PostazioneDTO.ToPostazioneDto) ?? new PostazioneDTO();
 
         }
+
+        public async Task<List<TipoPostazioneDTO>> LoadTipiPostazione(CancellationToken ctk = default)
+        {
+            using PostazioneDbContext _ctx = new();
+            return await _ctx.TipiPostazione
+                .AsNoTracking()
+                .OrderBy(p => p.Nome)
+                .Select(TipoPostazioneDTO.ToDto).ToListAsync(ctk);
+        }
+
+        public async Task<List<TipoRientroDTO>> LoadTipiRientro(CancellationToken ctk = default)
+        {
+            using PostazioneDbContext _ctx = new();
+            return await _ctx.TipiRientro
+                .AsNoTracking()
+                .OrderBy(p => p.Nome)
+                .Select(TipoRientroDTO.ToDto).ToListAsync(ctk);
+        }
+
     }
 }

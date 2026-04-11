@@ -120,6 +120,7 @@
 
             <ui:UiButton x:Name="PostazioniButton"
                                  Margin="20,5"
+                                 MinHeight="30"
                                  ToolTipText="GRUPPO POSTAZIONI"
                                  HorizontalAlignment="Stretch"
                                  Content=" POSTAZIONI "
@@ -127,6 +128,7 @@
 
             <ui:UiButton x:Name="SettoriButton"
                                  Margin="20,5"
+                                 MinHeight="30"
                                  ToolTipText="GRUPPO SETTORI"
                                  HorizontalAlignment="Stretch"
                                  Content="SETTORI"
@@ -135,6 +137,7 @@
 
             <ui:UiButton x:Name="TariffeButton"
                                  Margin="20,5"
+                                 MinHeight="30"
                                  ToolTipText="GRUPPO TARIFFE"
                                  HorizontalAlignment="Stretch"
                                  Content="TARIFFE"
@@ -143,6 +146,7 @@
 
             <ui:UiButton x:Name="RientriButton"
                                  Margin="20,5"
+                                 MinHeight="30"
                                  ToolTipText="GRUPPO RIENTRI"
                                  HorizontalAlignment="Stretch"
                                  Content="RIENTRI"

@@ -12,7 +12,7 @@
              Background="Transparent"
              x:DataType="vm:PostazioneGroupViewModel"
              x:CompileBindings="True"
-             x:Class="Leonardo.PostazioneGroupView">
+             x:Class="Views.PostazioneGroupView">
 
     <Grid x:Name="MainGrid">
     
@@ -64,22 +64,22 @@
                 <DataGrid.Columns >
                     
                     <DataGridTextColumn Header="Cod." 
-                                        x:DataType="vmdt:PostazioneMapDataType"
+                                        x:DataType="vm:BindableObjects.PostazioneMap"
                                         Binding="{Binding CodiceReparto}" 
                                         IsVisible="False" />
 
                     <DataGridTextColumn Header="Nome" 
-                                        x:DataType="vmdt:PostazioneMapDataType"
+                                        x:DataType="vm:BindableObjects.PostazioneMap"
                                         Binding="{Binding NomeSettore}" 
                                         Width="Auto" />
 
                     <DataGridTextColumn Header="Etichetta" 
-                                        x:DataType="vmdt:PostazioneMapDataType"
+                                        x:DataType="vm:BindableObjects.PostazioneMap"
                                         Binding="{Binding EtichettaSettore}" 
                                         Width="Auto" />
 
                     <DataGridTextColumn Header="Tipo" 
-                                        x:DataType="vmdt:PostazioneMapDataType"
+                                        x:DataType="vm:BindableObjects.PostazioneMap"
                                         Binding="{Binding NomeTipoSettore}" 
                                         Width="Auto" />
                                         
@@ -123,6 +123,7 @@
 
             <ui:UiButton x:Name="OperatoriButton"
                                  Margin="20,5"
+                                 MinHeight="30"
                                  ToolTipText="GRUPPO OPERATORI"
                                  HorizontalAlignment="Stretch"
                                  Content=" OPERATORI "
@@ -130,6 +131,7 @@
 
             <ui:UiButton x:Name="SettoriButton"
                                  Margin="20,5"
+                                 MinHeight="30"
                                  ToolTipText="GRUPPO SETTORI"
                                  HorizontalAlignment="Stretch"
                                  Content="SETTORI"
@@ -138,6 +140,7 @@
 
             <ui:UiButton x:Name="TariffeButton"
                                  Margin="20,5"
+                                 MinHeight="30"
                                  ToolTipText="GRUPPO TARIFFE"
                                  HorizontalAlignment="Stretch"
                                  Content="TARIFFE"
@@ -146,6 +149,7 @@
 
             <ui:UiButton x:Name="RientriButton"
                                  Margin="20,5"
+                                 MinHeight="30"
                                  ToolTipText="GRUPPO RIENTRI"
                                  HorizontalAlignment="Stretch"
                                  Content="RIENTRI"

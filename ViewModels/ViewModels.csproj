@@ -9,25 +9,25 @@
 
   <ItemGroup>
     <AvaloniaXaml Remove="Configurazione\Permessi\**" />
-    <AvaloniaXaml Remove="Configurazione\Postazione\**" />
     <AvaloniaXaml Remove="Configurazione\Settore\**" />
     <AvaloniaXaml Remove="Configurazione\Tariffa\**" />
     <AvaloniaXaml Remove="Mappings\**" />
     <Compile Remove="Configurazione\Permessi\**" />
-    <Compile Remove="Configurazione\Postazione\**" />
     <Compile Remove="Configurazione\Settore\**" />
     <Compile Remove="Configurazione\Tariffa\**" />
     <Compile Remove="Mappings\**" />
     <EmbeddedResource Remove="Configurazione\Permessi\**" />
-    <EmbeddedResource Remove="Configurazione\Postazione\**" />
     <EmbeddedResource Remove="Configurazione\Settore\**" />
     <EmbeddedResource Remove="Configurazione\Tariffa\**" />
     <EmbeddedResource Remove="Mappings\**" />
     <None Remove="Configurazione\Permessi\**" />
-    <None Remove="Configurazione\Postazione\**" />
     <None Remove="Configurazione\Settore\**" />
     <None Remove="Configurazione\Tariffa\**" />
     <None Remove="Mappings\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Remove="Configurazione\Postazione\PostazioneDelViewModel.cs" />
   </ItemGroup>
 
   <ItemGroup>

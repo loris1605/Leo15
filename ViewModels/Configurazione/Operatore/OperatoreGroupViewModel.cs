@@ -47,17 +47,17 @@ namespace ViewModels
             var isNotLoading = this.WhenAnyValue(x => x.IsLoading)
                 .Select(loading => !loading);
 
-            
-            
+
+
             //UpdCommand = ReactiveCommand.CreateFromObservable(
             //    () => NavigateToInput(new OperatoreUpdViewModel(ConfigHost, GroupBindingT!.Id)), canAction);
 
             //DelCommand = ReactiveCommand.CreateFromObservable(
             //    () => NavigateToInput(new OperatoreDelViewModel(ConfigHost, GroupBindingT!.Id)), canDelete);
 
-            //// Navigazioni Semplici (NavigateAndReset)
-            //PostazioniCommand = ReactiveCommand.CreateFromObservable(
-            //    () => NavigateToReset(new PostazioneGroupViewModel(ConfigHost)), isNotLoading);
+            // Navigazioni Semplici (NavigateAndReset)
+            PostazioniCommand = ReactiveCommand.CreateFromObservable(
+                () => NavigateToReset(new PostazioneGroupViewModel(ConfigHost, Locator.Current.GetService<IPostazioneRepository>())), isNotLoading);
 
             //SettoriCommand = ReactiveCommand.CreateFromObservable(
             //    () => NavigateToReset(new SettoreGroupViewModel(ConfigHost)), isNotLoading);

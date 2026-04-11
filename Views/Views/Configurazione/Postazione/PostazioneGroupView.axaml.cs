@@ -2,15 +2,15 @@ using Avalonia.Collections;
 using Avalonia.Controls;
 using Avalonia.Threading;
 using ReactiveUI;
-using ReactiveUI.Avalonia;
 using System.Reactive.Disposables;
 using System.Reactive.Disposables.Fluent;
 using ViewModels;
 
-namespace Leonardo;
+namespace Views;
 
-public partial class PostazioneGroupView : ReactiveUserControl<PostazioneGroupViewModel>
+public partial class PostazioneGroupView : BaseUserControl<PostazioneGroupViewModel>
 {
+    protected override string RootControlName => "MainGrid";
     public PostazioneGroupView()
     {
         InitializeComponent();
@@ -25,35 +25,9 @@ public partial class PostazioneGroupView : ReactiveUserControl<PostazioneGroupVi
                     .DisposeWith(d);
             }
 
-            // Enter Key Pressed
+            
 
-            #region TwoWay
-
-            //Bind PasswordText to TextBox
-
-
-            #endregion
-
-            #region OneWay
-
-            //this.OneWayBind(ViewModel,
-            //        vm => vm.EnabledButton,
-            //        v => v.CodiceSocio.IsEnabled,
-            //        l => l)
-            //.DisposeWith(d);
-
-            #endregion
-
-            #region Commands
-
-
-            #endregion
-
-
-            Disposable.Create(() => {
-                this.DataContext = null;
-                System.Diagnostics.Debug.WriteLine(">>> [VIEW] PostazioneGroupView deattivata, DataContext rimosso.");
-            }).DisposeWith(d);
+            
 
         });
     }

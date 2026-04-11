@@ -1,11 +1,6 @@
 ﻿using Models.Interfaces;
 using Models.Tables;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Linq.Expressions;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace DTO.Entity
 {
@@ -33,6 +28,18 @@ namespace DTO.Entity
                 PersonId = this.CodicePerson
             };
         }
+
+        public void UpdateTable(Operatore existing)
+        {
+            if (existing == null) return;
+            // Aggiorniamo solo i campi che possono cambiare
+            existing.Nome = this.NomeOperatore;
+            existing.Password = this.Password;
+            existing.Abilitato = this.Abilitato;
+            existing.Pass = this.Badge;
+            // Non tocchiamo l'ID!
+        }
+
 
         public static Expression<Func<Operatore, OperatoreDTO>> ToOperatoreDto => entity => new OperatoreDTO
         {

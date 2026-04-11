@@ -55,6 +55,7 @@ internal class Program
         services.AddTransient<IMenuRepository, MenuRepository>();
         services.AddTransient<IPersonRepository, PersonRepository>();
         services.AddTransient<IOperatoreRepository, OperatoreRepository>();
+        services.AddTransient<IPostazioneRepository, PostazioneRepository>();
     }
 
     private static void RegisterViewModels(IServiceCollection services)
@@ -109,10 +110,13 @@ internal class Program
         services.AddTransient<IViewFor<ConfigurazioneViewModel>, ConfigurazioneView>();
 
         services.AddTransient<IViewFor<OperatoreGroupViewModel>, OperatoreGroupView>();
-
         services.AddTransient<IViewFor<OperatoreAddViewModel>, OperatoreInputView>();
         services.AddTransient<IViewFor<OperatoreUpdViewModel>, OperatoreInputView>();
         services.AddTransient<IViewFor<OperatoreDelViewModel>, OperatoreInputView>();
+
+        services.AddTransient<IViewFor<PostazioneGroupViewModel>, PostazioneGroupView>();
+        services.AddTransient<IViewFor<PostazioneAddViewModel>, PostazioneInputView>();
+        services.AddTransient<IViewFor<PostazioneUpdViewModel>, PostazioneInputView>();
     }
 
 

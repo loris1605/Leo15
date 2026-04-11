@@ -11,5 +11,6 @@ namespace Models.Context
         public DbSet<TipoPostazione> TipiPostazione { get; set; } = null!;
         public DbSet<Reparto> Reparti { get; set; } = null!;
         public DbSet<Settore> Settori { get; set; } = null!;
+        public DbSet<TipoRientro> TipiRientro { get; set; } = null!;
     }
 }

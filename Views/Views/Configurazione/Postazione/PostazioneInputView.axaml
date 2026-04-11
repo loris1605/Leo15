@@ -11,7 +11,7 @@
              Background="Transparent"
              x:CompileBindings="False"
              x:DataType="vm:PostazioneInputBase"
-             x:Class="Leonardo.PostazioneInputView">
+             x:Class="Views.PostazioneInputView">
 
     <Grid x:Name="MainGrid" >
     
@@ -141,7 +141,9 @@
 
                 <lc:InputSaveBox x:Name="InputSaveBox"
                                  Grid.Row="3"
-                                 Margin="20"/>
+                                 Margin="20"
+                                 SaveCommand="{Binding SaveCommand}"
+                                 ExitCommand="{Binding EscPressedCommand}"/>
                             
             </Grid>
         

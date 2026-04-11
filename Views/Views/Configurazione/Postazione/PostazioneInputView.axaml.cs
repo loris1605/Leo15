@@ -1,19 +1,32 @@
 using Avalonia;
 using Avalonia.Input;
-using Avalonia.Threading;
 using ReactiveUI;
-using ReactiveUI.Avalonia;
-using System;
 using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Disposables.Fluent;
 using System.Reactive.Linq;
 using ViewModels;
 
-namespace Leonardo;
+namespace Views;
 
-public partial class PostazioneInputView : ReactiveUserControl<PostazioneInputBase>
+public partial class PostazioneInputView : BaseUserControl<PostazioneInputBase>,
+                                        IViewFor<PostazioneAddViewModel>,
+                                        IViewFor<PostazioneUpdViewModel>
 {
+    protected override string RootControlName => "MainGrid";
+
+    PostazioneAddViewModel? IViewFor<PostazioneAddViewModel>.ViewModel
+    {
+        get => ViewModel as PostazioneAddViewModel;
+        set => ViewModel = value;
+    }
+
+    PostazioneUpdViewModel? IViewFor<PostazioneUpdViewModel>.ViewModel
+    {
+        get => ViewModel as PostazioneUpdViewModel;
+        set => ViewModel = value;
+    }
+
     public PostazioneInputView()
     {
         InitializeComponent();
@@ -50,7 +63,7 @@ public partial class PostazioneInputView : ReactiveUserControl<PostazioneInputBa
 
             //Bind Nome to TextBox
             this.Bind(ViewModel,
-                      vm => vm.NomePostazione,
+                      vm => vm.BindingT.NomePostazione,
                       v => v.NomeBox.Text)
                 .DisposeWith(d);
 
@@ -58,8 +71,13 @@ public partial class PostazioneInputView : ReactiveUserControl<PostazioneInputBa
 
             //Bind SelectedValue To TipoPostazioneCombo
             this.Bind(ViewModel,
-                      vm => vm.CodiceTipoPostazione,
+                      vm => vm.BindingT.CodiceTipoPostazione,
                       v => v.TipoPostazioneCombo.SelectedValue)
+                .DisposeWith(d);
+
+            this.Bind(ViewModel,
+                      vm => vm.BindingT.CodiceTipoRientro,
+                      v => v.TipoRientroCombo.SelectedValue)
                 .DisposeWith(d);
 
 
@@ -111,23 +129,7 @@ public partial class PostazioneInputView : ReactiveUserControl<PostazioneInputBa
 
             #endregion
 
-            #region Commands
-
-            this.Bind(ViewModel,
-                    vm => vm.EscPressedCommand,
-                    v => v.InputSaveBox.ExitCommand).DisposeWith(d);
-
-            this.Bind(ViewModel,
-                vm => vm.SaveCommand,
-                v => v.InputSaveBox.SaveCommand).DisposeWith(d);
-
-
-            #endregion
-
-            Disposable.Create(() => {
-                this.DataContext = null;
-                System.Diagnostics.Debug.WriteLine(">>> [VIEW] OperatoreInputView deattivata, DataContext rimosso.");
-            }).DisposeWith(d);
+            
         });
     }
 }
