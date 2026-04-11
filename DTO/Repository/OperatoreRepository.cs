@@ -19,7 +19,7 @@ namespace DTO.Repository
         Task<List<OperatoreDTO>> Load(int id, CancellationToken ctk = default);
         Task<List<OperatoreDTO>> LoadByModel(object model, CancellationToken ctk = default);
         Task<List<OperatoreDTO>> LoadOperatori(Expression<Func<Operatore, bool>> predicate, CancellationToken ctk = default);
-        
+        Task<bool> Upd(OperatoreDTO dto);
     }
 
     public class OperatoreRepository : BaseRepository<OperatoreDbContext, Operatore>, IOperatoreRepository
@@ -45,6 +45,11 @@ namespace DTO.Repository
                 .SelectMany(o => o.Permessi.DefaultIfEmpty(), OperatoreDTO.ToOperatoriDtoRelationed) // <--- Usi l'espressione qui
                 .ToListAsync(ctk);
 
+        }
+
+        public async Task<bool> Upd(OperatoreDTO dto)
+        {
+            return await Upd<OperatoreDTO, Operatore>(dto);
         }
 
 

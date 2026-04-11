@@ -18,9 +18,9 @@ namespace Models.Repository
         Task<List<TMap>> GetAll<TMap>(Expression<Func<Ttable, TMap>> selector, Expression<Func<Ttable, bool>>? predicate = null, Expression<Func<Ttable, object>>? orderBy = null) where TMap : class, new();
         Task<List<TResult>> GetAll<TResult>(Expression<Func<Ttable, TResult>> selector, Expression<Func<Ttable, bool>>? predicate = null, CancellationToken ct = default);
         Task<TMap> GetById<TMap>(int id, Expression<Func<Ttable, TMap>> selector, CancellationToken ctk = default) where TMap : class, new();
-        Task<bool> Upd<TMap, Ttable>(TMap map, CancellationToken ctk = default)
-                    where Ttable : class, new()
-                    where TMap : IMappable<Ttable>, IMap;
+        Task<bool> Upd<Tdto, DbTable>(Tdto dto, CancellationToken ctk = default)
+                            where Tdto : IMappable<DbTable>, IMap
+                            where DbTable : class, new();
     }
 
     public abstract class BaseRepository<TContext, Ttable> : IBaseRepository<Ttable> where TContext : DbContext, new()
@@ -112,22 +112,25 @@ namespace Models.Repository
             }
         }
 
-        public async Task<bool> Upd<TMap, Ttable>(TMap map, CancellationToken ctk = default)
-                    where Ttable : class, new()
-                    where TMap : IMappable<Ttable>, IMap
+        public async Task<bool> Upd<Tdto,DbTable>(Tdto dto, CancellationToken ctk = default)
+                            where Tdto : IMappable<DbTable>, IMap
+                            where DbTable : class, new()
         {
             using TContext _ctx = new();
-            var existing = await _ctx.Set<Ttable>().FindAsync(map.Id);
+            DbTable? entity = await _ctx.Set<DbTable>().FindAsync(dto.Id);
 
-            if (existing == null) return false;
+            if (entity is null)
+            {
+                return false; // Oppure lancia un'eccezione specifica
+            }
 
-            // Ora map è un IMappable<Ttable>, quindi UpdateTable accetta un Ttable.
-            // 'existing' è un Ttable. Il cerchio si chiude e il compilatore è felice.
-            map.UpdateTable(existing);
+            dto.UpdateTable(entity);
 
             await _ctx.SaveChangesAsync(ctk);
             return true;
+
         }
+       
 
 
         public virtual async Task<TMap> GetById<TMap>(int id, Expression<Func<Ttable, TMap>> selector,
