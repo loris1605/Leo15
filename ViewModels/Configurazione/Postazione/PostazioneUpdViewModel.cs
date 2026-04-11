@@ -47,21 +47,19 @@ namespace ViewModels
             SetFocus(NomeFocus);
         }
 
-
-
         protected override async Task OnSaving()
         {
             if (!ValidaDati()) return;
 
             if (await Q.EsisteNomeUpd(BindingT.ToDto()))
             {
-                InfoLabel = "Operatore già registrato";
+                InfoLabel = "Postazione già registrato";
                 return;
             }
 
             InfoLabel = "";
 
-            if (!await Q.Upd(BindingT.ToDto()))
+            if (!await Q.Upd(BindingT.ToDto(), token))
             {
                 InfoLabel = "Errore Db modifica postazione";
                 SetFocus(NomeFocus);

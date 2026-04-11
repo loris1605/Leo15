@@ -47,6 +47,8 @@ namespace ViewModels
 
         protected override async Task OnSaving()
         {
+            if (token.IsCancellationRequested) return;
+
             if (!ValidaDati()) return;
 
             if (await Q.EsisteNomeUpd(BindingT.ToDto()))

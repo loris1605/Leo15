@@ -24,6 +24,12 @@ namespace DTO.Entity
             };
         }
 
+        public void UpdateTable(TipoPostazione existing)
+        {
+            if (existing == null) return;
+            existing.Nome = this.Nome;
+        }
+
         public static Expression<Func<TipoPostazione, TipoPostazioneDTO>> ToDto => t => new TipoPostazioneDTO
         {
             Id = t.Id,

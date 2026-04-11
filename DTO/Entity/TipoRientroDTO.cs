@@ -27,6 +27,13 @@ namespace DTO.Entity
             };
         }
 
+        public void UpdateTable(TipoRientro existing)
+        {
+            if (existing == null) return;
+            existing.Nome = this.Nome;
+            existing.DurataOre = this.DurataOre;
+        }
+
         public static Expression<Func<TipoRientro, TipoRientroDTO>> ToDto => t => new TipoRientroDTO
         {
             Id = t.Id,

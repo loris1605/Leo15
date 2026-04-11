@@ -35,20 +35,21 @@ namespace ViewModels
 
         public GroupViewModelBase(IScreen host) : base(host)
         {
-            var canExecuteAdd = this.WhenAnyValue(
-                 x => x.IsLoading,
-                 loading => !loading
-             ).CombineLatest(canAdd, (isNotLoading, childCanSave) => isNotLoading && childCanSave);
+            var isNotLoading = this.WhenAnyValue(x => x.IsLoading)
+                .Select(loading => !loading)
+                .Throttle(TimeSpan.FromMilliseconds(500), RxApp.MainThreadScheduler)
+                .StartWith(true) // Al caricamento il pulsante è subito attivo
+                .ObserveOn(RxApp.MainThreadScheduler);
 
-            var canExecuteDel = this.WhenAnyValue(
-                 x => x.IsLoading,
-                 loading => !loading
-             ).CombineLatest(canDel, (isNotLoading, childCanSave) => isNotLoading && childCanSave);
+            // 2. Applichiamo la logica ai vari canExecute
+            var canExecuteAdd = isNotLoading
+                .CombineLatest(canAdd, (notLoading, childCanAdd) => notLoading && childCanAdd);
 
-            var canExecuteUpd = this.WhenAnyValue(
-                 x => x.IsLoading,
-                 loading => !loading
-             ).CombineLatest(canUpd, (isNotLoading, childCanSave) => isNotLoading && childCanSave);
+            var canExecuteDel = isNotLoading
+                .CombineLatest(canDel, (notLoading, childCanDel) => notLoading && childCanDel);
+
+            var canExecuteUpd = isNotLoading
+                .CombineLatest(canUpd, (notLoading, childCanUpd) => notLoading && childCanUpd);
 
             AddCommand = ReactiveCommand.CreateFromTask(ExecuteAdding, canExecuteAdd);
             DelCommand = ReactiveCommand.CreateFromTask(ExecuteDeleting, canExecuteDel);
@@ -90,6 +91,10 @@ namespace ViewModels
 
         public async Task ExecuteAdding()
         {
+            if (_isClosing) return; // Se stiamo già uscendo, ignora il secondo Esc
+
+            await Task.Delay(50);
+
             IsLoading = true;
             try
             {
@@ -97,20 +102,28 @@ namespace ViewModels
             }
             catch (OperationCanceledException)
             {
-                Debug.WriteLine($"***** [VM] {this.GetType().Name} Caricamento annullato.");
+                Debug.WriteLine($"***** [VM] {this.GetType().Name} Esc annullato.");
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"***** [VM] {this.GetType().Name} ERRORE: {ex.Message}");
-                // Qui puoi settare una InfoLabel comune se l'hai nella base
+                Debug.WriteLine($"***** [VM] {this.GetType().Name} ERRORE ESC: {ex.Message}");
             }
             finally
             {
-                IsLoading = false;
+                // Importante: se OnEsc ha avviato la navigazione (OnBack o simile),
+                // manteniamo IsLoading = true per evitare che i pulsanti "lampeggino"
+                if (!_isClosing)
+                {
+                    IsLoading = false;
+                }
             }
         }
         public async Task ExecuteDeleting()
         {
+            if (_isClosing) return; // Se stiamo già uscendo, ignora il secondo Esc
+
+            await Task.Delay(50);
+
             IsLoading = true;
             try
             {
@@ -118,20 +131,28 @@ namespace ViewModels
             }
             catch (OperationCanceledException)
             {
-                Debug.WriteLine($"***** [VM] {this.GetType().Name} Caricamento annullato.");
+                Debug.WriteLine($"***** [VM] {this.GetType().Name} Esc annullato.");
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"***** [VM] {this.GetType().Name} ERRORE: {ex.Message}");
-                // Qui puoi settare una InfoLabel comune se l'hai nella base
+                Debug.WriteLine($"***** [VM] {this.GetType().Name} ERRORE ESC: {ex.Message}");
             }
             finally
             {
-                IsLoading = false;
+                // Importante: se OnEsc ha avviato la navigazione (OnBack o simile),
+                // manteniamo IsLoading = true per evitare che i pulsanti "lampeggino"
+                if (!_isClosing)
+                {
+                    IsLoading = false;
+                }
             }
         }
         public async Task ExecuteUpdating()
         {
+            if (_isClosing) return; // Se stiamo già uscendo, ignora il secondo Esc
+
+            await Task.Delay(50);
+
             IsLoading = true;
             try
             {
@@ -139,16 +160,20 @@ namespace ViewModels
             }
             catch (OperationCanceledException)
             {
-                Debug.WriteLine($"***** [VM] {this.GetType().Name} Caricamento annullato.");
+                Debug.WriteLine($"***** [VM] {this.GetType().Name} Esc annullato.");
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"***** [VM] {this.GetType().Name} ERRORE: {ex.Message}");
-                // Qui puoi settare una InfoLabel comune se l'hai nella base
+                Debug.WriteLine($"***** [VM] {this.GetType().Name} ERRORE ESC: {ex.Message}");
             }
             finally
             {
-                IsLoading = false;
+                // Importante: se OnEsc ha avviato la navigazione (OnBack o simile),
+                // manteniamo IsLoading = true per evitare che i pulsanti "lampeggino"
+                if (!_isClosing)
+                {
+                    IsLoading = false;
+                }
             }
         }
 

@@ -46,6 +46,17 @@ namespace DTO.Entity
             };
         }
 
+        public void UpdateTable(Postazione existing)
+        {
+            if (existing == null) return;
+            // Aggiorniamo solo i campi che possono cambiare
+            existing.Nome = this.NomePostazione;
+            existing.TipoPostazioneId = this.CodiceTipoPostazione;
+            existing.TipoRientroId = this.CodiceTipoRientro;
+            
+            // Non tocchiamo l'ID!
+        }
+
         public static Expression<Func<Postazione, PostazioneDTO>> ToPostazioneDto => entity => new PostazioneDTO
         {
             Id = entity.Id,

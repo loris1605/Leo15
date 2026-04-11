@@ -14,6 +14,7 @@ namespace DTO.Repository
         Task<List<PostazioneDTO>> LoadPostazioni(Expression<Func<Postazione, bool>> predicate, CancellationToken ctk = default);
         Task<List<TipoPostazioneDTO>> LoadTipiPostazione(CancellationToken ctk = default);
         Task<List<TipoRientroDTO>> LoadTipiRientro(CancellationToken ctk = default);
+        Task<bool> Upd(PostazioneDTO dto, CancellationToken ctk = default);
     }
 
     public class PostazioneRepository : BaseRepository<PostazioneDbContext, Postazione>, IPostazioneRepository
@@ -46,6 +47,11 @@ namespace DTO.Repository
 
             return await GetById(id, selector: PostazioneDTO.ToPostazioneDto) ?? new PostazioneDTO();
 
+        }
+
+        public async Task<bool> Upd(PostazioneDTO dto, CancellationToken ctk = default)
+        {
+            return await Upd<PostazioneDTO, Postazione>(dto, ctk);
         }
 
         public async Task<List<TipoPostazioneDTO>> LoadTipiPostazione(CancellationToken ctk = default)

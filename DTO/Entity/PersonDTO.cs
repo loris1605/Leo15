@@ -41,6 +41,17 @@ namespace DTO.Entity
             
         }
 
+        public void UpdateTable(Person existing)
+        {
+            if (existing == null) return;
+            // Aggiorniamo solo i campi che possono cambiare
+            existing.SurName = this.Cognome;
+            existing.FirstName = this.Nome;
+            existing.Natoil = this.Natoil;
+            existing.UniqueParam = this.CodiceUnivoco;
+            // Non tocchiamo l'ID!
+        }
+
         public string Cognome { get; set; } = string.Empty;
         public int Natoil { get; set; }
         

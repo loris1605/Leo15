@@ -21,7 +21,7 @@ namespace ViewModels
         public string UrlPathSegment { get; }
         public IScreen HostScreen { get; }
 
-        protected int _deadEntries;
+        protected bool _isClosing = false;
 
         protected CancellationTokenSource _cts;
         protected CancellationToken token => _cts?.Token ?? CancellationToken.None;
@@ -47,19 +47,31 @@ namespace ViewModels
             HostScreen = hostScreen;
             UrlPathSegment = urlPathSegment ?? this.GetType().Name;
 
-            var canExecuteSave = this.WhenAnyValue(
-                 x => x.IsLoading,
-                 loading => !loading
-             ).CombineLatest(canSave, (isNotLoading, childCanSave) => isNotLoading && childCanSave);
+            // 1. Definiamo un buffer temporale (es. 500ms) per evitare click compulsivi
+            var isNotLoading = this.WhenAnyValue(x => x.IsLoading)
+                .Select(loading => !loading)
+                .Throttle(TimeSpan.FromMilliseconds(500), RxApp.MainThreadScheduler)
+                .StartWith(true); // Serve per non aspettare 500ms al primo avvio
 
-            var canExecuteEsc = this.WhenAnyValue(
-                 x => x.IsLoading,
-                 loading => !loading
-             ).CombineLatest(canSave, (isNotLoading, childCanSave) => isNotLoading && childCanSave);
+            // 2. Applichiamo il ritardo al Save
+            var canExecuteSave = isNotLoading
+                .CombineLatest(canSave, (notLoading, childCanSave) => notLoading && childCanSave)
+                .ObserveOn(RxApp.MainThreadScheduler);
+
+            // 3. Applichiamo il ritardo all'Esc (e correggiamo il riferimento a canEsc)
+            var canExecuteEsc = isNotLoading
+                .CombineLatest(canEsc, (notLoading, childCanEsc) => notLoading && childCanEsc)
+                .ObserveOn(RxApp.MainThreadScheduler);
+
+            var canExecuteCombined = this.WhenAnyValue(x => x.IsLoading)
+                .Select(loading => !loading)
+                .Throttle(TimeSpan.FromMilliseconds(500), RxApp.MainThreadScheduler) // Impedisce riattivazioni repentine
+                .CombineLatest(canSave, (isNotLoading, childCanSave) => isNotLoading && childCanSave)
+                .ObserveOn(RxApp.MainThreadScheduler);
 
             LoadCommand = ReactiveCommand.CreateFromTask(ExecuteLoading,
                     this.WhenAnyValue(x => x.IsLoading, loading => !loading));
-            SaveCommand = ReactiveCommand.CreateFromTask(ExecuteSaving, canExecuteSave);
+            SaveCommand = ReactiveCommand.CreateFromTask(ExecuteSaving, canExecuteCombined);
             AppExitCommand = ReactiveCommand.Create(OnAppShutDown);
             EscPressedCommand = ReactiveCommand.CreateFromTask(ExecuteEscing, canExecuteEsc);
             
@@ -113,6 +125,11 @@ namespace ViewModels
 
         protected async Task ExecuteLoading()
         {
+            // Se stiamo già caricando o chiudendo, usciamo
+            if (_isClosing) return;
+
+            await Task.Delay(50);
+
             IsLoading = true;
             try
             {
@@ -125,16 +142,25 @@ namespace ViewModels
             catch (Exception ex)
             {
                 Debug.WriteLine($"***** [VM] {this.GetType().Name} ERRORE: {ex.Message}");
-                // Qui puoi settare una InfoLabel comune se l'hai nella base
             }
             finally
             {
-                IsLoading = false;
+                // Se durante il caricamento è successo qualcosa che ha triggerato la chiusura
+                // non riabilitiamo i controlli
+                if (!_isClosing)
+                {
+                    IsLoading = false;
+                }
             }
         }
 
+
         protected async Task ExecuteSaving()
         {
+            if (_isClosing) return; // Se stiamo uscendo, ignora ogni nuovo click
+
+            await Task.Delay(50);
+
             IsLoading = true;
             try
             {
@@ -147,16 +173,25 @@ namespace ViewModels
             catch (Exception ex)
             {
                 Debug.WriteLine($"***** [VM] {this.GetType().Name} ERRORE: {ex.Message}");
-                // Qui puoi settare una InfoLabel comune se l'hai nella base
             }
             finally
             {
-                IsLoading = false;
+                // Se OnSaving ha chiamato OnBack, _isClosing sarà true.
+                // In tal caso, lasciamo IsLoading = true per tenere i pulsanti disabilitati
+                if (!_isClosing)
+                {
+                    IsLoading = false;
+                }
             }
         }
 
+
         protected async Task ExecuteEscing()
         {
+            if (_isClosing) return; // Se stiamo già uscendo, ignora il secondo Esc
+
+            await Task.Delay(50);
+
             IsLoading = true;
             try
             {
@@ -164,18 +199,23 @@ namespace ViewModels
             }
             catch (OperationCanceledException)
             {
-                Debug.WriteLine($"***** [VM] {this.GetType().Name} Caricamento annullato.");
+                Debug.WriteLine($"***** [VM] {this.GetType().Name} Esc annullato.");
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"***** [VM] {this.GetType().Name} ERRORE: {ex.Message}");
-                // Qui puoi settare una InfoLabel comune se l'hai nella base
+                Debug.WriteLine($"***** [VM] {this.GetType().Name} ERRORE ESC: {ex.Message}");
             }
             finally
             {
-                IsLoading = false;
+                // Importante: se OnEsc ha avviato la navigazione (OnBack o simile),
+                // manteniamo IsLoading = true per evitare che i pulsanti "lampeggino"
+                if (!_isClosing)
+                {
+                    IsLoading = false;
+                }
             }
         }
+
 
         protected virtual void OnFinalDestruction()
         {

@@ -11,7 +11,8 @@ namespace Views;
 
 public partial class PostazioneInputView : BaseUserControl<PostazioneInputBase>,
                                         IViewFor<PostazioneAddViewModel>,
-                                        IViewFor<PostazioneUpdViewModel>
+                                        IViewFor<PostazioneUpdViewModel>,
+                                        IViewFor<PostazioneDelViewModel>
 {
     protected override string RootControlName => "MainGrid";
 
@@ -24,6 +25,12 @@ public partial class PostazioneInputView : BaseUserControl<PostazioneInputBase>,
     PostazioneUpdViewModel? IViewFor<PostazioneUpdViewModel>.ViewModel
     {
         get => ViewModel as PostazioneUpdViewModel;
+        set => ViewModel = value;
+    }
+
+    PostazioneDelViewModel? IViewFor<PostazioneDelViewModel>.ViewModel
+    {
+        get => ViewModel as PostazioneDelViewModel;
         set => ViewModel = value;
     }
 
@@ -67,17 +74,20 @@ public partial class PostazioneInputView : BaseUserControl<PostazioneInputBase>,
                       v => v.NomeBox.Text)
                 .DisposeWith(d);
 
-            
 
             //Bind SelectedValue To TipoPostazioneCombo
             this.Bind(ViewModel,
                       vm => vm.BindingT.CodiceTipoPostazione,
-                      v => v.TipoPostazioneCombo.SelectedValue)
+                      v => v.TipoPostazioneCombo.SelectedValue,
+                      vmToView => vmToView, // Da int a object (automatico)
+                      viewToVm => Convert.ToInt32(viewToVm)) // Da object a int (manuale)
                 .DisposeWith(d);
 
             this.Bind(ViewModel,
                       vm => vm.BindingT.CodiceTipoRientro,
-                      v => v.TipoRientroCombo.SelectedValue)
+                      v => v.TipoRientroCombo.SelectedValue,
+                      vmToView => vmToView,
+                      viewToVm => Convert.ToInt32(viewToVm))
                 .DisposeWith(d);
 
 

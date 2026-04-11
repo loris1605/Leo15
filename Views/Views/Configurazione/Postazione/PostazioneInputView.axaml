@@ -100,7 +100,6 @@
                                    ItemsSource="{Binding TipoRientroDataSource}"
                                    DisplayMemberBinding="{Binding Nome}"
                                    SelectedValueBinding="{Binding Id}"
-                                   SelectedValue="{Binding CodiceTipoRientro}"
                                    Background="White"
                                    HorizontalContentAlignment="Center"
                                    Grid.Column="1"

@@ -57,7 +57,7 @@ namespace ViewModels
 
             InfoLabel = "Updating Database...";
 
-            if (!await Q.Upd(BindingT.ToDto(), token))
+            if (!await Q.UpdPerson(BindingT.ToDto(), token))
             {
                 InfoLabel = "Errore Db modifica person";
                 SetFocus(CognomeFocus);

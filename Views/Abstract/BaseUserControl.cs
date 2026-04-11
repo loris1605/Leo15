@@ -61,7 +61,7 @@ namespace Views
         ~BaseUserControl()
         {
 
-            Debug.WriteLine($">>>>>> [GC SUCCESS] {this.GetType().Name} {this.GetHashCode()} DISTRUTTA");
+            Debug.WriteLine($">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> [GC SUCCESS] {this.GetType().Name} {this.GetHashCode()} DISTRUTTA");
 
         }
 #endif

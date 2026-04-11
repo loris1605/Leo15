@@ -48,6 +48,7 @@ namespace DTO.Repository
         Task<List<PersonDTO>> LoadMinorNato(int natoil, CancellationToken ctk = default);
         Task<List<PersonDTO>> LoadStartByCognome(string cognome, CancellationToken ctk = default);
         Task<List<PersonDTO>> LoadStartByNome(string nome, CancellationToken ctk = default);
+        Task<bool> UpdPerson(PersonDTO dto, CancellationToken ctk = default);
         Task<bool> UpdSocio(PersonDTO map, CancellationToken ctk = default);
         Task<bool> UpdTessera(PersonDTO map, CancellationToken ctk = default);
     }
@@ -384,6 +385,11 @@ namespace DTO.Repository
                 return -1;
             }
 
+        }
+
+        public async Task<bool> UpdPerson(PersonDTO dto, CancellationToken ctk = default)
+        {
+            return await Upd<PersonDTO, Person>(dto, ctk);
         }
 
         public async Task<bool> UpdSocio(PersonDTO map, CancellationToken ctk = default)

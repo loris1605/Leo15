@@ -178,9 +178,10 @@ namespace ViewModels
                                       Locator.Current.GetService<IPostazioneRepository>())).ToTask();
         }
 
-        protected override Task OnDeleting()
+        protected async override Task OnDeleting()
         {
-            throw new NotImplementedException();
+            await NavigateToInput(new PostazioneDelViewModel(ConfigHost, GroupBindingT.Id,
+                                      Locator.Current.GetService<IPostazioneRepository>())).ToTask();
         }
 
         protected async override Task OnUpdating()

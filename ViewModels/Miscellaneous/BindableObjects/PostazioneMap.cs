@@ -26,6 +26,7 @@ namespace ViewModels.BindableObjects
         {
             return new PostazioneDTO
             {
+                Id = this.Id,
                 CodiceTipoPostazione = this.CodiceTipoPostazione,
                 NomePostazione = this.NomePostazione,
                 NomeTipoPostazione = this.NomeTipoPostazione,
@@ -108,6 +109,8 @@ namespace ViewModels.BindableObjects
             get => _haspermesso;
             set => this.RaiseAndSetIfChanged(ref _haspermesso, value);
         }
+
+        public override string Titolo => $"{NomePostazione} - {NomeTipoPostazione}";
 
     }
 }

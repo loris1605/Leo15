@@ -49,15 +49,21 @@ namespace ViewModels
             if (HostScreen is IGroupScreen Host)
             {
                 // Svuota completamente lo stack del router di input
-                Host.InputRouter.NavigateBack.Execute();
-                Host.InputRouter.NavigationStack.Clear();
-                Host.AggiornaGridByInt(value);
-                Host.GroupEnabled = true;
+                RxApp.MainThreadScheduler.Schedule(() =>
+                {
+                    // Eseguiamo la navigazione e la pulizia
+                    Host.InputRouter.NavigateBack.Execute().Subscribe();
+                    Host.InputRouter.NavigationStack.Clear();
+
+                    // Aggiorniamo la grid e riabilitiamo i controlli
+                    Host.AggiornaGridByInt(value);
+                    Host.GroupEnabled = true;
+                });
             }
         }
 
-        
-        
+
+
 
         protected override async Task OnEsc()
         {

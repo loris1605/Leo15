@@ -117,6 +117,7 @@ internal class Program
         services.AddTransient<IViewFor<PostazioneGroupViewModel>, PostazioneGroupView>();
         services.AddTransient<IViewFor<PostazioneAddViewModel>, PostazioneInputView>();
         services.AddTransient<IViewFor<PostazioneUpdViewModel>, PostazioneInputView>();
+        services.AddTransient<IViewFor<PostazioneDelViewModel>, PostazioneInputView>();
     }
 
 
