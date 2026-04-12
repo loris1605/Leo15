@@ -1,13 +1,17 @@
-﻿using Models.Entity;
-using Models.Repository;
+﻿using Avalonia.Collections;
+using DTO.Entity;
+using DTO.Repository;
 using ReactiveUI;
+using Splat;
 using System.Reactive;
 using System.Reactive.Disposables.Fluent;
 using System.Reactive.Linq;
+using System.Reactive.Threading.Tasks;
+using ViewModels.BindableObjects;
 
 namespace ViewModels
 {
-    public class SettoreGroupViewModel : GroupViewModel<SettoreMap, SettoreR>
+    public class SettoreGroupViewModel : GroupViewModelBase<SettoreMap>, IGroupViewModelBase
     {
         public ReactiveCommand<Unit, Unit> OperatoriCommand { get; }
         public ReactiveCommand<Unit, Unit> PostazioniCommand { get; }
@@ -15,8 +19,21 @@ namespace ViewModels
         public ReactiveCommand<Unit, Unit> ListiniCommand { get; }
         public ReactiveCommand<Unit, Unit> RepartiCommand { get; }
 
-        public SettoreGroupViewModel(IScreen host) : base(host)
+        private ISettoreRepository Q;
+
+        protected IGroupScreen ConfigHost => HostScreen as IGroupScreen;
+
+        //fa il merge con la IObservable base
+        protected override IObservable<bool> canDel => this.WhenAnyValue(
+            x => x.GroupBindingT,
+            x => x.GroupBindingT.CodiceListino, // Osserva esplicitamente la proprietà interna
+            (item, codiceSocio) => item != null && codiceSocio == 0
+        );
+
+        public SettoreGroupViewModel(IScreen host,
+                                       ISettoreRepository Repository) : base(host)
         {
+            Q = Repository ?? throw new ArgumentNullException(nameof(Repository));
 
             var isHostValid = this.WhenAnyValue(x => x.HostScreen)
             .Select(h => h is IGroupScreen);
@@ -34,42 +51,138 @@ namespace ViewModels
                 .Select(loading => !loading);
 
 
-            // 2. Definizione Comandi tramite i metodi della Base
-            AddCommand = ReactiveCommand.CreateFromObservable(
-                () => NavigateToInput(new SettoreAddViewModel(ConfigHost)),
-                this.WhenAnyValue(x => x.IsLoading, x => !x));
-
-            UpdCommand = ReactiveCommand.CreateFromObservable(
-                () => NavigateToInput(new SettoreUpdViewModel(ConfigHost, GroupBindingT!.Id)), canAction);
-
-            DelCommand = ReactiveCommand.CreateFromObservable(
-                () => NavigateToInput(new SettoreDelViewModel(ConfigHost, GroupBindingT!.Id)), canDelete);
-
             // Navigazioni Semplici (NavigateAndReset)
             PostazioniCommand = ReactiveCommand.CreateFromObservable(
-                () => NavigateToReset(new PostazioneGroupViewModel(ConfigHost)), isNotLoading);
+                () => NavigateToReset(new PostazioneGroupViewModel(ConfigHost, Locator.Current.GetService<IPostazioneRepository>())), isNotLoading);
 
-            TariffeCommand = ReactiveCommand.CreateFromObservable(
-                () => NavigateToReset(new TariffaGroupViewModel(ConfigHost)), isNotLoading);
+            //TariffeCommand = ReactiveCommand.CreateFromObservable(
+            //    () => NavigateToReset(new TariffaGroupViewModel(ConfigHost)), isNotLoading);
 
             OperatoriCommand = ReactiveCommand.CreateFromObservable(
-                () => NavigateToReset(new OperatoreGroupViewModel(ConfigHost)), isNotLoading);
+                () => NavigateToReset(new OperatoreGroupViewModel(ConfigHost, Locator.Current.GetService<IOperatoreRepository>())), isNotLoading);
 
-            ListiniCommand = ReactiveCommand.CreateFromObservable(
-                () => NavigateToReset(new OperatoreAddViewModel(ConfigHost)), isNotLoading);
+            //ListiniCommand = ReactiveCommand.CreateFromObservable(
+            //    () => NavigateToReset(new OperatoreAddViewModel(ConfigHost)), isNotLoading);
 
-            RepartiCommand = ReactiveCommand.CreateFromObservable(
-                () => NavigateToReset(new OperatoreAddViewModel(ConfigHost)), isNotLoading);
+            //RepartiCommand = ReactiveCommand.CreateFromObservable(
+            //    () => NavigateToReset(new OperatoreAddViewModel(ConfigHost)), isNotLoading);
 
             this.WhenActivated(d =>
             {
-                ListiniCommand.DisposeWith(d);
-                OperatoriCommand.DisposeWith(d);
-                PostazioniCommand.DisposeWith(d);
-                TariffeCommand.DisposeWith(d);
-                RepartiCommand.DisposeWith(d);
+
+                OperatoriCommand?.DisposeWith(d);
+                TariffeCommand?.DisposeWith(d);
+                PostazioniCommand?.DisposeWith(d);
+                RepartiCommand?.DisposeWith(d);
+
             });
         }
-       
+
+        protected override void OnFinalDestruction()
+        {
+            // Assicuriamoci che la collezione sia nulla per il GC
+            Q = null;
+            base.OnFinalDestruction();
+        }
+
+        protected override async Task OnLoading()
+        {
+            // 1. Recupero dati (IsLoading è già TRUE grazie al wrapper)
+            var data = await Q.Load(0, token);
+
+            if (data != null && data.Count > 0)
+            {
+                // 2. Aggiorna tutto il blocco dati
+                await UpdateCollection(data, 0);
+
+                // 3. Seleziona l'elemento SENZA scatenare ricalcoli intermedi
+                // Accertati che IdIndex o la logica di selezione non faccia scattare altri comandi
+                GroupBindingT = DataSource.FirstOrDefault();
+            }
+            else
+            {
+                DataSource = new List<SettoreMap>();
+                GroupedDataSource = null;
+                GroupBindingT = null;
+            }
+
+            // Al termine, il wrapper della base metterà IsLoading = false
+            // I pulsanti passeranno da Disabilitato a Abilitato UNA SOLA VOLTA.
+        }
+
+        private async Task UpdateCollection(List<SettoreDTO> data, int id)
+        {
+            // Trasformazione dati
+            var mapped = await Task.Run(() => data.Select(dto => new SettoreMap(dto)).ToList());
+
+            // Assegnazione singola (DataSource deve notificare una volta sola)
+            //DataSource = mapped;
+
+            // Configurazione View
+            var view = new DataGridCollectionView(mapped);
+            view.GroupDescriptions.Add(new DataGridPathGroupDescription("Titolo"));
+
+            // Assegnazione alla UI
+            var GroupBindingTBackup = GroupBindingT;
+            GroupBindingT = null;
+            GroupedDataSource = view;
+            GroupBindingT = GroupBindingTBackup;
+
+            IdIndex = id;
+            GroupFocus = true;
+        }
+
+        public async Task CaricaDataSource(int id = 0)
+        {
+            try
+            {
+                var data = await Q.Load(id, token);
+                await UpdateCollection(data, id);
+            }
+            catch (OperationCanceledException) { }
+        }
+
+        protected IObservable<Unit> NavigateToReset(IRoutableViewModel vm)
+        {
+            if (ConfigHost == null) return Observable.Return(Unit.Default);
+
+            IsLoading = true;
+            return ConfigHost.GroupRouter
+                .NavigateAndReset
+                .Execute(vm)
+                .Select(_ => Unit.Default)
+                .Finally(() => this.IsLoading = false);
+        }
+
+        protected IObservable<Unit> NavigateToInput(IRoutableViewModel vm)
+        {
+            return Observable.Start(() => ConfigHost.GroupEnabled = false, RxApp.MainThreadScheduler)
+                .SelectMany(_ => ConfigHost.InputRouter.Navigate.Execute(vm))
+                .Select(_ => Unit.Default);
+        }
+
+        protected async override Task OnAdding()
+        {
+            await NavigateToInput(new SettoreAddViewModel(ConfigHost,
+                                      Locator.Current.GetService<ISettoreRepository>())).ToTask();
+        }
+
+        protected async override Task OnDeleting()
+        {
+            await NavigateToInput(new PostazioneDelViewModel(ConfigHost, GroupBindingT.Id,
+                                      Locator.Current.GetService<IPostazioneRepository>())).ToTask();
+        }
+
+        protected async override Task OnUpdating()
+        {
+            await NavigateToInput(new PostazioneUpdViewModel(ConfigHost, GroupBindingT.Id,
+                                      Locator.Current.GetService<IPostazioneRepository>())).ToTask();
+        }
+
+        protected override Task OnEsc()
+        {
+            throw new NotImplementedException();
+        }
+
     }
 }

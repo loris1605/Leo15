@@ -59,8 +59,8 @@ namespace ViewModels
             PostazioniCommand = ReactiveCommand.CreateFromObservable(
                 () => NavigateToReset(new PostazioneGroupViewModel(ConfigHost, Locator.Current.GetService<IPostazioneRepository>())), isNotLoading);
 
-            //SettoriCommand = ReactiveCommand.CreateFromObservable(
-            //    () => NavigateToReset(new SettoreGroupViewModel(ConfigHost)), isNotLoading);
+            SettoriCommand = ReactiveCommand.CreateFromObservable(
+                () => NavigateToReset(new SettoreGroupViewModel(ConfigHost, Locator.Current.GetService<ISettoreRepository>())), isNotLoading);
 
             //TariffeCommand = ReactiveCommand.CreateFromObservable(
             //    () => NavigateToReset(new TariffaGroupViewModel(ConfigHost)), isNotLoading);

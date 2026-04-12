@@ -48,27 +48,11 @@ namespace ViewModels
                 .Select(loading => !loading);
 
 
-            // 2. Definizione Comandi tramite i metodi della Base
-            //AddCommand = ReactiveCommand.CreateFromObservable(
-            //    () => NavigateToInput(new PostazioneAddViewModel(ConfigHost)),
-            //    this.WhenAnyValue(x => x.IsLoading, x => !x));
-
-            //UpdCommand = ReactiveCommand.CreateFromObservable(
-            //    () => NavigateToInput(new PostazioneUpdViewModel(ConfigHost, GroupBindingT!.Id)), canAction);
-
-            //DelCommand = ReactiveCommand.CreateFromObservable(
-            //    () => NavigateToInput(new PostazioneDelViewModel(ConfigHost, GroupBindingT!.Id)), canDelete);
-
-
-            //// Navigazioni Semplici (NavigateAndReset)
-            //SettoriCommand = ReactiveCommand.CreateFromObservable(
-            //    () => NavigateToReset(new SettoreGroupViewModel(ConfigHost)), isNotLoading);
-
-            //TariffeCommand = ReactiveCommand.CreateFromObservable(
-            //    () => NavigateToReset(new TariffaGroupViewModel(ConfigHost)), isNotLoading);
-
             OperatoriCommand = ReactiveCommand.CreateFromObservable(
                 () => NavigateToReset(new OperatoreGroupViewModel(ConfigHost, Locator.Current.GetService<IOperatoreRepository>())), isNotLoading);
+
+            SettoriCommand = ReactiveCommand.CreateFromObservable(
+                () => NavigateToReset(new SettoreGroupViewModel(ConfigHost, Locator.Current.GetService<ISettoreRepository>())), isNotLoading);
 
             //PermessiCommand = ReactiveCommand.CreateFromObservable(
             //    () => NavigateToReset(new OperatoreAddViewModel(ConfigHost)), isNotLoading);

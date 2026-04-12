@@ -1,63 +1,56 @@
-﻿using Models.Repository;
+﻿using DTO.Repository;
 using ReactiveUI;
-using SysNet;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using ViewModels.BindableObjects;
 
 namespace ViewModels
 {
     public class SettoreAddViewModel : SettoreInputBase
     {
-        private SettoreR Q { get; set; }
 
-        public SettoreAddViewModel(IScreen host) : base(host)
+        private ISettoreRepository Q;
+
+        public SettoreAddViewModel(IScreen host, ISettoreRepository Repository) : base(host)
         {
             Titolo = "Aggiungi Nuovo Settore";
             FieldsVisibile = true;
             FieldsEnabled = true;
-            Q = Create<SettoreR>.Instance();
+            Q = Repository;
         }
 
-        protected override void OnFinalDestruction()
-        {
-            Q?.Dispose();
-            Q = null;
-        }
+        protected override void OnFinalDestruction() => Q = null;
 
         protected override async Task OnLoading()
         {
             await CaricaCombos();
-            await OnFocus(NomeFocus);
+            SetFocus(NomeFocus);
         }
 
         private async Task CaricaCombos()
         {
-            TipoSettDataSource = await Q.LoadTipiSettore();
+            var data = await Q.LoadTipiSettore();
+            TipoSettDataSource = data.Select(dto => new TipoSettoreMap(dto)).ToList();
             CodiceTipoSettore = TipoSettDataSource[0].Id;
         }
 
         protected async override Task OnSaving()
         {
-            if (!await ValidaDati()) return;
+            if (!ValidaDati()) return;
 
-            if (await Q.EsisteNome(BindingT))
+            if (await Q.EsisteNome(BindingT.ToDto()))
             {
                 InfoLabel = "Settore già registrato";
-                await OnFocus(NomeFocus);
+                SetFocus(NomeFocus);
                 return;
             }
 
             InfoLabel = "";
 
-            int newSettoreId = await Q.Add(BindingT);
+            int newSettoreId = await Q.Add(BindingT.ToDto());
 
             if (newSettoreId == -1)
             {
                 InfoLabel = "Errore Db inserimento Settore";
-                await OnFocus(NomeFocus);
+                SetFocus(NomeFocus);
                 return;
             }
 

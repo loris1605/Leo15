@@ -1,19 +1,24 @@
 using Avalonia;
 using Avalonia.Input;
-using Avalonia.Threading;
 using ReactiveUI;
-using ReactiveUI.Avalonia;
-using System;
 using System.Reactive;
-using System.Reactive.Disposables;
 using System.Reactive.Disposables.Fluent;
 using System.Reactive.Linq;
 using ViewModels;
 
-namespace Leonardo;
+namespace Views;
 
-public partial class SettoreInputView : ReactiveUserControl<SettoreInputBase>
+public partial class SettoreInputView : BaseUserControl<SettoreInputBase>,
+                                        IViewFor<SettoreAddViewModel>
 {
+    protected override string RootControlName => "MainGrid";
+
+    SettoreAddViewModel? IViewFor<SettoreAddViewModel>.ViewModel
+    {
+        get => ViewModel as SettoreAddViewModel;
+        set => ViewModel = value;
+    }
+
     public SettoreInputView()
     {
         InitializeComponent();
@@ -59,22 +64,22 @@ public partial class SettoreInputView : ReactiveUserControl<SettoreInputBase>
 
             //Bind Nome to TextBox
             this.Bind(ViewModel,
-                      vm => vm.NomeSettore,
+                      vm => vm.BindingT.NomeSettore,
                       v => v.NomeBox.Text)
                 .DisposeWith(d);
 
             //Bind Label to TextBox
             this.Bind(ViewModel,
-                      vm => vm.EtichettaSettore,
+                      vm => vm.BindingT.EtichettaSettore,
                       v => v.EtichettaBox.Text)
                 .DisposeWith(d);
 
-
-
             //Bind SelectedValue To TipoPostazioneCombo
             this.Bind(ViewModel,
-                      vm => vm.CodiceTipoSettore,
-                      v => v.TipoSettoreCombo.SelectedValue)
+                      vm => vm.BindingT.CodiceTipoSettore,
+                      v => v.TipoSettoreCombo.SelectedValue,
+                      vmToView => vmToView, // Da int a object (automatico)
+                      viewToVm => Convert.ToInt32(viewToVm)) // Da object a int (manuale)
                 .DisposeWith(d);
 
 
@@ -100,23 +105,7 @@ public partial class SettoreInputView : ReactiveUserControl<SettoreInputBase>
 
             #endregion
 
-            #region Commands
-
-            this.Bind(ViewModel,
-                    vm => vm.EscPressedCommand,
-                    v => v.InputSaveBox.ExitCommand).DisposeWith(d);
-
-            this.Bind(ViewModel,
-                vm => vm.SaveCommand,
-                v => v.InputSaveBox.SaveCommand).DisposeWith(d);
-
-
-            #endregion
-
-            Disposable.Create(() => {
-                this.DataContext = null;
-                System.Diagnostics.Debug.WriteLine(">>> [VIEW] SettoreInputView deattivata, DataContext rimosso.");
-            }).DisposeWith(d);
+            
         });
     }
 }

@@ -1,67 +1,37 @@
-﻿using Models.Entity;
-using ReactiveUI;
+﻿using ReactiveUI;
 using SysNet;
 using System.Reactive;
 using System.Reactive.Concurrency;
 using System.Reactive.Disposables.Fluent;
 using System.Reactive.Linq;
+using ViewModels.BindableObjects;
 
 namespace ViewModels
 {
     public partial class SettoreInputBase : InputViewModel
     {
-       
+
+        protected async override Task OnSaving() { await Task.CompletedTask; }
+        protected async override Task OnLoading() => await Task.CompletedTask;
 
         public SettoreInputBase(IScreen host) : base(host)
         {
-            EscPressedCommand = ReactiveCommand.Create(OnBackEsc);
 
-            this.WhenActivated(d =>
-            {
-                this.WhenAnyValue(x => x.NomeSettore)
-                    .Where(_ => BindingT != null)
-                    .Subscribe(val => BindingT.NomeSettore = val)
-                    .DisposeWith(d);
-                this.WhenAnyValue(x => x.EtichettaSettore)
-                    .Where(_ => BindingT != null)
-                    .Subscribe(val => BindingT.EtichettaSettore = val)
-                    .DisposeWith(d);
-                this.WhenAnyValue(x => x.CodiceTipoSettore)
-                    .Where(_ => BindingT != null)
-                    .Subscribe(val => BindingT.CodiceTipoSettore = val)
-                    .DisposeWith(d);
-                
-
-            });
         }
 
-        protected async override Task OnSaving() { await Task.CompletedTask; }
-
-        protected async Task OnFocus(Interaction<Unit, Unit> control)
-        {
-            // Fondamentale: aspetta un attimo che la View sia "viva" e l'handler registrato
-            await Task.Delay(200);
-
-            try
-            {
-                await control.Handle(Unit.Default);
-            }
-            catch (Exception ex)
-            {
-                // Evita crash se l'handler non è ancora pronto o la vista è già chiusa
-                System.Diagnostics.Debug.WriteLine("Interaction Focus fallita: " + ex.Message);
-            }
-        }
-
-        private void OnBackEsc()
+        protected override async Task OnEsc()
         {
             if (HostScreen is IGroupScreen Host)
             {
-                RxApp.MainThreadScheduler.Schedule(() => {
+                RxApp.MainThreadScheduler.Schedule(() =>
+                {
                     Host.InputRouter.NavigationStack.Clear();
                     Host.GroupEnabled = true;
                 });
             }
+
+            await Task.CompletedTask;
+
         }
 
         protected void OnBack(int value = 0)
@@ -69,10 +39,16 @@ namespace ViewModels
             if (HostScreen is IGroupScreen Host)
             {
                 // Svuota completamente lo stack del router di input
-                Host.InputRouter.NavigateBack.Execute();
-                Host.InputRouter.NavigationStack.Clear();
-                Host.AggiornaGrid(value);
-                Host.GroupEnabled = true;
+                RxApp.MainThreadScheduler.Schedule(() =>
+                {
+                    // Eseguiamo la navigazione e la pulizia
+                    Host.InputRouter.NavigateBack.Execute().Subscribe();
+                    Host.InputRouter.NavigationStack.Clear();
+
+                    // Aggiorniamo la grid e riabilitiamo i controlli
+                    Host.AggiornaGridByInt(value);
+                    Host.GroupEnabled = true;
+                });
             }
         }
     }
@@ -92,30 +68,30 @@ namespace ViewModels
         protected bool IsLabelEmpty => BindingT is not null && (Label == "");
         protected bool CheckLess2Label => Label.Length < 2;
 
-        protected async Task<bool> ValidaDati()
+        protected bool ValidaDati()
         {
             if (IsNameEmpty)
             {
                 InfoLabel = "Inserire il nome del settore";
-                await OnFocus(NomeFocus);
+                SetFocus(NomeFocus);
                 return false;
             }
             if (CheckLess2Name)
             {
                 InfoLabel = "Formato Nome Settore non valido";
-                await OnFocus(NomeFocus);
+                SetFocus(NomeFocus);
                 return false;
             }
             if (IsLabelEmpty)
             {
                 InfoLabel = "Inserire l'etichetta del settore";
-                await OnFocus(LabelFocus);
+                SetFocus(LabelFocus);
                 return false;
             }
             if (CheckLess2Label)
             {
                 InfoLabel = "Formato Etichetta Settore non valido";
-                await OnFocus(LabelFocus);
+                SetFocus(LabelFocus);
                 return false;
             }
             InfoLabel = ""; // Pulisce eventuali errori precedenti
@@ -123,20 +99,7 @@ namespace ViewModels
 
         }
 
-        private string nome = string.Empty;
-        public string NomeSettore
-        {
-            get => nome;
-            set => this.RaiseAndSetIfChanged(ref nome, value);
-        }
-
-        private string etichetta = string.Empty;
-        public string EtichettaSettore
-        {
-            get => etichetta;
-            set => this.RaiseAndSetIfChanged(ref etichetta, value);
-        }
-
+        
         private int _codiceTipoSettore = 0;
         public int CodiceTipoSettore
         {
@@ -155,20 +118,7 @@ namespace ViewModels
         public SettoreMap BindingT
         {
             get => bindingt;
-            set
-            {
-                // 1. Aggiorna il riferimento (fondamentale per RaiseAndSetIfChanged)
-                this.RaiseAndSetIfChanged(ref bindingt, value);
-
-                // 2. Se carichi una postazione, allinea la UI al modello
-                if (value != null)
-                {
-                    this.NomeSettore = value.NomeSettore ?? "";
-                    this.EtichettaSettore = value.EtichettaSettore ?? "";
-                    this.CodiceTipoSettore = value.CodiceTipoSettore;
-
-                }
-            }
+        
         }
 
         public Interaction<Unit, Unit> NomeFocus { get; } = new();

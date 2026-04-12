@@ -23,9 +23,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Remove="Configurazione\Settore\SettoreAddViewModel.cs" />
     <Compile Remove="Configurazione\Settore\SettoreDelViewModel.cs" />
-    <Compile Remove="Configurazione\Settore\SettoreInputBase.cs" />
     <Compile Remove="Configurazione\Settore\SettoreUpdViewModel.cs" />
   </ItemGroup>
 

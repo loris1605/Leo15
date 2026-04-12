@@ -59,5 +59,26 @@ namespace DTO.Entity
             EtichettaSettore = entity.Label,
             CodiceTipoSettore = entity.TipoSettoreId
         };
+
+        public static Expression<Func<Settore, Listino?, SettoreDTO>> ToSettoriDtoRelationed =>
+        (o, p) => new SettoreDTO
+        {
+            Id = o.Id,
+            // Protezione su TipoPostazione
+            CodiceTipoSettore = o.TipoSettore != null ? o.TipoSettore.Id : 0,
+            NomeSettore = o.Nome,
+            EtichettaSettore = o.Label,
+            NomeTipoSettore = o.TipoSettore != null ? o.TipoSettore.Nome : "N/A",
+
+            // Protezione su Reparto
+            CodiceListino = p != null ? p.Id : 0,
+
+            // Protezione a cascata su Settore (p -> p.Settore)
+            NomeTariffa = (p != null && p.Tariffa != null) ? p.Tariffa.Nome : "Nessuno",
+            EtichettaTariffa = (p != null && p.Tariffa != null) ? p.Tariffa.Label : "Nessuna",
+            PrezzoTariffa = (p != null && p.Tariffa != null) ? p.Tariffa.Prezzo : 0M,
+
+            HasReparto = o.Reparti.Any()
+        };
     }
 }

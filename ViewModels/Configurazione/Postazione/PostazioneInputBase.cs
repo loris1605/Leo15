@@ -101,8 +101,7 @@ namespace ViewModels
 
             });
         }
-
-        
+    
 
         private bool _rientroVisibile = true;
         public bool RientroVisibile

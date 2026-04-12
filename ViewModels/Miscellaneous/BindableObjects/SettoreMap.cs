@@ -21,8 +21,25 @@ namespace ViewModels.BindableObjects
             this.NomeTariffa = dto.NomeTariffa;
             this.EtichettaTariffa = dto.EtichettaTariffa;
             this.PrezzoTariffa = dto.PrezzoTariffa;
+            this.HasReparto = dto.HasReparto;
         }
-        
+
+        public SettoreDTO ToDto()
+        {
+            return new SettoreDTO
+            {
+                Id = this.Id,
+                NomeSettore = this.NomeSettore,
+                EtichettaSettore = this.EtichettaSettore,
+                CodiceTipoSettore = this.CodiceTipoSettore,
+                CodiceListino = this.CodiceListino,
+                NomeTariffa = this.NomeTariffa,
+                EtichettaTariffa = this.EtichettaTariffa,
+                PrezzoTariffa = this.PrezzoTariffa,
+                HasReparto = this.HasReparto
+            };
+        }
+
 
         //public Settore ToTable() => Mappers.SettoreMapper.ToTable(this);
 

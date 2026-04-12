@@ -25,10 +25,6 @@ public partial class PostazioneGroupView : BaseUserControl<PostazioneGroupViewMo
                     .DisposeWith(d);
             }
 
-            
-
-            
-
         });
     }
 

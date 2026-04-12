@@ -1,6 +1,5 @@
 ﻿using DTO.Repository;
 using ReactiveUI;
-using SysNet;
 using ViewModels.BindableObjects;
 
 namespace ViewModels

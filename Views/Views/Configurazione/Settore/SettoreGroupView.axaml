@@ -11,7 +11,7 @@
              Background="Transparent"
              x:DataType="vm:SettoreGroupViewModel"
              x:CompileBindings="True"
-             x:Class="Leonardo.SettoreGroupView">
+             x:Class="Views.SettoreGroupView">
 
     <Grid x:Name="MainGrid">
     
@@ -124,12 +124,14 @@
 
             <ui:UiButton x:Name="OperatoriButton"
                                  Margin="20,5"
+                                 MinHeight="30"
                                  ToolTipText="GRUPPO OPERATORI"
                                  HorizontalAlignment="Stretch"
                                  Content=" OPERATORI "
                                  Command="{Binding OperatoriCommand}"/>
 
             <ui:UiButton x:Name="PostazioniButton"
+                                 MinHeight="30"
                                  Margin="20,5"
                                  ToolTipText="GRUPPO POSTAZIONI"
                                  HorizontalAlignment="Stretch"
@@ -139,6 +141,7 @@
 
             <ui:UiButton x:Name="TariffeButton"
                                  Margin="20,5"
+                                 MinHeight="30"
                                  ToolTipText="GRUPPO TARIFFE"
                                  HorizontalAlignment="Stretch"
                                  Content="TARIFFE"
@@ -147,6 +150,7 @@
 
             <ui:UiButton x:Name="RientriButton"
                                  Margin="20,5"
+                                 MinHeight="30"
                                  ToolTipText="GRUPPO RIENTRI"
                                  HorizontalAlignment="Stretch"
                                  Content="RIENTRI"

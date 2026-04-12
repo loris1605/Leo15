@@ -7,10 +7,12 @@ using System.Reactive.Disposables;
 using System.Reactive.Disposables.Fluent;
 using ViewModels;
 
-namespace Leonardo;
+namespace Views;
 
-public partial class SettoreGroupView : ReactiveUserControl<SettoreGroupViewModel>
+public partial class SettoreGroupView : BaseUserControl<SettoreGroupViewModel>
 {
+    protected override string RootControlName => "MainGrid";
+
     public SettoreGroupView()
     {
         InitializeComponent();
@@ -25,23 +27,7 @@ public partial class SettoreGroupView : ReactiveUserControl<SettoreGroupViewMode
             }
             // Enter Key Pressed
 
-            #region TwoWay
 
-            //Bind PasswordText to TextBox
-
-
-            #endregion
-
-            #region OneWay
-
-            
-            #endregion
-
-
-            Disposable.Create(() => {
-                this.DataContext = null;
-                System.Diagnostics.Debug.WriteLine(">>> [VIEW] SettoreGroupView deattivata, DataContext rimosso.");
-            }).DisposeWith(d);
         });
     }
 
