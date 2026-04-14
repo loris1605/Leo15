@@ -17,6 +17,7 @@ namespace ViewModels.BindableObjects
             this.CodicePerson = dto.CodicePerson;
             this.NomePostazione = dto.NomePostazione;
             this.TipoPostazione = dto.TipoPostazione;
+            this.CodicePermesso = dto.CodicePermesso;
         }
 
         public OperatoreDTO ToDto()
@@ -27,8 +28,8 @@ namespace ViewModels.BindableObjects
                 NomeOperatore = this.NomeOperatore,
                 Password = this.Password,
                 Badge = this.Badge,
-                CodicePerson = this.CodicePerson
-
+                CodicePerson = this.CodicePerson,
+                CodicePermesso = this.CodicePermesso
             };
          }
 

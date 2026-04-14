@@ -4,17 +4,20 @@ using Models.Context;
 using Models.Repository;
 using Models.Tables;
 using System.Linq.Expressions;
+using static Models.Entity.Global.Enums;
 
 namespace DTO.Repository
 {
     public interface IPostazioneRepository : IBaseRepository<Postazione>
     {
-        Task<PostazioneDTO> FirstPostazione(int id);
+        Task<PostazioneDTO> FirstPostazione(int id, CancellationToken ctk = default);
         Task<List<PostazioneDTO>> Load(int id, CancellationToken ctk = default);
         Task<List<PostazioneDTO>> LoadPostazioni(Expression<Func<Postazione, bool>> predicate, CancellationToken ctk = default);
         Task<List<TipoPostazioneDTO>> LoadTipiPostazione(CancellationToken ctk = default);
         Task<List<TipoRientroDTO>> LoadTipiRientro(CancellationToken ctk = default);
         Task<bool> Upd(PostazioneDTO dto, CancellationToken ctk = default);
+        Task<bool> SaveReparti(int id, List<SettoreElencoDTO> settori, CancellationToken ctk = default);
+        Task<List<SettoreElencoDTO>> GetReparti(int id, CancellationToken ctk = default);
     }
 
     public class PostazioneRepository : BaseRepository<PostazioneDbContext, Postazione>, IPostazioneRepository
@@ -42,10 +45,10 @@ namespace DTO.Repository
 
         }
 
-        public async Task<PostazioneDTO> FirstPostazione(int id)
+        public async Task<PostazioneDTO> FirstPostazione(int id, CancellationToken ctk = default)
         {
 
-            return await GetById(id, selector: PostazioneDTO.ToPostazioneDto) ?? new PostazioneDTO();
+            return await GetById(id, selector: PostazioneDTO.ToPostazioneDto, ctk: ctk) ?? new PostazioneDTO();
 
         }
 
@@ -72,5 +75,32 @@ namespace DTO.Repository
                 .Select(TipoRientroDTO.ToDto).ToListAsync(ctk);
         }
 
+        public async Task<List<SettoreElencoDTO>> GetReparti(int id, CancellationToken ctk = default)
+        {
+            using PostazioneDbContext _ctx = new();
+            return await _ctx.Settori.AsNoTracking()
+                .Select(SettoreElencoDTO.ToSettoreElencoDto(id)) // Passi l'id qui
+                .ToListAsync(ctk);
+        }
+
+        public async Task<bool> SaveReparti(int id, List<SettoreElencoDTO> settori, CancellationToken ctk = default)
+        {
+            using PostazioneDbContext _ctx = new();
+            var postazione = await _ctx.Postazioni
+                .Include(o => o.Reparti)
+                .FirstOrDefaultAsync(o => o.Id == id, ctk);
+            if (postazione == null)
+                return false;
+            // Rimuovi i reparti esistenti
+            _ctx.Reparti.RemoveRange(postazione.Reparti);
+            // Aggiungi i nuovi reparti
+            foreach (var settoredto in settori)
+            {
+                int settoreId = settoredto.Id;
+                if (settoredto.HasReparto) postazione.Reparti.Add(new Reparto { SettoreId = settoreId, PostazioneId = id });
+            }
+            await _ctx.SaveChangesAsync(ctk);
+            return true;
+        }
     }
 }

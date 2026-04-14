@@ -11,10 +11,14 @@ using System.Reactive.Disposables.Fluent;
 using System.Reactive.Linq;
 using ViewModels;
 
-namespace Leonardo;
+namespace Views;
 
-public partial class PermessiView : ReactiveUserControl<PermessiViewModel>
+public partial class PermessiView : BaseUserControl<PermessiViewModel>
 {
+    protected override string RootControlName => "MainGrid";
+
+
+
     public PermessiView()
     {
         InitializeComponent();
@@ -36,10 +40,11 @@ public partial class PermessiView : ReactiveUserControl<PermessiViewModel>
                         v => v.lblTitolo.Text)
                 .DisposeWith(d);
 
-            Disposable.Create(() => {
-                this.DataContext = null;
-                System.Diagnostics.Debug.WriteLine(">>> [VIEW] PermessiView deattivata, DataContext rimosso.");
-            }).DisposeWith(d);
+            this.OneWayBind(ViewModel,
+                    vm => vm.InfoLabel,
+                    v => v.InfoLabel.Text)
+            .DisposeWith(d);
+
         });
 
     }

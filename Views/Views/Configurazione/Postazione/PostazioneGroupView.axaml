@@ -111,7 +111,8 @@
                                      MinWidth="50"
                                      Margin="20,5"
                                      ToolTipText="GESTIONE REPARTI"
-                                     HorizontalAlignment="Center">
+                                     HorizontalAlignment="Center"
+                                     Command="{Binding RepartiCommand}">
 
                     <Image Source="avares://ControlStyles/Resources/AggiungiIcon.png" Width="34" Height="34" />
                 
@@ -123,7 +124,7 @@
 
             <ui:UiButton x:Name="OperatoriButton"
                                  Margin="20,5"
-                                 MinHeight="30"
+                                 MinHeight="50"
                                  ToolTipText="GRUPPO OPERATORI"
                                  HorizontalAlignment="Stretch"
                                  Content=" OPERATORI "
@@ -131,7 +132,7 @@
 
             <ui:UiButton x:Name="SettoriButton"
                                  Margin="20,5"
-                                 MinHeight="30"
+                                 MinHeight="50"
                                  ToolTipText="GRUPPO SETTORI"
                                  HorizontalAlignment="Stretch"
                                  Content="SETTORI"
@@ -140,7 +141,7 @@
 
             <ui:UiButton x:Name="TariffeButton"
                                  Margin="20,5"
-                                 MinHeight="30"
+                                 MinHeight="50"
                                  ToolTipText="GRUPPO TARIFFE"
                                  HorizontalAlignment="Stretch"
                                  Content="TARIFFE"
@@ -149,7 +150,7 @@
 
             <ui:UiButton x:Name="RientriButton"
                                  Margin="20,5"
-                                 MinHeight="30"
+                                 MinHeight="50"
                                  ToolTipText="GRUPPO RIENTRI"
                                  HorizontalAlignment="Stretch"
                                  Content="RIENTRI"

@@ -1,20 +1,10 @@
 ﻿using DTO.Entity;
-using DTO.Mapper;
 using Microsoft.EntityFrameworkCore;
 using Models.Context;
-using Models.Entity;
-using Models.Projections;
 using Models.Repository;
-using Models.StoreProcedure;
 using Models.Tables;
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 using System.Linq.Expressions;
-using System.Text;
-using System.Threading.Tasks;
-using Windows.ApplicationModel.Chat;
 
 namespace DTO.Repository
 {

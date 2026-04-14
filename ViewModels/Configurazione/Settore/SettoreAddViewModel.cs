@@ -29,7 +29,7 @@ namespace ViewModels
         {
             var data = await Q.LoadTipiSettore();
             TipoSettDataSource = data.Select(dto => new TipoSettoreMap(dto)).ToList();
-            CodiceTipoSettore = TipoSettDataSource[0].Id;
+            BindingT.CodiceTipoSettore = TipoSettDataSource[0].Id;
         }
 
         protected async override Task OnSaving()

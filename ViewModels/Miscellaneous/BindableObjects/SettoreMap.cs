@@ -41,18 +41,6 @@ namespace ViewModels.BindableObjects
         }
 
 
-        //public Settore ToTable() => Mappers.SettoreMapper.ToTable(this);
-
-        //public void UpdateTable(Settore existing)
-        //{
-        //    // Aggiorniamo solo i campi che possono cambiare
-        //    existing.Nome = this.NomeSettore;
-        //    existing.Label = this.EtichettaSettore;
-        //    existing.TipoSettoreId = this.CodiceTipoSettore;
-
-        //    // Non tocchiamo l'ID!
-        //}
-
         private string _nomesettore = string.Empty;
         public string NomeSettore
         {

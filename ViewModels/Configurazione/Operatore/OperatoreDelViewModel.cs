@@ -27,7 +27,7 @@ namespace ViewModels
 
         protected override async Task OnLoading()
         {
-var data = await Q.FirstOperatore(_idDaModificare);
+            var data = await Q.FirstOperatore(_idDaModificare);
             BindingT = new BindableObjects.OperatoreMap(data);
             if (GetCodiceOperatore == 0)
             {

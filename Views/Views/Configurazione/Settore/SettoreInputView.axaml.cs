@@ -9,13 +9,28 @@ using ViewModels;
 namespace Views;
 
 public partial class SettoreInputView : BaseUserControl<SettoreInputBase>,
-                                        IViewFor<SettoreAddViewModel>
+                                        IViewFor<SettoreAddViewModel>,
+                                        IViewFor<SettoreUpdViewModel>,
+                                        IViewFor<SettoreDelViewModel>
+
 {
     protected override string RootControlName => "MainGrid";
 
     SettoreAddViewModel? IViewFor<SettoreAddViewModel>.ViewModel
     {
         get => ViewModel as SettoreAddViewModel;
+        set => ViewModel = value;
+    }
+
+    SettoreUpdViewModel? IViewFor<SettoreUpdViewModel>.ViewModel
+    {
+        get => ViewModel as SettoreUpdViewModel;
+        set => ViewModel = value;
+    }
+
+    SettoreDelViewModel? IViewFor<SettoreDelViewModel>.ViewModel
+    {
+        get => ViewModel as SettoreDelViewModel;
         set => ViewModel = value;
     }
 

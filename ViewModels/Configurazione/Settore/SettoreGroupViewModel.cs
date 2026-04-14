@@ -27,7 +27,8 @@ namespace ViewModels
         protected override IObservable<bool> canDel => this.WhenAnyValue(
             x => x.GroupBindingT,
             x => x.GroupBindingT.CodiceListino, // Osserva esplicitamente la proprietà interna
-            (item, codiceSocio) => item != null && codiceSocio == 0
+            x => x.GroupBindingT.HasReparto,
+            (item, codiceSocio, hasReparto) => item != null && codiceSocio == 0 && !hasReparto
         );
 
         public SettoreGroupViewModel(IScreen host,
@@ -55,8 +56,8 @@ namespace ViewModels
             PostazioniCommand = ReactiveCommand.CreateFromObservable(
                 () => NavigateToReset(new PostazioneGroupViewModel(ConfigHost, Locator.Current.GetService<IPostazioneRepository>())), isNotLoading);
 
-            //TariffeCommand = ReactiveCommand.CreateFromObservable(
-            //    () => NavigateToReset(new TariffaGroupViewModel(ConfigHost)), isNotLoading);
+            TariffeCommand = ReactiveCommand.CreateFromObservable(
+                () => NavigateToReset(new TariffaGroupViewModel(ConfigHost, Locator.Current.GetService<ITariffaRepository>())), isNotLoading);
 
             OperatoriCommand = ReactiveCommand.CreateFromObservable(
                 () => NavigateToReset(new OperatoreGroupViewModel(ConfigHost, Locator.Current.GetService<IOperatoreRepository>())), isNotLoading);
@@ -169,20 +170,18 @@ namespace ViewModels
 
         protected async override Task OnDeleting()
         {
-            await NavigateToInput(new PostazioneDelViewModel(ConfigHost, GroupBindingT.Id,
-                                      Locator.Current.GetService<IPostazioneRepository>())).ToTask();
+            await NavigateToInput(new SettoreDelViewModel(ConfigHost, GroupBindingT.Id,
+                                      Locator.Current.GetService<ISettoreRepository>())).ToTask();
         }
 
         protected async override Task OnUpdating()
         {
-            await NavigateToInput(new PostazioneUpdViewModel(ConfigHost, GroupBindingT.Id,
-                                      Locator.Current.GetService<IPostazioneRepository>())).ToTask();
+            await NavigateToInput(new SettoreUpdViewModel(ConfigHost, GroupBindingT.Id,
+                                      Locator.Current.GetService<ISettoreRepository>())).ToTask();
         }
 
-        protected override Task OnEsc()
-        {
-            throw new NotImplementedException();
-        }
+        protected override async Task OnEsc() => await Task.CompletedTask;
+        
 
     }
 }

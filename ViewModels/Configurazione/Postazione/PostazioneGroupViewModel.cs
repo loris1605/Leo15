@@ -26,8 +26,9 @@ namespace ViewModels
         //fa il merge con la IObservable base
         protected override IObservable<bool> canDel => this.WhenAnyValue(
             x => x.GroupBindingT,
-            x => x.GroupBindingT.CodiceReparto, // Osserva esplicitamente la proprietà interna
-            (item, codiceSocio) => item != null && codiceSocio == 0
+            x => x.GroupBindingT.CodiceReparto,
+            x => x.GroupBindingT.HasPermesso,
+            (item, codiceSocio, hasPermesso) => item != null && codiceSocio == 0 && !hasPermesso
         );
 
         public PostazioneGroupViewModel(IScreen host,
@@ -54,11 +55,15 @@ namespace ViewModels
             SettoriCommand = ReactiveCommand.CreateFromObservable(
                 () => NavigateToReset(new SettoreGroupViewModel(ConfigHost, Locator.Current.GetService<ISettoreRepository>())), isNotLoading);
 
+            TariffeCommand = ReactiveCommand.CreateFromObservable(
+                () => NavigateToReset(new TariffaGroupViewModel(ConfigHost, Locator.Current.GetService<ITariffaRepository>())), isNotLoading);
+
             //PermessiCommand = ReactiveCommand.CreateFromObservable(
             //    () => NavigateToReset(new OperatoreAddViewModel(ConfigHost)), isNotLoading);
 
-            //RepartiCommand = ReactiveCommand.CreateFromObservable(
-            //    () => NavigateToReset(new OperatoreAddViewModel(ConfigHost)), isNotLoading);
+            RepartiCommand = ReactiveCommand.CreateFromObservable(
+                () => NavigateToInput(new RepartiViewModel(ConfigHost, GroupBindingT!.Id,
+                Locator.Current.GetService<IPostazioneRepository>())), canAction);
 
             this.WhenActivated(d =>
             {

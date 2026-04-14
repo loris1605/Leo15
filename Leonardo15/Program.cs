@@ -1,4 +1,5 @@
 ﻿using Avalonia;
+using Core;
 using DTO.Repository;
 using Microsoft.Extensions.DependencyInjection;
 using ReactiveUI;
@@ -6,6 +7,10 @@ using ReactiveUI.Avalonia;
 using Splat;
 using Splat.Microsoft.Extensions.DependencyInjection;
 using System;
+using System.Diagnostics;
+using System.IO;
+using System.Linq;
+using System.Reflection;
 using ViewModels; // Sostituisci con i tuoi namespace reali
 using Views;
 
@@ -57,6 +62,7 @@ internal class Program
         services.AddTransient<IOperatoreRepository, OperatoreRepository>();
         services.AddTransient<IPostazioneRepository, PostazioneRepository>();
         services.AddTransient<ISettoreRepository, SettoreRepository>();
+        services.AddTransient<ITariffaRepository, TariffaRepository>();
     }
 
     private static void RegisterViewModels(IServiceCollection services)
@@ -115,13 +121,24 @@ internal class Program
         services.AddTransient<IViewFor<OperatoreUpdViewModel>, OperatoreInputView>();
         services.AddTransient<IViewFor<OperatoreDelViewModel>, OperatoreInputView>();
 
+        services.AddTransient<IViewFor<PermessiViewModel>, PermessiView>();
+
         services.AddTransient<IViewFor<PostazioneGroupViewModel>, PostazioneGroupView>();
         services.AddTransient<IViewFor<PostazioneAddViewModel>, PostazioneInputView>();
         services.AddTransient<IViewFor<PostazioneUpdViewModel>, PostazioneInputView>();
         services.AddTransient<IViewFor<PostazioneDelViewModel>, PostazioneInputView>();
 
+        services.AddTransient<IViewFor<RepartiViewModel>, RepartiView>();
+
         services.AddTransient<IViewFor<SettoreGroupViewModel>, SettoreGroupView>();
         services.AddTransient<IViewFor<SettoreAddViewModel>, SettoreInputView>();
+        services.AddTransient<IViewFor<SettoreUpdViewModel>, SettoreInputView>();
+        services.AddTransient<IViewFor<SettoreDelViewModel>, SettoreInputView>();
+
+        services.AddTransient<IViewFor<TariffaGroupViewModel>, TariffaGroupView>();
+        services.AddTransient<IViewFor<TariffaAddViewModel>, TariffaInputView>();
+        services.AddTransient<IViewFor<TariffaUpdViewModel>, TariffaInputView>();
+        services.AddTransient<IViewFor<TariffaDelViewModel>, TariffaInputView>();
     }
 
 
@@ -129,6 +146,42 @@ internal class Program
     {
 
     }
+
+    private static void LoadModules(IServiceCollection services)
+    {
+        // 1. Definiamo dove sono i moduli (es. sottocartella "Modules")
+        string modulesPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Modules");
+
+        if (!Directory.Exists(modulesPath))
+            Directory.CreateDirectory(modulesPath);
+
+        // 2. Cerchiamo tutte le DLL
+        var files = Directory.GetFiles(modulesPath, "*.dll");
+
+        foreach (var file in files)
+        {
+            try
+            {
+                var assembly = Assembly.LoadFrom(file);
+
+                // 3. Cerchiamo la classe che implementa IAppModule (dal tuo progetto Core)
+                var moduleType = assembly.GetTypes()
+                    .FirstOrDefault(t => typeof(IAppModule).IsAssignableFrom(t) && !t.IsInterface);
+
+                if (moduleType != null)
+                {
+                    var module = (IAppModule)Activator.CreateInstance(moduleType)!;
+                    // 4. Eseguiamo la registrazione dinamica!
+                    module.Register(services);
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Errore caricamento modulo {file}: {ex.Message}");
+            }
+        }
+    }
+
 
 
 }

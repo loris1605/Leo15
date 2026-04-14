@@ -29,6 +29,7 @@
 
         <lc:TitleView TitoloPagina="GESTIONE SOCI"
                       ButtonText="Esci"
+                      ToolTipText="TORNA A MENU PRINCIPALE"
                       ExitCommand="{Binding EscPressedCommand}"
                       x:Name="Title"/>
         

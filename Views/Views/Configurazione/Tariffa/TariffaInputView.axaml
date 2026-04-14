@@ -11,7 +11,7 @@
              x:CompileBindings="False"
              x:DataType="vm:TariffaInputBase"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-             x:Class="Leonardo.TariffaInputView">
+             x:Class="Views.TariffaInputView">
 
     <Grid x:Name="MainGrid" >
     
@@ -136,7 +136,9 @@
 
                 <lc:InputSaveBox x:Name="InputSaveBox"
                                  Grid.Row="3"
-                                 Margin="20"/>
+                                 Margin="20"
+                                 SaveCommand="{Binding SaveCommand}"
+                                 ExitCommand="{Binding EscPressedCommand}"/>
             
             </Grid>
         

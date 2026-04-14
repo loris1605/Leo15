@@ -26,9 +26,7 @@ namespace ViewModels
 
         protected override IObservable<bool> canDel => this.WhenAnyValue(
             x => x.GroupBindingT,
-            x => x.GroupBindingT.CodicePermesso, // Osserva esplicitamente la proprietà interna
-            (item, codiceSocio) => item != null && codiceSocio == 0
-        );
+            (item) => item != null && item.CodicePermesso == 0);
 
         public OperatoreGroupViewModel(IScreen host,
                                        IOperatoreRepository Repository) : base(host)
@@ -57,16 +55,20 @@ namespace ViewModels
 
             // Navigazioni Semplici (NavigateAndReset)
             PostazioniCommand = ReactiveCommand.CreateFromObservable(
-                () => NavigateToReset(new PostazioneGroupViewModel(ConfigHost, Locator.Current.GetService<IPostazioneRepository>())), isNotLoading);
+                () => NavigateToReset(new PostazioneGroupViewModel(ConfigHost, 
+                Locator.Current.GetService<IPostazioneRepository>())), isNotLoading);
 
             SettoriCommand = ReactiveCommand.CreateFromObservable(
-                () => NavigateToReset(new SettoreGroupViewModel(ConfigHost, Locator.Current.GetService<ISettoreRepository>())), isNotLoading);
+                () => NavigateToReset(new SettoreGroupViewModel(ConfigHost, 
+                Locator.Current.GetService<ISettoreRepository>())), isNotLoading);
 
-            //TariffeCommand = ReactiveCommand.CreateFromObservable(
-            //    () => NavigateToReset(new TariffaGroupViewModel(ConfigHost)), isNotLoading);
+            TariffeCommand = ReactiveCommand.CreateFromObservable(
+                () => NavigateToReset(new TariffaGroupViewModel(ConfigHost, 
+                Locator.Current.GetService<ITariffaRepository>())), isNotLoading);
 
-            //PermessiCommand = ReactiveCommand.CreateFromObservable(
-            //    () => NavigateToInput(new PermessiViewModel(ConfigHost, GroupBindingT!.Id)), canAction);
+            PermessiCommand = ReactiveCommand.CreateFromObservable(
+                () => NavigateToInput(new PermessiViewModel(ConfigHost, GroupBindingT!.Id, 
+                Locator.Current.GetService<IOperatoreRepository>())), canAction);
 
             this.WhenActivated(d =>
             {

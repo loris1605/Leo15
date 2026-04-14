@@ -24,6 +24,7 @@
                 <ui:UiButton x:Name="BackButton"
                              Margin="20,15"
                              Grid.Column="1"
+                             ToolTipText="{Binding #Root.ToolTipText}"
                              Command="{Binding #Root.ExitCommand}">
                     <StackPanel Orientation="Horizontal" Spacing="10">
                         <Image Source="avares://ControlStyles/Resources/ExitIcon.png" 

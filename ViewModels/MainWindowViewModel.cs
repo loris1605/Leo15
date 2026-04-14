@@ -1,4 +1,5 @@
-﻿using DTO.Repository;
+﻿using Core;
+using DTO.Repository;
 using Microsoft.EntityFrameworkCore;
 using Models.Context;
 using Models.Repository;
@@ -72,7 +73,6 @@ namespace ViewModels
         private void GoToLogin()
         {
             HostScreen.Router.NavigateAndReset.Execute(new LoginViewModel(HostScreen));
-
         }
 
         private void GoToConnection()

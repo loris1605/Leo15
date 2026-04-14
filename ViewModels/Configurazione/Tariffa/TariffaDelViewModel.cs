@@ -1,4 +1,5 @@
-﻿using Models.Repository;
+﻿using DTO.Repository;
+using Models.Repository;
 using ReactiveUI;
 using SysNet;
 
@@ -6,42 +7,40 @@ namespace ViewModels
 {
     public class TariffaDelViewModel : TariffaInputBase
     {
-        private TariffaR Q { get; set; }
+        private ITariffaRepository Q;
 
         private readonly int _idDaModificare;
 
-        public TariffaDelViewModel(IScreen host, int idsettore) : base(host)
+        public TariffaDelViewModel(IScreen host, int idtariffa, ITariffaRepository Repository) : base(host)
         {
-            _idDaModificare = idsettore;
+            _idDaModificare = idtariffa;
             Titolo = "Cancella Settore";
-            Q = Create<TariffaR>.Instance();
+            Q = Repository ?? throw new ArgumentNullException(nameof(Repository));
             FieldsEnabled = false;
         }
 
-        protected override void OnFinalDestruction()
-        {
-            Q?.Dispose();
-            Q = null;
-            
-        }
+        protected override void OnFinalDestruction() => Q = null;
 
         protected override async Task OnLoading()
         {
-            BindingT = await Q.GetById(_idDaModificare);
+            var data = await Q.FirstTariffa(_idDaModificare);
+
+            BindingT = new BindableObjects.TariffaMap(data);
+
             if (GetCodiceTariffa == 0)
             {
                 InfoLabel = "Errore: Tariffa non trovata nel database.";
                 FieldsEnabled = false;
             }
-            await OnFocus(EscFocus);
+            SetFocus(EscFocus);
         }
 
         protected async override Task OnSaving()
         {
-            if (!await Q.Del(BindingT))
+            if (!await Q.Del(BindingT.ToDTO()))
             {
                 InfoLabel = "Errore Db eliminazione Tariffa";
-                await OnEscFocus();
+                SetFocus(EscFocus);
                 return;
             }
             OnBack(-100);

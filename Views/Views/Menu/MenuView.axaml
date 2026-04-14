@@ -35,6 +35,7 @@
         <lc:TitleView x:Name="Title"
                       TitoloPagina="MENU PRINCIPALE"
                       ButtonText=" Logout "
+                      ToolTipText="CAMBIO OPERATORE"
                       ExitCommand="{Binding LogoutCommand}"/>
 		    
         <Border Grid.Row="1" Padding="30" VerticalAlignment="Top">

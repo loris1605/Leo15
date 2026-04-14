@@ -1,5 +1,6 @@
 using Avalonia;
 using Avalonia.Controls;
+using ControlStyles;
 using ReactiveUI;
 using System.Reactive;
 
@@ -30,6 +31,15 @@ public partial class TitleView : UserControl
     {
         get => GetValue(ButtonTextProperty);
         set => SetValue(ButtonTextProperty, value);
+    }
+
+    public static readonly StyledProperty<string> ToolTipTextProperty =
+        AvaloniaProperty.Register<TitleView, string>(nameof(ToolTipText), defaultValue: string.Empty);
+
+    public string ToolTipText
+    {
+        get => GetValue(ToolTipTextProperty);
+        set => SetValue(ToolTipTextProperty, value);
     }
 
     // Proprietà Comando (Usa ReactiveCommand invece di ICommand)

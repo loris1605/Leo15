@@ -11,7 +11,7 @@
              Background="Transparent"
              x:DataType="vm:TariffaGroupViewModel"
              x:CompileBindings="True"
-             x:Class="Leonardo.TariffaGroupView">
+             x:Class="Views.TariffaGroupView">
 
     <Grid x:Name="MainGrid">
     
@@ -116,6 +116,7 @@
         
             <ui:UiButton x:Name="OperatoriButton"
                                  Margin="20,5"
+                                 MinHeight="50"
                                  ToolTipText="GRUPPO OPERATORI"
                                  HorizontalAlignment="Stretch"
                                  Content=" OPERATORI"
@@ -124,6 +125,7 @@
 
             <ui:UiButton x:Name="PostazioniButton"
                                  Margin="20,5"
+                                 MinHeight="50"
                                  ToolTipText="GRUPPO POSTAZIONI"
                                  HorizontalAlignment="Stretch"
                                  Content=" POSTAZIONI "
@@ -131,6 +133,7 @@
 
             <ui:UiButton x:Name="SettoriButton"
                                  Margin="20,5"
+                                 MinHeight="50"
                                  ToolTipText="GRUPPO SETTORI"
                                  HorizontalAlignment="Stretch"
                                  Content="SETTORI"
@@ -139,6 +142,7 @@
 
             <ui:UiButton x:Name="RientriButton"
                                  Margin="20,5"
+                                 MinHeight="50"
                                  ToolTipText="GRUPPO RIENTRI"
                                  HorizontalAlignment="Stretch"
                                  Content="RIENTRI"

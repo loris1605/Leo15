@@ -4,27 +4,17 @@ using System.Reactive.Disposables;
 using System.Reactive.Disposables.Fluent;
 using ViewModels;
 
-namespace Leonardo;
+namespace Views;
 
-public partial class TariffaGroupView : ReactiveUserControl<TariffaGroupViewModel>
+public partial class TariffaGroupView : BaseUserControl<TariffaGroupViewModel>
 {
+    protected override string RootControlName => "MainGrid";
+
     public TariffaGroupView()
     {
         InitializeComponent();
 
-        this.WhenActivated(d =>
-        {
-            // Enter Key Pressed
-            #region TwoWay
-            //Bind PasswordText to TextBox
-            #endregion
-
-
-            Disposable.Create(() => {
-                this.DataContext = null;
-                System.Diagnostics.Debug.WriteLine(">>> [VIEW] TariffaGroupView deattivata, DataContext rimosso.");
-            }).DisposeWith(d);
-        });
+        
 
     }
 

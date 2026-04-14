@@ -1,5 +1,4 @@
 ﻿using DTO.Entity;
-using DTO.Mapper;
 using Microsoft.EntityFrameworkCore;
 using Models.Context;
 using Models.Repository;
@@ -53,7 +52,7 @@ namespace DTO.Repository
 
             try
             {
-                var result = await query.Select(PermessoMapper.ToPostazioneDTO).ToListAsync(ctk);
+                var result = await query.Select(PostazioneDTO.ToPermessoDTO).ToListAsync(ctk);
                 return result;
             }
             catch (OperationCanceledException)

@@ -1,5 +1,4 @@
 ﻿using DTO.Entity;
-using DTO.Mapper;
 using Microsoft.EntityFrameworkCore;
 using Models.Context;
 using Models.Entity.Global;
@@ -31,7 +30,7 @@ namespace DTO.Repository
             return await _ctx.Permessi
                         .AsNoTracking()
                         .Where(p => p.OperatoreId == CodiceOperatore)
-                        .Select(PermessoMapper.ToPostazioneXC)
+                        .Select(LoginDTO.ToPostazioneXC)
                         .ToListAsync(ct); // <--- Passiamo il token a EF
         }
 
@@ -41,7 +40,7 @@ namespace DTO.Repository
             return await _ctx.Reparti
                         .AsNoTracking()
                         .Where(p => p.PostazioneId == CodicePostazione)
-                        .Select(RepartoMapper.ToSettoreXC)
+                        .Select(LoginDTO.ToSettoreXC)
                         .ToListAsync(ct); // <--- Passiamo il token a EF
         }
 
@@ -51,7 +50,7 @@ namespace DTO.Repository
             return await _ctx.Listini
                        .AsNoTracking()
                        .Where(p => p.SettoreId == CodiceSettore)
-                       .Select(ListinoMapper.ToTariffaXC)
+                       .Select(LoginDTO.ToTariffaXC)
                        .ToListAsync(ct); // <--- Passiamo il token a EF
         }
 
@@ -103,7 +102,7 @@ namespace DTO.Repository
             return await _ctx.Giornate
                             .AsNoTracking()
                             .Where(x => x.Aperta == true)
-                            .Select(GiornataMapper.ToGiornataXC)
+                            .Select(LoginDTO.ToGiornataXC)
                             .FirstOrDefaultAsync(ct); // <--- Passiamo il token a EF
         }
     }

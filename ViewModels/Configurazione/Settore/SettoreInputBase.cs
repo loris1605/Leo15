@@ -2,7 +2,6 @@
 using SysNet;
 using System.Reactive;
 using System.Reactive.Concurrency;
-using System.Reactive.Disposables.Fluent;
 using System.Reactive.Linq;
 using ViewModels.BindableObjects;
 
@@ -118,7 +117,7 @@ namespace ViewModels
         public SettoreMap BindingT
         {
             get => bindingt;
-        
+            set => this.RaiseAndSetIfChanged(ref bindingt, value);
         }
 
         public Interaction<Unit, Unit> NomeFocus { get; } = new();

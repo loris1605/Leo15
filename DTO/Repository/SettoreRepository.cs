@@ -14,11 +14,12 @@ namespace DTO.Repository
 {
     public interface ISettoreRepository : IBaseRepository<Settore>
     {
-        Task<SettoreDTO> FirstSettore(int id);
+        Task<SettoreDTO> FirstSettore(int id, CancellationToken ctk = default);
         Task<List<SettoreDTO>> Load(int id, CancellationToken ctk = default);
         Task<List<SettoreDTO>> LoadSettori(Expression<Func<Settore, bool>> predicate, CancellationToken ctk = default);
         Task<bool> Upd(SettoreDTO dto, CancellationToken ctk = default);
         Task<List<TipoSettoreDTO>> LoadTipiSettore(CancellationToken ctk = default);
+        Task<List<TariffaDTO>> GetListini(int id, CancellationToken ctk = default);
     }
 
     public class SettoreRepository : BaseRepository<SettoreDbContext, Settore>, ISettoreRepository
@@ -57,10 +58,20 @@ namespace DTO.Repository
 
         }
 
-        public async Task<SettoreDTO> FirstSettore(int id) => await GetById(id, selector: SettoreDTO.ToSettoreDto) ?? new SettoreDTO();
+        public async Task<SettoreDTO> FirstSettore(int id, CancellationToken ctk = default) 
+        {
+            return await GetById(id, selector: SettoreDTO.ToSettoreDto, ctk: ctk) ?? new SettoreDTO();    
+        }
 
         public async Task<bool> Upd(SettoreDTO dto, CancellationToken ctk = default) => await Upd<SettoreDTO, Settore>(dto, ctk);
 
-
+        public async Task<List<TariffaDTO>> GetListini(int id, CancellationToken ctk = default)
+        {
+            using SettoreDbContext _ctx = new();
+            return await _ctx.Tariffe
+                .AsNoTracking()
+                .Select(TariffaDTO.ToTariffaElencoDto(id)) // Passi l'id qui
+                .ToListAsync(ctk);
+        }
     }
 }

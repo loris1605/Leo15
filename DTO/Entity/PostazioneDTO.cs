@@ -1,4 +1,5 @@
-﻿using Models.Interfaces;
+﻿using Models.Entity;
+using Models.Interfaces;
 using Models.Tables;
 using System.Linq.Expressions;
 
@@ -88,5 +89,16 @@ namespace DTO.Entity
                               : "N/A",
             HasPermesso = o.Permessi.Any()
         };
+
+        public static Expression<Func<Permesso, PostazioneDTO>> ToPermessoDTO => p => new PostazioneDTO
+        {
+            Id = p.Id,
+            // Attenzione: qui mappi PostazioneId su CodiceTipoPostazione, 
+            // verifica che non debba essere p.Postazione.TipoPostazioneId
+            CodiceTipoPostazione = p.PostazioneId,
+            NomePostazione = p.Postazione != null ? p.Postazione.Nome : "N/A"
+        };
+
+        
     }
 }

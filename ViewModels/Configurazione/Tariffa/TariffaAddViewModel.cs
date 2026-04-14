@@ -1,4 +1,5 @@
-﻿using Models.Repository;
+﻿using DTO.Repository;
+using Models.Repository;
 using ReactiveUI;
 using SysNet;
 
@@ -6,46 +7,43 @@ namespace ViewModels
 {
     public class TariffaAddViewModel : TariffaInputBase
     {
-        private TariffaR Q { get; set; }
+        private ITariffaRepository Q;
 
-        public TariffaAddViewModel(IScreen host) : base(host)
+        public TariffaAddViewModel(IScreen host, ITariffaRepository Repository) : base(host)
         {
             Titolo = "Aggiungi Nuova Tariffa";
             FieldsVisibile = true;
             FieldsEnabled = true;
-            Q = Create<TariffaR>.Instance();
+            Q = Repository;
         }
 
-        protected override void OnFinalDestruction()
-        {
-            Q?.Dispose();
-            Q = null;
-        }
+        protected override void OnFinalDestruction() => Q = null;
 
         protected override async Task OnLoading()
         {
-            await OnFocus(NomeFocus);
+            SetFocus(NomeFocus);
+            await Task.CompletedTask;
         }
 
         protected async override Task OnSaving()
         {
-            if (!await ValidaDati()) return;
+            if (!ValidaDati()) return;
 
-            if (await Q.EsisteNome(BindingT))
+            if (await Q.EsisteNome(BindingT.ToDTO()))
             {
                 InfoLabel = "Tariffa già registrata";
-                await OnFocus(NomeFocus);
+                SetFocus(NomeFocus);
                 return;
             }
 
             InfoLabel = "";
 
-            int newTariffaId = await Q.Add(BindingT);
+            int newTariffaId = await Q.Add(BindingT.ToDTO());
 
             if (newTariffaId == -1)
             {
                 InfoLabel = "Errore Db inserimento Tariffa";
-                await OnFocus(NomeFocus);
+                SetFocus(NomeFocus);
                 return;
             }
 

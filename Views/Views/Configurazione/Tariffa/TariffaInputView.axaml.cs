@@ -8,10 +8,33 @@ using System.Reactive.Disposables.Fluent;
 using System.Reactive.Linq;
 using ViewModels;
 
-namespace Leonardo;
+namespace Views;
 
-public partial class TariffaInputView : ReactiveUserControl<TariffaInputBase>
+public partial class TariffaInputView : BaseUserControl<TariffaInputBase>,
+                                        IViewFor<TariffaAddViewModel>,
+                                        IViewFor<TariffaUpdViewModel>,
+                                        IViewFor<TariffaDelViewModel>
 {
+    protected override string RootControlName => "MainGrid";
+
+    TariffaAddViewModel? IViewFor<TariffaAddViewModel>.ViewModel
+    {
+        get => ViewModel as TariffaAddViewModel;
+        set => ViewModel = value;
+    }
+
+    TariffaUpdViewModel? IViewFor<TariffaUpdViewModel>.ViewModel
+    {
+        get => ViewModel as TariffaUpdViewModel;
+        set => ViewModel = value;
+    }
+
+    TariffaDelViewModel? IViewFor<TariffaDelViewModel>.ViewModel
+    {
+        get => ViewModel as TariffaDelViewModel;
+        set => ViewModel = value;
+    }
+
     public TariffaInputView()
     {
         InitializeComponent();
@@ -53,13 +76,13 @@ public partial class TariffaInputView : ReactiveUserControl<TariffaInputBase>
 
             //Bind Nome to TextBox
             this.Bind(ViewModel,
-                      vm => vm.NomeTariffa,
+                      vm => vm.BindingT.NomeTariffa,
                       v => v.NomeBox.Text)
                 .DisposeWith(d);
 
             //Bind Label to TextBox
             this.Bind(ViewModel,
-                      vm => vm.EtichettaTariffa,
+                      vm => vm.BindingT.EtichettaTariffa,
                       v => v.EtichettaBox.Text)
                 .DisposeWith(d);
 
@@ -83,23 +106,6 @@ public partial class TariffaInputView : ReactiveUserControl<TariffaInputBase>
 
             #endregion
 
-            #region Commands
-
-            this.Bind(ViewModel,
-                    vm => vm.EscPressedCommand,
-                    v => v.InputSaveBox.ExitCommand).DisposeWith(d);
-
-            this.Bind(ViewModel,
-                vm => vm.SaveCommand,
-                v => v.InputSaveBox.SaveCommand).DisposeWith(d);
-
-
-            #endregion
-
-            Disposable.Create(() => {
-                this.DataContext = null;
-                System.Diagnostics.Debug.WriteLine(">>> [VIEW] TariffaInputView deattivata, DataContext rimosso.");
-            }).DisposeWith(d);
         });
     }
 }

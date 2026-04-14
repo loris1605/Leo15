@@ -1,68 +1,55 @@
-﻿using Models.Entity;
+﻿using DTO.Repository;
 using Models.Repository;
 using ReactiveUI;
 using SysNet;
 using System.Reactive.Concurrency;
+using ViewModels.BindableObjects;
 
 namespace ViewModels
 {
-    public partial class PermessiViewModel : InputViewModel
+    public partial class PermessiViewModel : OperatoreInputBase
     {
-        private OperatoreR OperatoreQ { get; set; }
-        private PermessoR Q { get; set; }
+        private IOperatoreRepository Q;
+        
         private readonly int _idDaModificare;
 
-        public PermessiViewModel(IScreen host, int idoperatore) : base(host)
+        public PermessiViewModel(IScreen host, int idoperatore, IOperatoreRepository Repository) : base(host)
         {
-            Q = Create<PermessoR>.Instance();
-            OperatoreQ = Create<OperatoreR>.Instance();
             _idDaModificare = idoperatore;
-           
+            Q = Repository;
         }
 
         protected override void OnFinalDestruction()
         {
-            Q?.Dispose();
             Q = null;
-            OperatoreQ?.Dispose();
-            OperatoreQ = null;
             base.OnFinalDestruction();
         }
 
         protected override async Task OnLoading()
         {
-            var operatore = await OperatoreQ.GetById(_idDaModificare);
+            var operatore = await Q.FirstOperatore(_idDaModificare, token);
             Titolo = "Permessi per l'operatore : " + operatore.NomeOperatore;
-            DataSource = await Q.GetPostazioniSenzaPermesso(_idDaModificare);
+            var data = await Q.GetPermessi(_idDaModificare,token);
+
+            DataSource = data.Select(dto => new PostazioneElencoMap(dto)).ToList();
+            SetFocus(EscFocus);
         }
 
-        protected override Task OnSaving() => Task.CompletedTask;
-        
-
-        public void OnBackEsc()
+        protected async override Task OnSaving()
         {
-            if (HostScreen is IGroupScreen Host)
+            var dtoSource = DataSource.Select(p => p.ToDto()).ToList();
+
+            if (!await Q.SavePermessi(_idDaModificare, dtoSource, token))
             {
-                RxApp.MainThreadScheduler.Schedule(() => {
-                    Host.InputRouter.NavigationStack.Clear();
-                    Host.GroupEnabled = true;
-                });
+                InfoLabel = "Errore Db modifica permessi";
+                SetFocus(EscFocus);
+                return;
             }
+
+            OnBack(_idDaModificare);
         }
 
-        protected void OnBack(int value = 0)
-        {
-            if (HostScreen is IGroupScreen Host)
-            {
-                // Svuota completamente lo stack del router di input
-                Host.InputRouter.NavigateBack.Execute();
-                Host.InputRouter.NavigationStack.Clear();
-                Host.AggiornaGrid(value);
-                Host.GroupEnabled = true;
-            }
-        }
 
-        
     }
 
     public partial class PermessiViewModel
@@ -81,7 +68,7 @@ namespace ViewModels
         #region BindingT
 
         private PostazioneElencoMap _bindingT;
-        public PostazioneElencoMap BindingT
+        public new PostazioneElencoMap BindingT
         {
             get => _bindingT;
             set => this.RaiseAndSetIfChanged(ref _bindingT, value);

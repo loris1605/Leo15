@@ -231,7 +231,7 @@ namespace ViewModels
         ~BaseViewModel()
         {
             // Questo apparirà nella finestra "Output" di Visual Studio
-            Debug.WriteLine($"***** [GC] {this.GetType().Name} {this.GetHashCode()} DISTRUTTO *****");
+            Debug.WriteLine($"************************************************** [GC] {this.GetType().Name} {this.GetHashCode()} DISTRUTTO *****");
         }
 #endif
 

@@ -1,0 +1,33 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="Views.UiSpinner">
+    
+    <Grid Name="LoadingOverlay" IsVisible="{Binding IsBusy}">
+    <!-- Sfondo semi-trasparente per dare profondità -->
+        <Border Background="Black" Opacity="0.3" CornerRadius="8"/>
+        
+        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+            <!-- Spinner ad arco animato -->
+            <Arc Width="50" Height="50" 
+                 Stroke="White" StrokeThickness="4"
+                 StartAngle="0" SweepAngle="270">
+                <Arc.Transitions>
+                    <Transitions>
+                        <!-- Rotazione infinita -->
+                        <DoubleTransition Property="RotateTransform.Angle" Duration="0:0:1"/>
+                    </Transitions>
+                </Arc.Transitions>
+                <Arc.RenderTransform>
+                    <RotateTransform />
+                </Arc.RenderTransform>
+            </Arc>
+            
+            <TextBlock Text="Caricamento in corso..." 
+                       Foreground="White" Margin="0,10,0,0"/>
+        </StackPanel>
+    </Grid>
+
+</UserControl>

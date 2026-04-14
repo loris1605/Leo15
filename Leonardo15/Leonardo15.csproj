@@ -26,7 +26,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Core\Core.csproj" />
     <ProjectReference Include="..\DTO\DTO.csproj" />
+    
     <ProjectReference Include="..\Models\Models.csproj" />
     <ProjectReference Include="..\SysNet\SysNet.csproj" />
     <ProjectReference Include="..\ViewModels\ViewModels.csproj" />

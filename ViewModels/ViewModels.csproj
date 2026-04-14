@@ -8,23 +8,10 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <AvaloniaXaml Remove="Configurazione\Permessi\**" />
-    <AvaloniaXaml Remove="Configurazione\Tariffa\**" />
     <AvaloniaXaml Remove="Mappings\**" />
-    <Compile Remove="Configurazione\Permessi\**" />
-    <Compile Remove="Configurazione\Tariffa\**" />
     <Compile Remove="Mappings\**" />
-    <EmbeddedResource Remove="Configurazione\Permessi\**" />
-    <EmbeddedResource Remove="Configurazione\Tariffa\**" />
     <EmbeddedResource Remove="Mappings\**" />
-    <None Remove="Configurazione\Permessi\**" />
-    <None Remove="Configurazione\Tariffa\**" />
     <None Remove="Mappings\**" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Compile Remove="Configurazione\Settore\SettoreDelViewModel.cs" />
-    <Compile Remove="Configurazione\Settore\SettoreUpdViewModel.cs" />
   </ItemGroup>
 
   <ItemGroup>
@@ -38,6 +25,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Core\Core.csproj" />
     <ProjectReference Include="..\DTO\DTO.csproj" />
     <ProjectReference Include="..\SysNet\SysNet.csproj" />
   </ItemGroup>

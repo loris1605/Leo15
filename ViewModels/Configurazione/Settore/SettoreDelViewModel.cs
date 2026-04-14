@@ -1,47 +1,56 @@
-﻿using Models.Repository;
+﻿using DTO.Repository;
+using Models.Repository;
 using ReactiveUI;
 using SysNet;
+using ViewModels.BindableObjects;
 
 namespace ViewModels
 {
     public class SettoreDelViewModel : SettoreInputBase
     {
-        private SettoreR Q { get; set; }
+        private ISettoreRepository Q;
 
         private readonly int _idDaModificare;
 
-        public SettoreDelViewModel(IScreen host, int idsettore) : base(host)
+        public SettoreDelViewModel(IScreen host, int idsettore, ISettoreRepository Repository) : base(host)
         {
             _idDaModificare = idsettore;
             Titolo = "Cancella Settore";
-            Q = Create<SettoreR>.Instance();
+            Q = Repository;
             FieldsEnabled = false;
         }
 
-        protected override void OnFinalDestruction()
-        {
-            Q?.Dispose();
-            Q = null;
-        }
+        protected override void OnFinalDestruction() => Q = null;
 
         protected override async Task OnLoading()
         {
-            TipoSettDataSource = await Q.LoadTipiSettore();
-            BindingT = await Q.GetById(_idDaModificare);
+            await CaricaCombos();
+
+            var data = await Q.FirstSettore(_idDaModificare);
+            BindingT = new BindableObjects.SettoreMap(data);
+         
+            
             if (GetCodiceSettore == 0)
             {
                 InfoLabel = "Errore: Settore non trovato nel database.";
                 FieldsEnabled = false;
             }
-            await OnFocus(EscFocus);
+            SetFocus(EscFocus);
+        }
+
+        private async Task CaricaCombos()
+        {
+            var data = await Q.LoadTipiSettore();
+            TipoSettDataSource = data.Select(dto => new TipoSettoreMap(dto)).ToList();
+            
         }
 
         protected async override Task OnSaving()
         {
-            if (!await Q.Del(BindingT))
+            if (!await Q.Del(BindingT.ToDto()))
             {
                 InfoLabel = "Errore Db eliminazione Settore";
-                await OnEscFocus();
+                SetFocus(EscFocus);
                 return;
             }
             OnBack(-100);

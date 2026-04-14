@@ -22,6 +22,7 @@
         <lc:TitleView TitoloPagina="CONFIGURAZIONE"
                       x:Name="Title"
                       ButtonText="Esci"
+                      ToolTipText="TORNA A MENU PRINCIPALE"
                       ExitCommand="{Binding EscPressedCommand}"/>
        
         <Grid x:Name="MainGrid"

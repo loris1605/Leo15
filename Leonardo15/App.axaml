@@ -5,7 +5,14 @@
              <!-- "Default" ThemeVariant follows system theme variant. "Dark" or "Light" are other available options. -->
 
     <Application.Styles>
-        <FluentTheme />
+        <FluentTheme>
+        <FluentTheme.Palettes>
+           <!-- Specifica la variante (Light o Dark) per evitare l'obbligo della x:Key -->
+           <ColorPaletteResources x:Key="Light" RegionColor="White" Accent="LightBlue" />
+           <ColorPaletteResources x:Key="Dark" RegionColor="Black" Accent="Blue" />
+         </FluentTheme.Palettes>
+    </FluentTheme>
+
         
         <!-- Altri stili globali... -->
     
