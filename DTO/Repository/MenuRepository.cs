@@ -11,6 +11,8 @@ namespace DTO.Repository
     {
         Task<List<PostazioneDTO>> CaricaPostazioniCassa(int CodiceOperatore, CancellationToken ctk = default);
         Task<bool> EsisteGiornataAperta(CancellationToken ctk = default);
+        Task<bool> OpenGiornata(CancellationToken ctk = default);
+
     }
 
     public class MenuRepository : BaseRepository<MenuDbContext, Permesso>, IMenuRepository
@@ -66,6 +68,31 @@ namespace DTO.Repository
                 return new List<PostazioneDTO>();
             }
 
+        }
+
+        public async Task<bool> OpenGiornata(CancellationToken ctk = default)
+        {
+
+            using MenuDbContext _ctx = new();
+            try
+            {
+                var giornata = new Giornata
+                {
+                    Aperta = true,
+                    DataInizio = DateTime.Now,
+                    DataFine = DateTime.MaxValue
+                };
+
+                await _ctx.Giornate.AddAsync(giornata, ctk);
+                await _ctx.SaveChangesAsync(ctk);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($">>> [ERROR] OpenGiornata: {ex.InnerException?.Message ?? ex.Message}");
+                return false;
+
+            }
         }
     }
 }

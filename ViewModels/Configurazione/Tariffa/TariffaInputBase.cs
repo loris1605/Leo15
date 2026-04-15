@@ -94,45 +94,12 @@ namespace ViewModels
 
         }
 
-        private string nome = string.Empty;
-        public string NomeTariffa
-        {
-            get => nome;
-            set => this.RaiseAndSetIfChanged(ref nome, value);
-        }
-
-        private string etichetta = string.Empty;
-        public string EtichettaTariffa
-        {
-            get => etichetta;
-            set => this.RaiseAndSetIfChanged(ref etichetta, value);
-        }
-
-        private decimal prezzo = 0M;
-        public decimal PrezzoTariffa
-        {
-            get => prezzo;
-            set => this.RaiseAndSetIfChanged(ref prezzo, value);
-        }
-
+        
         private TariffaMap bindingt = Create<TariffaMap>.Instance();
         public TariffaMap BindingT
         {
             get => bindingt;
-            set
-            {
-                // 1. Aggiorna il riferimento (fondamentale per RaiseAndSetIfChanged)
-                this.RaiseAndSetIfChanged(ref bindingt, value);
-
-                // 2. Se carichi una postazione, allinea la UI al modello
-                if (value != null)
-                {
-                    this.NomeTariffa = value.NomeTariffa ?? "";
-                    this.EtichettaTariffa = value.EtichettaTariffa ?? "";
-                    this.PrezzoTariffa = value.PrezzoTariffa;
-
-                }
-            }
+            set => this.RaiseAndSetIfChanged(ref bindingt, value);
         }
 
         public Interaction<Unit, Unit> NomeFocus { get; } = new();

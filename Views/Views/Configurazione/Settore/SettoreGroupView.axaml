@@ -112,7 +112,8 @@
                                      MinWidth="50"
                                      Margin="20,5"
                                      ToolTipText="GESTIONE LISTINI"
-                                     HorizontalAlignment="Center">
+                                     HorizontalAlignment="Center"
+                                     Command="{Binding ListiniCommand}">
 
                     <Image Source="avares://ControlStyles/Resources/AggiungiIcon.png" Width="34" Height="34" />
                 

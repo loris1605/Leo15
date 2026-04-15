@@ -1,4 +1,5 @@
 using Avalonia.Input;
+using FluentIcons.Common.Internals;
 using ReactiveUI;
 using ReactiveUI.Avalonia;
 using System;
@@ -84,6 +85,11 @@ public partial class TariffaInputView : BaseUserControl<TariffaInputBase>,
             this.Bind(ViewModel,
                       vm => vm.BindingT.EtichettaTariffa,
                       v => v.EtichettaBox.Text)
+                .DisposeWith(d);
+
+            this.Bind(ViewModel,
+                      vm => vm.BindingT.PrezzoTariffa,
+                      v => v.PrezzoBox.Value)
                 .DisposeWith(d);
 
             #region OneWay

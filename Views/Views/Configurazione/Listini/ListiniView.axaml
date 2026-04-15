@@ -10,8 +10,8 @@
              d:DesignHeight="450"
              KeyboardNavigation.TabNavigation="Cycle"
              Background="Transparent"
-             x:DataType="vm:RepartiViewModel"
-             x:Class="Views.RepartiView">
+             x:DataType="vm:ListiniViewModel"
+             x:Class="Views.ListiniView">
 
     <Grid x:Name="MainGrid" >
     
@@ -63,7 +63,7 @@
                                             Background="Transparent">
                     
                         <HeaderedContentControl.Header>
-                            <TextBlock Text=" SETTORI " 
+                            <TextBlock Text=" TARIFFE " 
                                        Foreground="Black" 
                                        Margin="3"
                                        HorizontalAlignment="Center"/>
@@ -80,32 +80,32 @@
                             <DataGrid.Columns >
                             
                                 <DataGridTextColumn Header="Cod." 
-                                            x:DataType="vm:BindableObjects.SettoreElencoMap"
+                                            x:DataType="vm:BindableObjects.TariffaMap"
                                             Binding="{Binding Id}" 
                                             IsVisible="False" />
     
                                 <DataGridTextColumn Header="Nome" 
-                                            x:DataType="vm:BindableObjects.SettoreElencoMap"
-                                            Binding="{Binding NomeSettore}" 
+                                            x:DataType="vm:BindableObjects.TariffaMap"
+                                            Binding="{Binding NomeTariffa}" 
                                             IsReadOnly="True"
                                             Width="Auto" />
 
                                 <DataGridTextColumn Header="Etichetta" 
-                                            x:DataType="vm:BindableObjects.SettoreElencoMap"
-                                            Binding="{Binding EtichettaSettore}" 
+                                            x:DataType="vm:BindableObjects.TariffaMap"
+                                            Binding="{Binding EtichettaTariffa}" 
                                             IsReadOnly="True"
                                             Width="Auto" />
     
-                                <DataGridTextColumn Header="Tipo" 
-                                            x:DataType="vm:BindableObjects.SettoreElencoMap"
-                                            Binding="{Binding NomeTipoSettore}" 
+                                <DataGridTextColumn Header="Prezzo" 
+                                            x:DataType="vm:BindableObjects.TariffaMap"
+                                            Binding="{Binding PrezzoTariffa}" 
                                             IsReadOnly="True"
                                             Width="Auto" />
     
                                 <DataGridCheckBoxColumn 
-                                            Header="Permesso"
-                                            x:DataType="vm:BindableObjects.SettoreElencoMap"
-                                            Binding="{Binding HasReparto, 
+                                            Header="Listino"
+                                            x:DataType="vm:BindableObjects.TariffaMap"
+                                            Binding="{Binding HasListino, 
                                                      Mode=TwoWay,
                                                      UpdateSourceTrigger=PropertyChanged}" 
                                             IsReadOnly="False"
@@ -157,5 +157,5 @@
         </ui:PopupBorder>
     
     </Grid>
- 
+  
 </UserControl>

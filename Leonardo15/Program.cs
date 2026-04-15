@@ -135,6 +135,8 @@ internal class Program
         services.AddTransient<IViewFor<SettoreUpdViewModel>, SettoreInputView>();
         services.AddTransient<IViewFor<SettoreDelViewModel>, SettoreInputView>();
 
+        services.AddTransient<IViewFor<ListiniViewModel>, ListiniView>();
+
         services.AddTransient<IViewFor<TariffaGroupViewModel>, TariffaGroupView>();
         services.AddTransient<IViewFor<TariffaAddViewModel>, TariffaInputView>();
         services.AddTransient<IViewFor<TariffaUpdViewModel>, TariffaInputView>();

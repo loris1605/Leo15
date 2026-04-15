@@ -70,7 +70,8 @@ namespace DTO.Entity
             NomeTariffa = entity.Nome,
             EtichettaTariffa = entity.Label,
             PrezzoTariffa = entity.Prezzo,
-            IsFreeDrink = entity.IsFreeDrink
+            IsFreeDrink = entity.IsFreeDrink,
+            HasListino = entity.Listini.Any() // Se la tariffa è associata a qualche listino, HasListino sarà true
         };
 
         public static Expression<Func<Tariffa, TariffaDTO>> ToTariffaElencoDto(int settoreId)

@@ -38,12 +38,14 @@ namespace DTO.Repository
             using OperatoreDbContext _ctx = new();
 
             // Carichiamo prima gli operatori con i loro dati (Eager Loading)
-            return await _ctx.Operatori
+            var data = await _ctx.Operatori
                 .AsNoTracking()
                 .Where(predicate)
                 .OrderBy(o => o.Nome)
                 .SelectMany(o => o.Permessi.DefaultIfEmpty(), OperatoreDTO.ToOperatoriDtoRelationed) // <--- Usi l'espressione qui
                 .ToListAsync(ctk);
+
+            return data;
 
         }
 

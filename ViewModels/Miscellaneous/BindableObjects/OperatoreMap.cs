@@ -14,6 +14,7 @@ namespace ViewModels.BindableObjects
             this.NomeOperatore = dto.NomeOperatore;
             this.Password = dto.Password;
             this.Badge = dto.Badge;
+            this.Abilitato = dto.Abilitato;
             this.CodicePerson = dto.CodicePerson;
             this.NomePostazione = dto.NomePostazione;
             this.TipoPostazione = dto.TipoPostazione;
@@ -28,6 +29,7 @@ namespace ViewModels.BindableObjects
                 NomeOperatore = this.NomeOperatore,
                 Password = this.Password,
                 Badge = this.Badge,
+                Abilitato = this.Abilitato,
                 CodicePerson = this.CodicePerson,
                 CodicePermesso = this.CodicePermesso
             };

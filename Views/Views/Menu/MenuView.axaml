@@ -125,7 +125,7 @@
                                MaxHeight="50"/>
 
                 <ui:UiMenuItem x:Name="ReportItem"
-                               Header="  REPORT  "
+                               Header="  SERVIZI  "
                                VerticalAlignment="Center">
                 
                     <MenuItem Header="  GIORNATA  " >
@@ -133,8 +133,7 @@
                         <ui:UiMenuItem Header="  APERTURA GIORNATA  " 
                                        x:Name="ApriGiornataItem"
                                        MaxHeight="50"
-                                       Command="{Binding NavigateCommand}"
-                                       CommandParameter="OpenGiornata"/>
+                                       Command="{Binding ApriGiornataCommand}"/>
 
                         <ui:UiMenuItem Header="  CHIUSURA GIORNATA  " 
                                        x:Name="ChiudiGiornataItem"

@@ -62,8 +62,9 @@ namespace ViewModels
             OperatoriCommand = ReactiveCommand.CreateFromObservable(
                 () => NavigateToReset(new OperatoreGroupViewModel(ConfigHost, Locator.Current.GetService<IOperatoreRepository>())), isNotLoading);
 
-            //ListiniCommand = ReactiveCommand.CreateFromObservable(
-            //    () => NavigateToReset(new OperatoreAddViewModel(ConfigHost)), isNotLoading);
+            ListiniCommand = ReactiveCommand.CreateFromObservable(
+                () => NavigateToInput(new ListiniViewModel(ConfigHost, GroupBindingT!.Id,
+                Locator.Current.GetService<ISettoreRepository>())), canAction);
 
             //RepartiCommand = ReactiveCommand.CreateFromObservable(
             //    () => NavigateToReset(new OperatoreAddViewModel(ConfigHost)), isNotLoading);

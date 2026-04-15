@@ -32,6 +32,7 @@ namespace ViewModels.BindableObjects
                 NomeTariffa = this.NomeTariffa,
                 EtichettaTariffa = this.EtichettaTariffa,
                 PrezzoTariffa = this.PrezzoTariffa,
+                HasListino = this.HasListino,
                 IsFreeDrink = this.IsFreeDrink
             };
         }

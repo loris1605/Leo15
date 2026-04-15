@@ -3,6 +3,7 @@ using DTO.Repository;
 using Models.Entity.Global;
 using ReactiveUI;
 using Splat;
+using System.Diagnostics;
 using System.Diagnostics.Metrics;
 using System.Reactive;
 using System.Reactive.Disposables.Fluent;
@@ -18,14 +19,17 @@ namespace ViewModels
         public ReactiveCommand<string, Unit> NavigateCommand { get; }
         public ReactiveCommand<string, Unit> CassaCommand { get; }
         public ReactiveCommand<Unit, Unit> LogoutCommand { get; }
-                
-        
+        public ReactiveCommand<Unit, Unit> ApriGiornataCommand { get; }     
+
+
+
         public MenuViewModel(IScreen host,
                              IMenuRepository menuRepository = null) : base(host)
         {
             Q = menuRepository ?? Locator.Current.GetService<IMenuRepository>();
 
             var canExecute = this.WhenAnyValue(x => x.IsLoading, x => !x);
+            var canApri = this.WhenAnyValue(x => x.ApriGiornataEnabled);
 
             NavigateCommand = ReactiveCommand.CreateFromTask<string>(async (dest) =>
             {
@@ -43,14 +47,42 @@ namespace ViewModels
 
             CassaCommand = ReactiveCommand.CreateFromTask<string>(param => OnCassa(param), canExecute);
             LogoutCommand = ReactiveCommand.CreateFromTask(GoToLogin, canExecute);
-                                   
+            ApriGiornataCommand = ReactiveCommand.CreateFromTask(async () =>
+            {
+                return await Q.OpenGiornata(token);
+            }, canApri);
+
+            //ApriGiornataCommand
+            //    .ObserveOn(RxApp.MainThreadScheduler)
+            //    .Subscribe(result =>
+            //    {
+            //        if (result)
+            //        {
+            //            ApriGiornataEnabled = false;
+            //            // Qui puoi mostrare MessageBox o altri update UI
+            //        }
+            //        else
+            //        {
+            //            Debug.WriteLine("Errore durante l'apertura della giornata.");
+            //        }
+            //    });
+
 
             this.WhenActivated(d => 
             {
+                this.WhenAnyValue(x => x.ApriGiornataEnabled)
+                .Select(x => !x)
+                .BindTo(this, x => x.ChiudiGiornataEnabled)
+                .DisposeWith(d);
+
+                this.WhenAnyValue(x => x.ApriGiornataEnabled)
+                .Select(enabled => $"Sessione Contabile {(enabled ? "Chiusa" : "Aperta")}")
+                .BindTo(this, x => x.SessioneContabile).DisposeWith(d);
+
                 LogoutCommand?.DisposeWith(d);
                 CassaCommand?.DisposeWith(d);
                 NavigateCommand?.DisposeWith(d);
-                             
+                ApriGiornataCommand?.DisposeWith(d);
             });
                 
         }
@@ -90,7 +122,7 @@ namespace ViewModels
             if (GlobalValuesC.MySetting is null) return;
 
             OperatoreName = "Operatore : " + GlobalValuesC.MySetting.NOMEOPERATORE;
-            SessioneContabile = "Sessione Contabile " + (ApriGiornataEnabled ? "Chiusa" : "Aperta");
+            //SessioneContabile = "Sessione Contabile " + (ApriGiornataEnabled ? "Chiusa" : "Aperta");
 
             if (GlobalValuesC.MySetting.POSTAZIONI is null) return;
 
@@ -152,6 +184,20 @@ namespace ViewModels
         }
 
         protected override async Task OnSaving() => await Task.CompletedTask;
+
+        private async Task OpenGiornata()
+        {
+            bool result = await Q.OpenGiornata(token);
+            if (result)
+            {
+                ApriGiornataEnabled = false;
+                //MessageBox.Show("Giornata aperta con successo!");
+            }
+            else
+            {
+                Debug.WriteLine("Errore durante l'apertura della giornata.");
+            }
+        }   
 
         protected override Task OnEsc()
         {

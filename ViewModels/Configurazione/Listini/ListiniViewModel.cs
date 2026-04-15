@@ -35,6 +35,20 @@ namespace ViewModels
             DataSource = data.Select(dto => new TariffaMap(dto)).ToList();
             SetFocus(EscFocus);
         }
+
+        protected async override Task OnSaving()
+        {
+            var dtoSource = DataSource.Select(p => p.ToDTO()).ToList();
+
+            if (!await Q.SaveListini(_idDaModificare, dtoSource, token))
+            {
+                InfoLabel = "Errore Db modifica listini";
+                SetFocus(EscFocus);
+                return;
+            }
+
+            OnBack(_idDaModificare);
+        }
     } 
 
     public partial class ListiniViewModel

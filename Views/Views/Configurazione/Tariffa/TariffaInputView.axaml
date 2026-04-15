@@ -89,8 +89,7 @@
                                        Margin="10,10,0,10"
                                        Grid.Row="3"/>
 
-                        <NumericUpDown Value="{Binding PrezzoTariffa}" 
-                                       x:Name="PrezzoBox"
+                        <NumericUpDown x:Name="PrezzoBox"
                                        Grid.Row="3"
                                        Grid.Column="1"
                                        FormatString="C2" 

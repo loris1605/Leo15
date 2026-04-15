@@ -16,5 +16,6 @@ namespace Models.Context
         public DbSet<TipoSettore> TipiSettore { get; set; } = null!;
         public DbSet<Giornata> Giornate { get; set; } = null!;
         public DbSet<Settore> Settori { get; set; } = null!;
+        public DbSet<Tariffa> Tariffe { get; set; } = null!;
     }
 }
