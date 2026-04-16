@@ -30,4 +30,8 @@
     <ProjectReference Include="..\SysNet\SysNet.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Cassa\Back\" />
+  </ItemGroup>
+
 </Project>

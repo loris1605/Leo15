@@ -57,16 +57,18 @@
                         <ui:UiMenuItem x:Name="SociItem"
                                        Header="  SOCI  "
                                        Command="{Binding NavigateCommand}"
+                                       MaxHeight="50"
                                        CommandParameter="Soci"/>
 
                         <ui:UiMenuItem x:Name="ConfigurazioneItem"
                                        Header="  CONFIGURAZIONE  " 
                                        Command="{Binding NavigateCommand}"
+                                       MaxHeight="50"
                                        CommandParameter="Configurazione"/>
 
                         <ui:UiMenuItem Name="ServiziItem"
                                        Header="  SERVIZI  " 
-                                       
+                                       MaxHeight="50"
                                        Command="{Binding NavigateCommand}"
                                        CommandParameter="Servizi"/>
                     
@@ -87,7 +89,19 @@
                                MaxHeight="50">
 
                     <MenuItem x:Name="CassaPostazioneItem"
-                              ItemsSource="{Binding Path=CassaPostazioniDataSource}">
+                             Header="Seleziona Postazione"
+                             ItemsSource="{Binding CassaPostazioniDataSource}">
+                       
+                       <MenuItem.Styles>
+                           <!-- Questo stile si applica a ogni MenuItem generato dentro l'ItemsSource -->
+                           <Style Selector="MenuItem > MenuItem" x:DataType="vm:BindableObjects.PostazioneMap">
+                               <Setter Property="Header" Value="{Binding NomePostazione}" />
+                               <Setter Property="Command" Value="{Binding $parent[MenuItem].DataContext.SelezionaPostazioneCommand}" />
+                               <Setter Property="CommandParameter" Value="{Binding}" />
+                           </Style>
+                       </MenuItem.Styles>
+                       
+                    </MenuItem>
 
 
 
@@ -100,7 +114,6 @@
                             </DataTemplate>
                         </MenuItem.ItemTemplate>-->
 
-                    </MenuItem>
                 
                 
                 </ui:UiMenuItem>

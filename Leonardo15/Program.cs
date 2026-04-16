@@ -84,6 +84,7 @@ internal class Program
         
         RegisterIViewForSoci(services);
         RegisterIViewForConfigurazione(services);
+        RegisterIViewForCassa(services);
 
     }
 
@@ -142,6 +143,11 @@ internal class Program
         services.AddTransient<IViewFor<TariffaUpdViewModel>, TariffaInputView>();
         services.AddTransient<IViewFor<TariffaDelViewModel>, TariffaInputView>();
     }
+
+    private static void RegisterIViewForCassa(IServiceCollection services)
+    {
+        services.AddTransient<IViewFor<CassaViewModel>, CassaView>();
+    }   
 
 
     private static void RegisterMappers()

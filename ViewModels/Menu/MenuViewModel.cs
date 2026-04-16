@@ -17,7 +17,7 @@ namespace ViewModels
         private IMenuRepository Q { get; set; }
         
         public ReactiveCommand<string, Unit> NavigateCommand { get; }
-        public ReactiveCommand<string, Unit> CassaCommand { get; }
+        public ReactiveCommand<PostazioneMap, Unit> SelezionaPostazioneCommand { get; }
         public ReactiveCommand<Unit, Unit> LogoutCommand { get; }
         public ReactiveCommand<Unit, Unit> ApriGiornataCommand { get; }     
 
@@ -30,6 +30,15 @@ namespace ViewModels
 
             var canExecute = this.WhenAnyValue(x => x.IsLoading, x => !x);
             var canApri = this.WhenAnyValue(x => x.ApriGiornataEnabled);
+
+            _chiudiGiornataEnabled = this.WhenAnyValue(x => x.ApriGiornataEnabled)
+                .Select(x => !x)
+                .ToProperty(this, x => x.ChiudiGiornataEnabled);
+
+                // 2. Gestisci la stringa della Sessione
+                _sessioneContabile = this.WhenAnyValue(x => x.ApriGiornataEnabled)
+                    .Select(v => $"Sessione Contabile {(v ? "Chiusa" : "Aperta")}")
+                    .ToProperty(this, x => x.SessioneContabile);
 
             NavigateCommand = ReactiveCommand.CreateFromTask<string>(async (dest) =>
             {
@@ -45,27 +54,22 @@ namespace ViewModels
                     await HostScreen.Router.NavigateAndReset.Execute(page);
             }, canExecute);
 
-            CassaCommand = ReactiveCommand.CreateFromTask<string>(param => OnCassa(param), canExecute);
-            LogoutCommand = ReactiveCommand.CreateFromTask(GoToLogin, canExecute);
-            ApriGiornataCommand = ReactiveCommand.CreateFromTask(async () =>
+            SelezionaPostazioneCommand = ReactiveCommand.Create<PostazioneMap>(postazione =>
             {
-                return await Q.OpenGiornata(token);
-            }, canApri);
+                // 1. Salva la selezione
+                SelectedPostazione = postazione;
 
-            //ApriGiornataCommand
-            //    .ObserveOn(RxApp.MainThreadScheduler)
-            //    .Subscribe(result =>
-            //    {
-            //        if (result)
-            //        {
-            //            ApriGiornataEnabled = false;
-            //            // Qui puoi mostrare MessageBox o altri update UI
-            //        }
-            //        else
-            //        {
-            //            Debug.WriteLine("Errore durante l'apertura della giornata.");
-            //        }
-            //    });
+                // 2. Esegui la logica necessaria
+                Debug.WriteLine($"Postazione selezionata: {postazione.NomePostazione}");
+
+                // Esempio: aggiorna altri stati della UI o chiama servizi
+            });
+
+
+            LogoutCommand = ReactiveCommand.CreateFromTask(GoToLogin, canExecute);
+
+            ApriGiornataCommand = ReactiveCommand.Create(OpenGiornata, canApri);
+
 
 
             this.WhenActivated(d => 
@@ -80,7 +84,7 @@ namespace ViewModels
                 .BindTo(this, x => x.SessioneContabile).DisposeWith(d);
 
                 LogoutCommand?.DisposeWith(d);
-                CassaCommand?.DisposeWith(d);
+                SelezionaPostazioneCommand?.DisposeWith(d);
                 NavigateCommand?.DisposeWith(d);
                 ApriGiornataCommand?.DisposeWith(d);
             });
@@ -185,9 +189,9 @@ namespace ViewModels
 
         protected override async Task OnSaving() => await Task.CompletedTask;
 
-        private async Task OpenGiornata()
+        private void OpenGiornata()
         {
-            bool result = await Q.OpenGiornata(token);
+            bool result = Q.OpenGiornata(token);
             if (result)
             {
                 ApriGiornataEnabled = false;
@@ -271,24 +275,14 @@ namespace ViewModels
             set => this.RaiseAndSetIfChanged(ref _myoperatorename, value);
         }
 
-        private string _mysessionecontabile = string.Empty;
-        public string SessioneContabile
-        {
-            get => _mysessionecontabile;
-            set => this.RaiseAndSetIfChanged(ref _mysessionecontabile, value);
-        }
+        readonly ObservableAsPropertyHelper<string> _sessioneContabile;
+        public string SessioneContabile => _sessioneContabile.Value;
 
-        private bool _myaprigiornataenabled = false;
+        private bool _apriGiornataEnabled;
         public bool ApriGiornataEnabled
         {
-            get => _myaprigiornataenabled;
-            set
-            {
-                this.RaiseAndSetIfChanged(ref _myaprigiornataenabled, value);
-                ChiudiGiornataEnabled = !value;
-                Visibile[(int)Enums.Postazioni.Cassa] = !value;
-                SessioneContabile = "Sessione Contabile " + (value ? "Chiusa" : "Aperta");
-            }
+            get => _apriGiornataEnabled;
+            set => this.RaiseAndSetIfChanged(ref _apriGiornataEnabled, value);
         }
 
         private bool _myapripostazioneenabled = false;
@@ -298,12 +292,8 @@ namespace ViewModels
             set => this.RaiseAndSetIfChanged(ref _myapripostazioneenabled, value);
         }
 
-        private bool _mychiudigiornataenabled = false;
-        public bool ChiudiGiornataEnabled
-        {
-            get => _mychiudigiornataenabled;
-            set => this.RaiseAndSetIfChanged(ref _mychiudigiornataenabled, value);
-        }
+        readonly ObservableAsPropertyHelper<bool> _chiudiGiornataEnabled;
+        public bool ChiudiGiornataEnabled => _chiudiGiornataEnabled.Value;
 
         private bool _isMenuReady = false;
         public bool IsMenuReady
@@ -311,7 +301,14 @@ namespace ViewModels
             get => _isMenuReady;
             set => this.RaiseAndSetIfChanged(ref _isMenuReady, value);
         }
-        
+
+        private PostazioneMap _selectedPostazione;
+        public PostazioneMap SelectedPostazione
+        {
+            get => _selectedPostazione;
+            set => this.RaiseAndSetIfChanged(ref _selectedPostazione, value);
+        }
+
     }
 
     

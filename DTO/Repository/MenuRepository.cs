@@ -11,7 +11,7 @@ namespace DTO.Repository
     {
         Task<List<PostazioneDTO>> CaricaPostazioniCassa(int CodiceOperatore, CancellationToken ctk = default);
         Task<bool> EsisteGiornataAperta(CancellationToken ctk = default);
-        Task<bool> OpenGiornata(CancellationToken ctk = default);
+        bool OpenGiornata(CancellationToken ctk = default);
 
     }
 
@@ -70,7 +70,7 @@ namespace DTO.Repository
 
         }
 
-        public async Task<bool> OpenGiornata(CancellationToken ctk = default)
+        public bool OpenGiornata(CancellationToken ctk = default)
         {
 
             using MenuDbContext _ctx = new();
@@ -83,8 +83,8 @@ namespace DTO.Repository
                     DataFine = DateTime.MaxValue
                 };
 
-                await _ctx.Giornate.AddAsync(giornata, ctk);
-                await _ctx.SaveChangesAsync(ctk);
+                _ctx.Giornate.Add(giornata);
+                _ctx.SaveChanges();
                 return true;
             }
             catch (Exception ex)
