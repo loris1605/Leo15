@@ -13,6 +13,7 @@ namespace Models.Tables
 
         public List<Socio> Soci { get; set; } = [];
         public Operatore? Operatore { get; set; }
+        public List<Scheda> Schede { get; set; } = [];
 
         [NotMapped]
         public string Nome

@@ -10,9 +10,9 @@ namespace ViewModels
     public class CassaPostazioneViewModel : BaseViewModel
     {
         private int cassaPostazioneId;
-        public CassaPostazioneViewModel(IScreen host, int id) : base(host)
+        public CassaPostazioneViewModel(IScreen host, int postazioneId) : base(host)
         {
-            cassaPostazioneId = id;
+            cassaPostazioneId = postazioneId;
         }
 
         protected override Task OnEsc()

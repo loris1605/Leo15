@@ -69,7 +69,6 @@ internal class Program
     {
         // ViewModels
         services.AddTransient<MainWindowViewModel>();
-
                
     }
 
@@ -147,6 +146,7 @@ internal class Program
     private static void RegisterIViewForCassa(IServiceCollection services)
     {
         services.AddTransient<IViewFor<CassaViewModel>, CassaView>();
+        services.AddTransient<IViewFor<CassaPostazioneViewModel>, CassaPostazioneView>();
     }   
 
 

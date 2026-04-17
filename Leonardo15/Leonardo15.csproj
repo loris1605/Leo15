@@ -18,6 +18,11 @@
       <IncludeAssets Condition="'$(Configuration)' != 'Debug'">None</IncludeAssets>
       <PrivateAssets Condition="'$(Configuration)' != 'Debug'">All</PrivateAssets>
     </PackageReference>
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Scripting" Version="4.8.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.14">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
 	  <!-- AGGIUNGI QUESTO PER BLOCCARE LA VERSIONE -->
 	  <PackageReference Include="Splat" Version="17.1.1" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.14" />

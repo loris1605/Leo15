@@ -19,7 +19,7 @@ namespace ViewModels
                                                IActivatableViewModel
                                                 
     {
-        int currentVersion = 2; // Versione attuale del database, da aggiornare quando si modificano le entità
+        int currentVersion = 3; // Versione attuale del database, da aggiornare quando si modificano le entità
         
         public RoutingState Router { get; } = new RoutingState();
         public string UrlPathSegment => "main";

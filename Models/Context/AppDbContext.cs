@@ -25,7 +25,8 @@ namespace Models.Context
         public DbSet<Reparto> Reparti { get; set; } = null!;
         public DbSet<Tariffa> Tariffe { get; set; } = null!;
         public DbSet<Listino> Listini { get; set; } = null!;
-        public DbSet<Giornata> Giornate {  get; set; } = null!;
+        public DbSet<Giornata> Giornate { get; set; } = null!;
+        public DbSet<Scheda> Schede { get; set; } = null!;
 
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -51,7 +52,7 @@ namespace Models.Context
         private static void SettingsConfig(ModelBuilder modelBuilder)
         {
             //Configurazione People
-  
+
             modelBuilder.Entity<DbSettings>().HasData(
                         new DbSettings { Id = -1, Version = 1, UpdatedAt = new DateTime(2026, 1, 1, 0, 0, 0) });
 
@@ -76,19 +77,22 @@ namespace Models.Context
             //            .HasForeignKey<Operatore>(v => v.PersonId);
 
             modelBuilder.Entity<Person>().HasData(
-                    new Person { 
+                    new Person
+                    {
                         Id = -1,
                         FirstName = "SOCIO",
                         SurName = "VIRTUALE",
                         Natoil = 21000101,
-                        UniqueParam = "VIRSOC21000101"},
+                        UniqueParam = "VIRSOC21000101"
+                    },
                     new Person
                     {
                         Id = -999,
                         FirstName = "Di Servizio",
                         SurName = "Tessera",
                         Natoil = 21000101,
-                        UniqueParam = "TESSER21000101"},
+                        UniqueParam = "TESSER21000101"
+                    },
                     new Person
                     {
                         Id = -2,
@@ -103,7 +107,8 @@ namespace Models.Context
                         FirstName = "Non Importato",
                         SurName = "Socio",
                         Natoil = 21000101,
-                        UniqueParam = "SCOSOC21000101"});
+                        UniqueParam = "SCOSOC21000101"
+                    });
         }
         private static void SociConfig(ModelBuilder modelBuilder)
         {
@@ -145,7 +150,7 @@ namespace Models.Context
                 .HasIndex(p => p.NumeroTessera)
                 .IsUnique();
 
-            
+
         }
         private static void OperatoriConfig(ModelBuilder modelBuilder)
         {
@@ -176,23 +181,28 @@ namespace Models.Context
             modelBuilder.Entity<TipoPostazione>().HasData(
                     new TipoPostazione
                     {
-                        Id = 1, Nome = "Amministratore"
+                        Id = 1,
+                        Nome = "Amministratore"
                     },
                     new TipoPostazione
                     {
-                        Id =2, Nome = "Cassa"
+                        Id = 2,
+                        Nome = "Cassa"
                     },
                     new TipoPostazione
                     {
-                        Id = 3, Nome = "Bar"
+                        Id = 3,
+                        Nome = "Bar"
                     },
                     new TipoPostazione
                     {
-                        Id = 4, Nome = "Guardaroba"
+                        Id = 4,
+                        Nome = "Guardaroba"
                     },
                     new TipoPostazione
                     {
-                        Id = 5, Nome = "Pulizie"
+                        Id = 5,
+                        Nome = "Pulizie"
                     });
 
         }
@@ -292,26 +302,26 @@ namespace Models.Context
                     OperatoreId = -1,
                     PostazioneId = -1
                 });
-                //new Permesso
-                //{
-                //    OperatoreId = 1,
-                //    PostazioneId = 2
-                //},
-                //new Permesso
-                //{
-                //    OperatoreId = 1,
-                //    PostazioneId = 3
-                //},
-                //new Permesso
-                //{
-                //    OperatoreId = 1,
-                //    PostazioneId = 4
-                //},
-                //new Permesso
-                //{
-                //    OperatoreId = 1,
-                //    PostazioneId = 5
-                //});
+            //new Permesso
+            //{
+            //    OperatoreId = 1,
+            //    PostazioneId = 2
+            //},
+            //new Permesso
+            //{
+            //    OperatoreId = 1,
+            //    PostazioneId = 3
+            //},
+            //new Permesso
+            //{
+            //    OperatoreId = 1,
+            //    PostazioneId = 4
+            //},
+            //new Permesso
+            //{
+            //    OperatoreId = 1,
+            //    PostazioneId = 5
+            //});
 
 
         }
@@ -347,7 +357,7 @@ namespace Models.Context
                         .HasForeignKey(s => s.TipoSettoreId) // La chiave è TipoPostazioneId
                         .OnDelete(DeleteBehavior.NoAction);
 
-            
+
         }
         private static void RepartoConfig(ModelBuilder modelBuilder)
         {
@@ -364,7 +374,7 @@ namespace Models.Context
                         .HasForeignKey(s => s.SettoreId) // La chiave è SettoreId
                         .OnDelete(DeleteBehavior.NoAction);
 
-            
+
         }
         private static void TariffaConfig(ModelBuilder modelBuilder)
         {
@@ -374,7 +384,7 @@ namespace Models.Context
             modelBuilder.Entity<Tariffa>()
                 .Property(s => s.Label).HasMaxLength(25);
 
-                       
+
         }
         private static void ListinoConfig(ModelBuilder modelBuilder)
         {
@@ -391,12 +401,32 @@ namespace Models.Context
                         .HasForeignKey(s => s.SettoreId) // La chiave è SettoreId
                         .OnDelete(DeleteBehavior.NoAction);
 
-            
+
         }
         private static void GiornataConfig(ModelBuilder modelBuilder)
         {
-            
-        }
 
+        }
+        private static void SchedaConfig(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<Scheda>()
+                .Property(s => s.NumeroTessera).HasMaxLength(30);
+
+            modelBuilder.Entity<Scheda>()
+                .Property(s => s.Cognome).HasMaxLength(30);
+            
+            modelBuilder.Entity<Scheda>()
+                .Property(s => s.Nome).HasMaxLength(30);
+
+
+
+            // EF Core capisce da solo la relazione, ma puoi essere esplicito:
+            modelBuilder.Entity<Scheda>()
+                        .HasOne(s => s.Person)          // Una Scheda ha una Person
+                        .WithMany(p => p.Schede)    // Una Person ha una Scheda
+                        .HasForeignKey(s => s.PersonId) // La chiave è PersonId
+                        .OnDelete(DeleteBehavior.NoAction);
+
+        }
     }
 }
