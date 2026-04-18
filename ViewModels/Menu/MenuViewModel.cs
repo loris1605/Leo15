@@ -54,16 +54,18 @@ namespace ViewModels
                     await HostScreen.Router.NavigateAndReset.Execute(page);
             }, canExecute);
 
-            SelezionaPostazioneCommand = ReactiveCommand.Create<PostazioneMap>(postazione =>
-            {
-                // 1. Salva la selezione
-                SelectedPostazione = postazione;
+            SelezionaPostazioneCommand = ReactiveCommand.CreateFromTask<PostazioneMap>(x => GoToCassa(x), canExecute);
+            //{
+            //    // 1. Salva la selezione
+            //    SelectedPostazione = postazione;
 
-                // 2. Esegui la logica necessaria
-                Debug.WriteLine($"Postazione selezionata: {postazione.NomePostazione}");
+            //    // 2. Esegui la logica necessaria
+            //    Debug.WriteLine($"Postazione selezionata: {postazione.NomePostazione}");
 
-                // Esempio: aggiorna altri stati della UI o chiama servizi
-            });
+
+
+            //    // Esempio: aggiorna altri stati della UI o chiama servizi
+            //});
 
 
             LogoutCommand = ReactiveCommand.CreateFromTask(GoToLogin, canExecute);
@@ -171,15 +173,9 @@ namespace ViewModels
 
         }
 
-        private async Task OnCassa(string x)
+        private async Task GoToCassa(PostazioneMap map)
         {
-            await Task.CompletedTask;
-            //GlobalValuesC.MyPostazione = new()
-            //{
-            //    DESCPOSTAZIONE = x
-            //};
-            //MessageBox.Show(x);
-            //MainNavigator.NotifyColleagues("CassaBase");
+            await HostScreen.Router.NavigateAndReset.Execute(new CassaViewModel(HostScreen, map));
         }
 
         private async Task GoToLogin()

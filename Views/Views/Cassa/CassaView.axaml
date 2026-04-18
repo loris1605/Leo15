@@ -14,8 +14,22 @@
 
     <Grid x:Name="MainGrid">
 
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
         <r:RoutedViewHost x:Name="RouterHost" 
-                      Router="{Binding CassaRouter}" >
+                      Router="{Binding CassaRouter}" 
+                      Grid.ColumnSpan="3"
+                      Grid.RowSpan="3">
     
             <r:RoutedViewHost.PageTransition>
                 <!-- Durata di 0.5 secondi -->
@@ -27,6 +41,22 @@
             </r:RoutedViewHost.DefaultContent>
     
          </r:RoutedViewHost>    
+
+         <r:RoutedViewHost x:Name="SettingsHost" 
+                      Router="{Binding SettingsRouter}" 
+                      Grid.Column="1"
+                      Grid.Row="1">
+    
+            <r:RoutedViewHost.PageTransition>
+                <!-- Durata di 0.5 secondi -->
+                <CrossFade Duration="0:0:0.5" />
+            </r:RoutedViewHost.PageTransition>
+
+            <r:RoutedViewHost.DefaultContent>
+                <Border/>
+            </r:RoutedViewHost.DefaultContent>
+    
+         </r:RoutedViewHost>  
     
     </Grid>
   

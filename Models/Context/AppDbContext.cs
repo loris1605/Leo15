@@ -46,6 +46,7 @@ namespace Models.Context
             TariffaConfig(modelBuilder);
             ListinoConfig(modelBuilder);
             GiornataConfig(modelBuilder);
+            SchedaConfig(modelBuilder);
         }
 
 

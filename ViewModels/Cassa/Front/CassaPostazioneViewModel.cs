@@ -1,33 +1,50 @@
-﻿using ReactiveUI;
+﻿using DTO.Repository;
+using ReactiveUI;
+using Splat;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reactive.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ViewModels.BindableObjects;
 
 namespace ViewModels
 {
-    public class CassaPostazioneViewModel : BaseViewModel
+    public partial class CassaPostazioneViewModel : BaseViewModel
     {
-        private int cassaPostazioneId;
-        public CassaPostazioneViewModel(IScreen host, int postazioneId) : base(host)
+        private PostazioneMap cassaPostazione;
+        public CassaPostazioneViewModel(IScreen host, PostazioneMap postazione) : base(host)
         {
-            cassaPostazioneId = postazioneId;
+            cassaPostazione = postazione;
+            Titolo = $"Postazione {cassaPostazione.NomePostazione}";
         }
 
-        protected override Task OnEsc()
+        protected async override Task OnEsc() => await HostScreen
+                                                        .Router
+                                                        .NavigateAndReset
+                                                        .Execute(new MenuViewModel(HostScreen,
+                                                            Locator.Current.GetService<IMenuRepository>()));
+
+        protected override async Task OnLoading()
         {
-            throw new NotImplementedException();
+            await Task.CompletedTask;
         }
 
-        protected override Task OnLoading()
+        protected override async Task OnSaving()
         {
-            throw new NotImplementedException();
+            await Task.CompletedTask;
         }
+    }
 
-        protected override Task OnSaving()
+    public partial class CassaPostazioneViewModel
+    {
+        private string _titolo = string.Empty;
+        public string Titolo
         {
-            throw new NotImplementedException();
+            get => _titolo;
+            set => this.RaiseAndSetIfChanged(ref _titolo, value);
         }
+        
     }
 }

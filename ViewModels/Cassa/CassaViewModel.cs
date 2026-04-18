@@ -2,20 +2,24 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reactive.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ViewModels.BindableObjects;
 
 namespace ViewModels
 {
     public partial class CassaViewModel : BaseViewModel
     {
         public RoutingState CassaRouter { get; } = new RoutingState();
-        private int _cassaPostazioneId;
+        public RoutingState SettingsRouter { get; } = new RoutingState();
+
+        private PostazioneMap _cassaPostazione;
 
 
-        public CassaViewModel(IScreen host, int cassaPostazioneId) : base(host)
+        public CassaViewModel(IScreen host, PostazioneMap cassaPostazione) : base(host)
         {
-            _cassaPostazioneId = cassaPostazioneId;
+            _cassaPostazione = cassaPostazione;
         }
 
         protected override Task OnEsc()
@@ -23,9 +27,10 @@ namespace ViewModels
             throw new NotImplementedException();
         }
 
-        protected override Task OnLoading()
+        protected override async Task OnLoading()
         {
-            throw new NotImplementedException();
+            await CassaRouter.NavigateAndReset.Execute(new CassaPostazioneViewModel(HostScreen, 
+                                                                                   _cassaPostazione));
         }
 
         protected override Task OnSaving()
