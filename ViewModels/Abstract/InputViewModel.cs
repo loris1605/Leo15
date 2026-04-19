@@ -12,7 +12,7 @@ namespace ViewModels
         public int Id { get; set; }
         public virtual int ParentIndex { get; set; }
 
-        public RoutingState Router => HostScreen.Router;
+        //public RoutingState Router => HostScreen.Router;
     
 
         public Interaction<Unit, Unit> EscFocus { get; } = new();

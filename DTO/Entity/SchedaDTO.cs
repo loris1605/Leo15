@@ -11,7 +11,7 @@ namespace DTO.Entity
 {
     public class SchedaDTO : BaseDTO, IMap
     {
-        public int Posizione { get; set; }
+        public string Posizione { get; set; } = string.Empty;
         public string NumeroTessera { get; set; } = string.Empty;
         public int CodicePerson { get; set; }
         public string Cognome { get; set; } = string.Empty;
@@ -25,6 +25,8 @@ namespace DTO.Entity
         public decimal Consumazione { get; set; }
         public bool Blocco { get; set; }
         public string Note { get; set; } = string.Empty;
+
+        public SchedaDTO() { }
 
         public SchedaDTO(Scheda table)
         {

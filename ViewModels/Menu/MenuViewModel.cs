@@ -19,10 +19,9 @@ namespace ViewModels
         public ReactiveCommand<string, Unit> NavigateCommand { get; }
         public ReactiveCommand<PostazioneMap, Unit> SelezionaPostazioneCommand { get; }
         public ReactiveCommand<Unit, Unit> LogoutCommand { get; }
-        public ReactiveCommand<Unit, Unit> ApriGiornataCommand { get; }     
+        public ReactiveCommand<Unit, Unit> ApriGiornataCommand { get; }
 
-
-
+        
         public MenuViewModel(IScreen host,
                              IMenuRepository menuRepository = null) : base(host)
         {
@@ -35,8 +34,8 @@ namespace ViewModels
                 .Select(x => !x)
                 .ToProperty(this, x => x.ChiudiGiornataEnabled);
 
-                // 2. Gestisci la stringa della Sessione
-                _sessioneContabile = this.WhenAnyValue(x => x.ApriGiornataEnabled)
+            // 2. Gestisci la stringa della Sessione
+            _sessioneContabile = this.WhenAnyValue(x => x.ApriGiornataEnabled)
                     .Select(v => $"Sessione Contabile {(v ? "Chiusa" : "Aperta")}")
                     .ToProperty(this, x => x.SessioneContabile);
 
@@ -55,36 +54,16 @@ namespace ViewModels
             }, canExecute);
 
             SelezionaPostazioneCommand = ReactiveCommand.CreateFromTask<PostazioneMap>(x => GoToCassa(x), canExecute);
-            //{
-            //    // 1. Salva la selezione
-            //    SelectedPostazione = postazione;
-
-            //    // 2. Esegui la logica necessaria
-            //    Debug.WriteLine($"Postazione selezionata: {postazione.NomePostazione}");
-
-
-
-            //    // Esempio: aggiorna altri stati della UI o chiama servizi
-            //});
-
-
+            
             LogoutCommand = ReactiveCommand.CreateFromTask(GoToLogin, canExecute);
 
             ApriGiornataCommand = ReactiveCommand.Create(OpenGiornata, canApri);
 
-
+            
 
             this.WhenActivated(d => 
             {
-                this.WhenAnyValue(x => x.ApriGiornataEnabled)
-                .Select(x => !x)
-                .BindTo(this, x => x.ChiudiGiornataEnabled)
-                .DisposeWith(d);
-
-                this.WhenAnyValue(x => x.ApriGiornataEnabled)
-                .Select(enabled => $"Sessione Contabile {(enabled ? "Chiusa" : "Aperta")}")
-                .BindTo(this, x => x.SessioneContabile).DisposeWith(d);
-
+                
                 LogoutCommand?.DisposeWith(d);
                 SelezionaPostazioneCommand?.DisposeWith(d);
                 NavigateCommand?.DisposeWith(d);

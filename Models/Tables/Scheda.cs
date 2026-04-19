@@ -11,7 +11,7 @@ namespace Models.Tables
     {
         public int Id { get; set; }
 
-        public int Posizione { get; set; }
+        public string Posizione { get; set; } = string.Empty;
         public string NumeroTessera { get; set; } = string.Empty;
         public int PersonId { get; set; }
         public string Cognome { get; set; } = string.Empty;
