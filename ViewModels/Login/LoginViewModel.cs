@@ -95,12 +95,10 @@ namespace ViewModels
                 // Qui potresti aggiungere un'interaction per mostrare un messaggio di errore all'utente
             }
 
-            await Task.CompletedTask;
         }
 
         private async Task GoToMenu()
         {
-            await HostScreen.Router.NavigateAndReset.Execute(new EmptyViewModel(HostScreen));
             await HostScreen.Router.NavigateAndReset.Execute(new MenuViewModel(HostScreen,
                                                                                Locator.Current.GetService<IMenuRepository>()));
         }

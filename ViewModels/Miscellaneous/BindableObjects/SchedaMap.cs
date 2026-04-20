@@ -19,6 +19,7 @@ namespace ViewModels.BindableObjects
             this.NumeroTessera = dto.NumeroTessera;
             this.CodicePerson = dto.CodicePerson;
             this.Cognome = dto.Cognome;
+            this.Nome = dto.Nome;
             this.Natoil = dto.Natoil;
             this.CheckinTime = dto.CheckinTime;
             this.CheckoutTime = dto.CheckoutTime;
@@ -42,6 +43,7 @@ namespace ViewModels.BindableObjects
                 NumeroTessera = this.NumeroTessera,
                 CodicePerson = this.CodicePerson,
                 Cognome = this.Cognome,
+                Nome = this.Nome,
                 Natoil = this.Natoil,
                 CheckinTime = this.CheckinTime,
                 CheckoutTime = this.CheckoutTime,
@@ -81,6 +83,13 @@ namespace ViewModels.BindableObjects
         {
             get => _cognome;
             set => this.RaiseAndSetIfChanged(ref _cognome, value);
+        }
+
+        private string _nome = string.Empty;
+        public override string Nome
+        {
+            get => _nome;
+            set => this.RaiseAndSetIfChanged(ref _nome, value);
         }
 
         private int _natoil;

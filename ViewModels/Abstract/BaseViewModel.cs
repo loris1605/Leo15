@@ -65,7 +65,7 @@ namespace ViewModels
 
             var canExecuteCombined = this.WhenAnyValue(x => x.IsLoading)
                 .Select(loading => !loading)
-                .Throttle(TimeSpan.FromMilliseconds(500), RxApp.MainThreadScheduler) // Impedisce riattivazioni repentine
+                .Throttle(TimeSpan.FromMilliseconds(300), RxApp.MainThreadScheduler) // Impedisce riattivazioni repentine
                 .CombineLatest(canSave, (isNotLoading, childCanSave) => isNotLoading && childCanSave)
                 .ObserveOn(RxApp.MainThreadScheduler);
 

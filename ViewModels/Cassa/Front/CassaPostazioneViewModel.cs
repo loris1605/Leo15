@@ -33,16 +33,7 @@ namespace ViewModels
             _isOpen = _isOpenManualTrigger.ToProperty(this, x => x.IsOpen);
 
             PosizioneEnterCommand = ReactiveCommand.CreateFromTask(OnApriScheda);
-            //{
-            //    if (string.IsNullOrWhiteSpace(BindingT.Posizione))
-            //    {
-            //        _isOpenManualTrigger.OnNext(true);
-            //        return;
-            //    }
-            //    // Logica per entrare nella postazione
-            //    // Esempio: await PostazioneService.EntraPostazioneAsync(BindingT.Posizione);
-            //});
-
+            
             this.WhenActivated(d =>
             {
                 EntraSocioCommand?.DisposeWith(d);

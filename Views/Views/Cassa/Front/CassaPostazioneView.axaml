@@ -153,17 +153,17 @@
            
                 <StackPanel Orientation="Vertical"
                         x:Name="InfoStackPanel"
-                        Margin="20,2">
+                        Margin="20">
                     
-                    <TextBlock Text="{Binding BindingT.Cognome}" 
-                           HorizontalAlignment="Left"
-                           Foreground="Black" 
-                           FontSize="12"/>
-            
                     <TextBlock Text="{Binding BindingT.Nome}" 
-                           HorizontalAlignment="Left"
-                           Foreground="Black" 
-                           FontSize="12"/>
+                               HorizontalAlignment="Left"
+                               Foreground="Black" 
+                               FontSize="16"/>
+
+                    <TextBlock Text="{Binding BindingT.Cognome}" 
+                               HorizontalAlignment="Left"
+                               Foreground="Black" 
+                               FontSize="16"/>
             
                 </StackPanel>
            
