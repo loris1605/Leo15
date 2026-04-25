@@ -26,8 +26,7 @@
                       ToolTipText="TORNA A MENU PRINCIPALE"
                       ExitCommand="{Binding EscPressedCommand}"/>
        
-        <Grid x:Name="MainGrid"
-              ColumnDefinitions="2*,3*"
+        <Grid ColumnDefinitions="2*,3*"
               Grid.Row="1"
               Margin="50">
 			
