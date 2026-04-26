@@ -33,7 +33,12 @@ namespace ViewModels
             _isOpen = _isOpenManualTrigger.ToProperty(this, x => x.IsOpen);
 
             PosizioneEnterCommand = ReactiveCommand.CreateFromTask(OnApriScheda);
-            
+            ListaSociCommand = ReactiveCommand.CreateFromTask(async () =>
+            {
+                await HostScreen.Router.Navigate.Execute(new ListaSociViewModel(HostScreen, cassaPostazione,
+                    Locator.Current.GetService<ISchedaRepository>()));
+            });
+
             this.WhenActivated(d =>
             {
                 EntraSocioCommand?.DisposeWith(d);

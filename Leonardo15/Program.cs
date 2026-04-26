@@ -63,6 +63,7 @@ internal class Program
         services.AddTransient<IPostazioneRepository, PostazioneRepository>();
         services.AddTransient<ISettoreRepository, SettoreRepository>();
         services.AddTransient<ITariffaRepository, TariffaRepository>();
+        services.AddTransient<ISchedaRepository, SchedaRepository>();
     }
 
     private static void RegisterViewModels(IServiceCollection services)
@@ -147,6 +148,7 @@ internal class Program
     {
         services.AddTransient<IViewFor<CassaViewModel>, CassaView>();
         services.AddTransient<IViewFor<CassaPostazioneViewModel>, CassaPostazioneView>();
+        services.AddTransient<IViewFor<ListaSociViewModel>, ListaSociView>();
     }   
 
 

@@ -9,10 +9,19 @@ using ViewModels.BindableObjects;
 
 namespace ViewModels
 {
-    public partial class CassaViewModel : BaseViewModel
+    public interface ICassaScreen : IScreen
+    {
+        RoutingState CassaRouter { get; }
+        RoutingState SettingsRouter { get; }
+        
+    }
+
+    public partial class CassaViewModel : BaseViewModel, ICassaScreen
     {
         public RoutingState CassaRouter { get; } = new RoutingState();
         public RoutingState SettingsRouter { get; } = new RoutingState();
+        public RoutingState Router => CassaRouter;
+
 
         private PostazioneMap _cassaPostazione;
 

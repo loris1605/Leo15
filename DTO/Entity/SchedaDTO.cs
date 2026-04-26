@@ -4,6 +4,7 @@ using Models.Tables;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -90,5 +91,24 @@ namespace DTO.Entity
             existing.Note = this.Note;
 
         }
+
+        public static Expression<Func<Scheda, SchedaDTO>> ToSchedaDto => entity => new SchedaDTO
+        {
+            Id = entity.Id,
+            Posizione = entity.Posizione,
+            NumeroTessera = entity.NumeroTessera,
+            CodicePerson = entity.PersonId,
+            Cognome = entity.Cognome,
+            Natoil = entity.Natoil,
+            CheckinTime = entity.CheckinTime,
+            CheckoutTime = entity.CheckoutTime,
+            Grb1 = entity.Grb1,
+            Grb2 = entity.Grb2,
+            Grb3 = entity.Grb3,
+            Grb4 = entity.Grb4,
+            Consumazione = entity.Consumazione,
+            Blocco = entity.Blocco,
+            Note = entity.Note
+        };
     }
 }
